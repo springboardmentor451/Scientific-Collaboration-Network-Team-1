@@ -1,0 +1,70 @@
+from fastapi import APIRouter
+
+from app.routes.deps import AdminUser, CurrentUser, UserServiceDeps
+from app.schemas import UserResponse, UserRoleUpdateRequest, UserUpdateRequest
+
+user_router = APIRouter(prefix="/users", tags=["users"])
+
+
+@user_router.get("/pending", response_model=list[UserResponse])
+async def get_pending_users(
+    _: AdminUser, user_service: UserServiceDeps
+) -> list[UserResponse]:
+    return await user_service.get_pending_users()
+
+
+@user_router.patch("/{user_id}/approve", response_model=UserResponse)
+async def approve_user(
+    user_id: int, _: AdminUser, user_service: UserServiceDeps
+) -> UserResponse:
+    return await user_service.approve(user_id)
+
+
+@user_router.patch("/{user_id}/reject", response_model=UserResponse)
+async def reject_user(
+    user_id: int, _: AdminUser, user_service: UserServiceDeps
+) -> UserResponse:
+    return await user_service.reject(user_id)
+
+
+@user_router.patch("/me", response_model=UserResponse)
+async def update_me(
+    credential: UserUpdateRequest,
+    current_user: CurrentUser,
+    user_service: UserServiceDeps,
+) -> UserResponse:
+    return await user_service.update(credential, current_user)
+
+
+@user_router.patch("/{user_id}/role", response_model=UserResponse)
+async def change_role(
+    user_id: int,
+    data: UserRoleUpdateRequest,
+    _: AdminUser,
+    user_service: UserServiceDeps,
+) -> UserResponse:
+    return await user_service.change_role(user_id, data)
+
+
+@user_router.delete("/me", status_code=204)
+async def delete_me(
+    current_user: CurrentUser,
+    user_service: UserServiceDeps,
+) -> None:
+    await user_service.delete(current_user)
+
+
+@user_router.delete("/{user_id}", status_code=204)
+async def delete_user(
+    user_id: int, _: AdminUser, user_service: UserServiceDeps
+) -> None:
+    await user_service.delete_by_id(user_id)
+
+
+@user_router.patch("/{user_id}/ban", response_model=UserResponse)
+async def ban_user(
+    user_id: int,
+    _: AdminUser,
+    user_service: UserServiceDeps,
+) -> UserResponse:
+    return await user_service.ban(user_id)

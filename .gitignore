@@ -1,0 +1,20 @@
+# Ignore VS Code settings
+.vscode/
+
+# Ignore __pycache__
+__pycache__/
+
+# Ignore log files
+*.log
+
+# Ignore build output
+dist/
+build/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+*.db
+
+# Ignore environment files
+.env
