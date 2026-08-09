@@ -12,7 +12,7 @@ dist/
 build/
 
 # Ignore all JSON files in data folder
-data/*.json
+backend/data/*.json
 
 # Ignore system files
 .DS_Store
