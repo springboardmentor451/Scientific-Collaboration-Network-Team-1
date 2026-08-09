@@ -13,6 +13,7 @@ from app.services import (
     InstitutionService,
     ResearcherService,
     TokenService,
+    UserAdminService,
     UserService,
 )
 
@@ -27,6 +28,10 @@ Token = Annotated[str, Depends(oauth2_scheme)]
 # Dependency providers
 def get_user_service(session: DBSession) -> UserService:
     return UserService(session)
+
+
+def get_user_admin_serive(session: DBSession) -> UserAdminService:
+    return UserAdminService(session)
 
 
 def get_token_service() -> TokenService:
@@ -70,6 +75,7 @@ def require_role(*roles: UserRole):
 # Annotated shortcuts for routes
 AuthServiceDeps = Annotated[AuthService, Depends(get_auth_service)]
 UserServiceDeps = Annotated[UserService, Depends(get_user_service)]
+UserAdminServiceDeps = Annotated[UserAdminService, Depends(get_user_admin_serive)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 ResearcherServiceDeps = Annotated[ResearcherService, Depends(get_researcher_service)]
 AdminUser = Annotated[User, Depends(require_role(UserRole.SYSTEM_ADMIN))]
