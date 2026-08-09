@@ -6,10 +6,7 @@ PASSWORD_MAX_LENGTH: Final[int] = 128
 USERNAME_MAX_LENGTH: Final[int] = 100
 COUNTRY_MAX_LENGTH: Final[int] = 100
 CITY_MAX_LENGTH: Final[int] = 100
-
-ACADEMIC_SUFFIXES: Final[frozenset[str]] = frozenset(
-    {".edu", ".ac.uk", ".ac.in", ".edu.au"}
-)
+TOTP_INTERVAL = 300  # in seconds
 
 
 class TokenFields:
@@ -40,3 +37,30 @@ class UserStatus(StrEnum):
 
 class InstitutionType(StrEnum):
     UNIVERSITY = "university"
+
+
+class PublicationType(StrEnum):
+    JOURNAL = "journal"
+    CONFERENCE = "conference"
+    BOOK = "book"
+    PATENT = "patent"
+    REPORT = "report"
+
+
+class PublicationStatus(StrEnum):
+    DRAFT = "draft"
+    SUBMITTED = "submitted"
+    PUBLISHED = "published"
+    ARCHIVED = "archived"
+
+
+class ProjectStatus(StrEnum):
+    ACTIVE = "active"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+
+class ProjectRole(StrEnum):
+    PI = "principal_investigator"
+    CO_PI = "co_investigator"
+    MEMBER = "member"
