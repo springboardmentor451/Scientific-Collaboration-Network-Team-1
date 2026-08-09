@@ -3,6 +3,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from app.core import Config, engine, get_config
+from app.core.domains import load_domains
 from app.routes import router
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -17,6 +18,7 @@ config.validate()
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("starting up Research Management Platform")
+    await load_domains()
     yield
     logger.info("shutting down")
     await engine.dispose()
