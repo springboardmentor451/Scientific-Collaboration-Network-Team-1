@@ -30,6 +30,10 @@ To downgrade to a specific revision:
 View Current DB Revision
 -> alembic current
 
+Generate a new migration
+-> uv run alembic revision --autogenerate -m "update models"
+Alembic will create a new file in migrations/versions/.
+
 Check History of Migrations
 -> alembic history
 
