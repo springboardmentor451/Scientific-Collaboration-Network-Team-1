@@ -1,7 +1,8 @@
-from sqlalchemy import ForeignKey
+from sqlalchemy import Enum, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core import Base
+from app.core.constants import ProjectRole
 
 
 class ProjectResearcher(Base):
@@ -12,4 +13,7 @@ class ProjectResearcher(Base):
     )
     researcher_id: Mapped[int] = mapped_column(
         ForeignKey("researchers.researcher_id", ondelete="CASCADE"), primary_key=True
+    )
+    role: Mapped[ProjectRole] = mapped_column(
+        Enum(ProjectRole), default=ProjectRole.MEMBER, nullable=False
     )

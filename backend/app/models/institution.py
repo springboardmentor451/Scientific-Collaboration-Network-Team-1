@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Integer, String
+from sqlalchemy import Enum, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core import Base
@@ -24,7 +24,7 @@ class Institution(Base):
         String(COUNTRY_MAX_LENGTH), nullable=False
     )
     type: Mapped[InstitutionType] = mapped_column(
-        String,
+        Enum(InstitutionType),
         default=InstitutionType.UNIVERSITY,
         nullable=False,
     )

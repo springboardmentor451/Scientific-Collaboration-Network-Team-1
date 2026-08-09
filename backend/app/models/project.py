@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING
 
-from app.core import Base
-from sqlalchemy import Date, DateTime, Integer, String, Text
+from sqlalchemy import Date, DateTime, Enum, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.core import Base
+from app.core.constants import ProjectStatus
 
 if TYPE_CHECKING:
     from app.models.researcher import Researcher
@@ -22,10 +24,13 @@ class Project(Base):
     start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(UTC), nullable=False
+        DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     researchers: Mapped[list[Researcher]] = relationship(
         "Researcher", secondary="project_researchers", back_populates="projects"
+    )
+    status: Mapped[ProjectStatus] = mapped_column(
+        Enum(ProjectStatus), default=ProjectStatus.ACTIVE, nullable=False, index=True
     )
 
     def __repr__(self) -> str:

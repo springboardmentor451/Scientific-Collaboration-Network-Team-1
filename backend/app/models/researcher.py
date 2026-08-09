@@ -8,12 +8,16 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core import Base
 
 if TYPE_CHECKING:
+    from app.models.collaboration import Collaboration
     from app.models.institution import Institution
+    from app.models.project import Project
+    from app.models.publication import Publication
     from app.models.user import User
 
 
 class Researcher(Base):
     __tablename__: str = "researchers"
+
     researcher_id: Mapped[int] = mapped_column(
         Integer, primary_key=True, autoincrement=True
     )
@@ -33,6 +37,19 @@ class Researcher(Base):
     user: Mapped[User] = relationship("User", back_populates="researcher")
     institution: Mapped[Institution | None] = relationship(
         "Institution", back_populates="researchers"
+    )
+    publications: Mapped[list[Publication]] = relationship(
+        "Publication",
+        secondary="publication_authors",
+        back_populates="authors",
+    )
+    projects: Mapped[list[Project]] = relationship(
+        "Project", secondary="project_researchers", back_populates="researchers"
+    )
+    collaborations: Mapped[list[Collaboration]] = relationship(
+        "Collaboration",
+        secondary="collaboration_researchers",
+        back_populates="researchers",
     )
 
     def __repr__(self) -> str:

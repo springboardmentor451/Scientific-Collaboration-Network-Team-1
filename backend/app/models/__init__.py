@@ -1,5 +1,6 @@
 from app.models.citation import Citation
 from app.models.collaboration import Collaboration
+from app.models.collaboration_researcher import CollaborationResearcher
 from app.models.conference import Conference
 from app.models.institution import Institution
 from app.models.project import Project
@@ -13,6 +14,7 @@ from app.models.user import User
 __all__: list[str] = [
     "Citation",
     "Collaboration",
+    "CollaborationResearcher",
     "Conference",
     "Institution",
     "Project",
@@ -21,5 +23,5 @@ __all__: list[str] = [
     "PublicationAuthor",
     "Researcher",
     "RevokedToken",
-    "User"
+    "User",
 ]
