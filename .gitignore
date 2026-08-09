@@ -11,6 +11,9 @@ __pycache__/
 dist/
 build/
 
+# Ignore all JSON files in data folder
+data/*.json
+
 # Ignore system files
 .DS_Store
 Thumbs.db
