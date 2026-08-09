@@ -1,4 +1,4 @@
-from app.schemas.base import ResponseBase
+from app.schemas.base import MessageResponse, ResponseBase
 from app.schemas.citation import CitationRequest, CitationResponse
 from app.schemas.conference import (
     ConferenceRequest,
@@ -23,6 +23,7 @@ from app.schemas.researcher import (
 )
 from app.schemas.user import (
     EmailVerifyRequest,
+    LoginCodeRequest,
     RefreshRequest,
     TokenPayload,
     TokenResponse,
@@ -52,6 +53,8 @@ __all__: list[str] = [
     "InstitutionRequest",
     "InstitutionResponse",
     "InstitutionUpdateRequest",
+    "LoginCodeRequest",
+    "MessageResponse",
     "ProjectRequest",
     "ProjectResponse",
     "ProjectUpdateRequest",

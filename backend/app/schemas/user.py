@@ -1,15 +1,16 @@
+import re
 from datetime import datetime
 from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr, field_validator
 
 from app.core.constants import (
-    ACADEMIC_SUFFIXES,
     PASSWORD_MAX_LENGTH,
     PASSWORD_MIN_LENGTH,
     UserRole,
     UserStatus,
 )
+from app.core.domains import is_research_email
 from app.schemas.base import ResponseBase
 
 
@@ -23,10 +24,18 @@ class UserRequest(BaseModel):
     @field_validator("email", mode="before")
     @classmethod
     def validate_email_domain(cls, email: str) -> str:
-        domain: str = email.split("@")[-1].lower()
-        if not any(domain.endswith(suffix) for suffix in ACADEMIC_SUFFIXES):
-            raise ValueError("email must be from an academic institution")
+        if not is_research_email(email):
+            raise ValueError("email must be from a recognised institution")
         return email
+
+    @field_validator("password", mode="before")
+    @classmethod
+    def validate_password(cls, password: str) -> str:
+        if not re.search(r"[A-Za-z]", password):
+            raise ValueError("password must contain atleast one letter")
+        if not re.search(r"\d", password):
+            raise ValueError("password must contain atleast one number")
+        return password
 
 
 class UserUpdateRequest(BaseModel):
@@ -52,6 +61,11 @@ class UserResponse(ResponseBase):
 
 
 class EmailVerifyRequest(BaseModel):
+    email: EmailStr
+    code: str = Field(min_length=6, max_length=6)
+
+
+class LoginCodeRequest(BaseModel):
     email: EmailStr
     code: str = Field(min_length=6, max_length=6)
 

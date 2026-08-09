@@ -9,3 +9,7 @@ class ResponseBase(BaseModel):
     @classmethod
     def from_orm(cls, obj: Any) -> Self:
         return cls.model_validate(obj)
+
+
+class MessageResponse(BaseModel):
+    message: str
