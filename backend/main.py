@@ -2,7 +2,12 @@ import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from app.core import Config, engine, get_config
+from app.core import (
+    Config,
+    engine,
+    get_config,
+    logging_config,  # noqa: F401
+)
 from app.core.domains import load_domains
 from app.routes import router
 from fastapi import FastAPI, Request

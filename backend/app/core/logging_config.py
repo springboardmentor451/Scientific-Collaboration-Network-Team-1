@@ -54,6 +54,6 @@ NOISY_LOGGERS: list[str] = [
 ]
 
 for name in NOISY_LOGGERS:
-    logger: logging.Logger = logging.getLogger(name)
-    logger.setLevel(logging.WARNING)
-    logger.propagate = False  # prevent bubbling up to root
+    _logger: logging.Logger = logging.getLogger(name)
+    _logger.setLevel(logging.WARNING)
+    _logger.propagate = False  # prevent bubbling up to root
