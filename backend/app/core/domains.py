@@ -12,6 +12,7 @@ CACHE_FILE = Path("./data/research_domains.json")
 
 # global cache — loaded once at startup
 _research_domains: set[str] = set()
+_domains_loaded = False
 
 
 async def _fetch_remote() -> list[dict[str, Any]]:
@@ -23,31 +24,26 @@ async def _fetch_remote() -> list[dict[str, Any]]:
         return response.json()
 
 
-def _convert_into_simple_format(raw_data: list[dict[str, Any]]) -> dict[str, list[str]]:
+def _parse_domains(raw_data: list[dict[str, Any]]) -> set[str]:
     """Convert raw list[dict] into simplified {"domains": [...]} format."""
     domains: set[str] = set()
     for institute in raw_data:
         for domain in institute.get("domains", []):
-            domains.add(domain)
-    return {"domains": sorted(domains)}
+            domains.add(domain.lower())
+    return domains
 
 
-def _extract_domains(data: dict[str, list[str]]) -> set[str]:
-    """Convert simplified dict into a set of domains."""
-    return {domain.lower() for domain in data.get("domains", [])}
-
-
-def _load_from_cache() -> dict[str, list[str]]:
+def _load_from_cache() -> set[str]:
     """Load simplified domains dict from cache file."""
     logger.info("loading domains from cache")
     return json.loads(CACHE_FILE.read_text())
 
 
-def _save_to_cache(data: dict[str, list[str]]) -> None:
+def _save_to_cache(domains: set[str]) -> None:
     """Save simplified domains dict to cache file."""
     CACHE_FILE.parent.mkdir(exist_ok=True)
-    CACHE_FILE.write_text(json.dumps(data))
-    logger.info("domains cached to %s", CACHE_FILE)
+    CACHE_FILE.write_text(json.dumps(sorted(domains)))
+    logger.info("domains cached to %s", len(domains))
 
 
 async def fetch_domains() -> set[str]:
@@ -56,17 +52,20 @@ async def fetch_domains() -> set[str]:
     Returns a set of lowercase domains.
     """
     if CACHE_FILE.exists():
-        data: dict[str, list[str]] = _load_from_cache()
-    else:
-        raw_data: list[dict[str, Any]] = await _fetch_remote()
-        data = _convert_into_simple_format(raw_data)
-        _save_to_cache(data)
-    return _extract_domains(data)
+        return _load_from_cache()
+    raw_data: list[dict[str, Any]] = await _fetch_remote()
+    domains: set[str] = _parse_domains(raw_data)
+    _save_to_cache(domains)
+    return domains
 
 
 async def load_domains() -> None:
-    global _research_domains
+    global _research_domains, _domains_loaded
+    if _domains_loaded:
+        logger.debug("domains already loaded, skipping")
+        return
     _research_domains = await fetch_domains()
+    _domains_loaded = True
     logger.info("loaded %d academic domains", len(_research_domains))
 
 
