@@ -76,7 +76,7 @@ class AuthService:
         user.login_code = secret
         await user_service.session.commit()
         send_verification_email(user.email, code)
-        return MessageResponse(message="OTP sent - check your email to complete login")
+        return MessageResponse(message="verification code sent to your email")
 
     async def verify_login_code(
         self, data: LoginCodeRequest, user_service: UserService
