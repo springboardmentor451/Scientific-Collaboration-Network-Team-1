@@ -35,7 +35,7 @@ def _parse_domains(raw_data: list[dict[str, Any]]) -> set[str]:
 
 def _load_from_cache() -> set[str]:
     """Load simplified domains dict from cache file."""
-    logger.info("loading domains from cache")
+    logger.debug("loading domains from cache")
     return json.loads(CACHE_FILE.read_text())
 
 
@@ -66,7 +66,7 @@ async def load_domains() -> None:
         return
     _research_domains = await fetch_domains()
     _domains_loaded = True
-    logger.info("loaded %d academic domains", len(_research_domains))
+    logger.debug("loaded %d academic domains", len(_research_domains))
 
 
 def is_research_email(email: str) -> bool:
