@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import TOTP_INTERVAL, TokenType, UserStatus
+from app.core.interfaces import IEmailNotifier
 from app.models import RevokedToken, User
 from app.schemas import (
     EmailVerifyRequest,
@@ -17,14 +18,16 @@ from app.schemas import (
 )
 from app.services.token import TokenService
 from app.services.user import UserService
-from app.utils import send_verification_email
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
 class AuthService:
-    def __init__(self, token_service: TokenService) -> None:
+    def __init__(
+        self, token_service: TokenService, email_notifier: IEmailNotifier
+    ) -> None:
         self.token_service: TokenService = token_service
+        self.email_notifier: IEmailNotifier = email_notifier
 
     async def register(
         self, credentials: UserRequest, user_service: UserService
@@ -46,7 +49,7 @@ class AuthService:
         secret, code = self._generate_totp()
         new_user.verification_code = secret
         await user_service.session.commit()
-        send_verification_email(new_user.email, code)
+        self.email_notifier.send_verification_email(new_user.email, code)
         return MessageResponse(message="verification code sent to your email")
 
     async def verify_email(
@@ -75,7 +78,7 @@ class AuthService:
         secret, code = self._generate_totp()
         user.login_code = secret
         await user_service.session.commit()
-        send_verification_email(user.email, code)
+        self.email_notifier.send_verification_email(user.email, code)
         return MessageResponse(message="verification code sent to your email")
 
     async def verify_login_code(
