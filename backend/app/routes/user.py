@@ -18,6 +18,13 @@ async def get_pending_users(
     return await user_admin_service.get_pending_users()
 
 
+@user_router.get("/", response_model=list[UserResponse])
+async def get_all_users(
+    _: AdminUser, user_admin_service: UserAdminServiceDeps
+) -> list[UserResponse]:
+    return await user_admin_service.get_all_users()
+
+
 @user_router.patch("/{user_id}/approve", response_model=UserResponse)
 async def approve_user(
     user_id: int, _: AdminUser, user_admin_service: UserAdminServiceDeps
