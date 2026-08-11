@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import Config, get_config, get_db
 from app.core.constants import UserRole
+from app.core.interfaces import IEmailNotifier
 from app.models import User
 from app.schemas import TokenPayload
 from app.services import (
@@ -16,8 +17,9 @@ from app.services import (
     UserAdminService,
     UserService,
 )
+from app.utils import EmailNotifier
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 config: type[Config] = get_config()
 
 # Type aliases
@@ -26,12 +28,16 @@ Token = Annotated[str, Depends(oauth2_scheme)]
 
 
 # Dependency providers
+def get_email_notifier() -> IEmailNotifier:
+    return EmailNotifier()
+
+
 def get_user_service(session: DBSession) -> UserService:
     return UserService(session)
 
 
 def get_user_admin_serive(session: DBSession) -> UserAdminService:
-    return UserAdminService(session)
+    return UserAdminService(session, get_email_notifier())
 
 
 def get_token_service() -> TokenService:
@@ -39,7 +45,7 @@ def get_token_service() -> TokenService:
 
 
 def get_auth_service() -> AuthService:
-    return AuthService(get_token_service())
+    return AuthService(get_token_service(), get_email_notifier())
 
 
 def get_researcher_service(session: DBSession) -> ResearcherService:
