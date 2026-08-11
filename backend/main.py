@@ -11,6 +11,7 @@ from app.core import (
 from app.core.domains import load_domains
 from app.routes import router
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from granian import Granian
 from granian.constants import Interfaces
@@ -33,6 +34,13 @@ app = FastAPI(
     title="Scientific Collaboration Network Analyzer",
     version="1.0.0",
     lifespan=lifespan,
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 app.include_router(router, prefix="/api")
 
