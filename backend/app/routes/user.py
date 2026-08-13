@@ -18,7 +18,7 @@ async def get_pending_users(
     return await user_admin_service.get_pending_users()
 
 
-@user_router.get("/", response_model=list[UserResponse])
+@user_router.get("/all-users", response_model=list[UserResponse])
 async def get_all_users(
     _: AdminUser, user_admin_service: UserAdminServiceDeps
 ) -> list[UserResponse]:
