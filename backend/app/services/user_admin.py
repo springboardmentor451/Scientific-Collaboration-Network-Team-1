@@ -23,6 +23,7 @@ class UserAdminService:
         return UserResponse.from_orm(user)
 
     async def get_all_users(self) -> list[UserResponse]:
+        logger.debug("fetching all users")
         result: ScalarResult[User] = await self.session.scalars(select(User))
         return [UserResponse.from_orm(user) for user in result.all()]
 
@@ -31,7 +32,7 @@ class UserAdminService:
         result: ScalarResult[User] = await self.session.scalars(
             select(User).where(User.status == UserStatus.PENDING)
         )
-        return [UserResponse.from_orm(u) for u in result.all()]
+        return [UserResponse.from_orm(user) for user in result.all()]
 
     async def approve(self, user_id: int) -> UserResponse:
         logger.debug("approving user %d", user_id)
@@ -60,7 +61,7 @@ class UserAdminService:
     async def change_role(
         self, user_id: int, data: UserRoleUpdateRequest
     ) -> UserResponse:
-        logger.info("changing role for user: %d to %s", user_id, data.role)
+        logger.debug("changing role for user: %d to %s", user_id, data.role)
         user: User = await self._get_by_id(user_id)
         user.role = data.role
         await self.session.commit()
