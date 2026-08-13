@@ -22,7 +22,7 @@ config.validate()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("starting up Research Management Platform")
     await load_domains()
     yield
