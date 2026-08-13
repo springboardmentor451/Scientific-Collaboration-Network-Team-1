@@ -4,9 +4,12 @@ from typing import Final
 PASSWORD_MIN_LENGTH: Final[int] = 8
 PASSWORD_MAX_LENGTH: Final[int] = 128
 USERNAME_MAX_LENGTH: Final[int] = 100
+VERIFICATION_CODE_LENGTH: Final[int] = 6
 COUNTRY_MAX_LENGTH: Final[int] = 100
 CITY_MAX_LENGTH: Final[int] = 100
-TOTP_INTERVAL = 300  # in seconds
+TITLE_MAX_LENGTH: Final[int] = 500
+DOI_MAX_LENGTH: Final[int] = 255
+TOTP_INTERVAL: Final[int] = 300  # in seconds
 
 
 class TokenFields:
@@ -52,6 +55,10 @@ class PublicationStatus(StrEnum):
     SUBMITTED = "submitted"
     PUBLISHED = "published"
     ARCHIVED = "archived"
+
+class PublicationFile:
+    ALLOWED_EXTENSIONS: Final[set[str]] ={".docx", ".pdf"} 
+    MAX_FILE_SIZE: Final[int]= 10 * 1024 * 1024
 
 
 class ProjectStatus(StrEnum):
