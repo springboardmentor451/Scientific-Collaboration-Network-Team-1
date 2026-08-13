@@ -9,12 +9,11 @@ from app.core.constants import TOTP_INTERVAL, TokenType, UserStatus
 from app.core.interfaces import IEmailNotifier
 from app.models import RevokedToken, User
 from app.schemas import (
-    EmailVerifyRequest,
-    LoginCodeRequest,
     MessageResponse,
     TokenPayload,
     TokenResponse,
     UserRequest,
+    VerificationCodeRequest,
 )
 from app.services.token import TokenService
 from app.services.user import UserService
@@ -53,7 +52,7 @@ class AuthService:
         return MessageResponse(message="verification code sent to your email")
 
     async def verify_email(
-        self, data: EmailVerifyRequest, user_service: UserService
+        self, data: VerificationCodeRequest, user_service: UserService
     ) -> MessageResponse:
         user: User | None = await user_service.get_by_email(data.email)
         if not user:
@@ -82,7 +81,7 @@ class AuthService:
         return MessageResponse(message="verification code sent to your email")
 
     async def verify_login_code(
-        self, data: LoginCodeRequest, user_service: UserService
+        self, data: VerificationCodeRequest, user_service: UserService
     ) -> TokenResponse:
         user: User | None = await user_service.get_by_email(data.email)
         if not user:
@@ -150,7 +149,9 @@ class AuthService:
         if user.status == UserStatus.BANNED:
             raise HTTPException(status_code=403, detail="account banned")
 
-    def _validate_verification_code(self, data: EmailVerifyRequest, user: User) -> None:
+    def _validate_verification_code(
+        self, data: VerificationCodeRequest, user: User
+    ) -> None:
         if user.status in (UserStatus.BANNED, UserStatus.REJECTED):
             raise HTTPException(
                 status_code=403, detail="account is not eligible for verification"
@@ -158,11 +159,11 @@ class AuthService:
         if user.is_verified:
             raise HTTPException(status_code=400, detail="user is already verified")
         if not user.verification_code:
-            raise HTTPException(status_code=400, detail="no OTP requested")
+            raise HTTPException(status_code=400, detail="no code requested")
         if not self._verify_totp(user.verification_code, data.code):
             raise HTTPException(status_code=400, detail="invalid verification code")
 
-    def _validate_login_code(self, data: LoginCodeRequest, user: User) -> None:
+    def _validate_login_code(self, data: VerificationCodeRequest, user: User) -> None:
         if not user.login_code:
             raise HTTPException(status_code=400, detail="no login code requested")
         if not self._verify_totp(user.login_code, data.code):
