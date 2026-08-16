@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import TOTP_INTERVAL, TokenType, UserStatus
-from app.core.interfaces import IEmailNotifier
+from app.core.interfaces import EmailNotifier
 from app.models import RevokedToken, User
 from app.schemas import (
     MessageResponse,
@@ -23,10 +23,10 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 class AuthService:
     def __init__(
-        self, token_service: TokenService, email_notifier: IEmailNotifier
+        self, token_service: TokenService, email_notifier: EmailNotifier
     ) -> None:
         self.token_service: TokenService = token_service
-        self.email_notifier: IEmailNotifier = email_notifier
+        self.email_notifier: EmailNotifier = email_notifier
 
     async def register(
         self, credentials: UserRequest, user_service: UserService
@@ -99,7 +99,7 @@ class AuthService:
 
     async def logout(self, refresh_token: str, session: AsyncSession) -> None:
         payload: TokenPayload = self.token_service.decode_token(refresh_token)
-        if payload.token_type != "refresh":
+        if payload.token_type != TokenType.REFRESH:
             raise HTTPException(status_code=400, detail="invalid refresh token")
         existing: RevokedToken | None = await session.scalar(
             select(RevokedToken).where(RevokedToken.token == refresh_token)
@@ -112,7 +112,7 @@ class AuthService:
         self, refresh_token: str, user_service: UserService, session: AsyncSession
     ) -> TokenResponse:
         payload: TokenPayload = self.token_service.decode_token(refresh_token)
-        if payload.token_type != "refresh":
+        if payload.token_type != TokenType.REFRESH:
             raise HTTPException(status_code=400, detail="invalid refresh token")
         revoked: RevokedToken | None = await session.scalar(
             select(RevokedToken).where(RevokedToken.token == refresh_token)
@@ -131,12 +131,12 @@ class AuthService:
 
     def _generate_totp(self) -> tuple[str, str]:
         secret: str = pyotp.random_base32()
-        totp = pyotp.TOTP(secret, interval=TOTP_INTERVAL)
+        totp = pyotp.TOTP(secret, interval=int(TOTP_INTERVAL.total_seconds()))
         code: str = totp.now()
         return secret, code
 
     def _verify_totp(self, secret: str, code: str) -> bool:
-        totp = pyotp.TOTP(secret, interval=TOTP_INTERVAL)
+        totp = pyotp.TOTP(secret, interval=int(TOTP_INTERVAL.total_seconds()))
         return totp.verify(code, valid_window=1)
 
     def _validate_status(self, user: User) -> None:

@@ -6,7 +6,7 @@ from sqlalchemy.engine.result import ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import UserStatus
-from app.core.interfaces import IEmailNotifier
+from app.core.interfaces import EmailNotifier
 from app.models import User
 from app.schemas import UserResponse, UserRoleUpdateRequest
 
@@ -14,9 +14,9 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class UserAdminService:
-    def __init__(self, session: AsyncSession, email_notifier: IEmailNotifier) -> None:
+    def __init__(self, session: AsyncSession, email_notifier: EmailNotifier) -> None:
         self.session: AsyncSession = session
-        self.email_notifier: IEmailNotifier = email_notifier
+        self.email_notifier: EmailNotifier = email_notifier
 
     async def get_user(self, user_id: int) -> UserResponse:
         user: User = await self._get_by_id(user_id)

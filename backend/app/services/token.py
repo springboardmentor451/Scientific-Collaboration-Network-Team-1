@@ -5,19 +5,19 @@ import jwt
 from fastapi import HTTPException
 
 from app.core import Config
-from app.core.constants import TokenFields, TokenType
+from app.core.constants import TokenClaims, TokenType
 from app.schemas import TokenPayload
 
 
 class TokenService:
-    def __init__(self, config: type[Config]) -> None:
-        self.config = config
+    def __init__(self, config: Config) -> None:
+        self.config: Config = config
 
     def create_access_token(self, email: str) -> str:
         payload: dict[str, str | datetime] = {
-            TokenFields.SUBJECT: email,
-            TokenFields.TYPE: TokenType.ACCESS,
-            TokenFields.EXPIRY: datetime.now(UTC)
+            TokenClaims.SUBJECT: email,
+            TokenClaims.TYPE: TokenType.ACCESS,
+            TokenClaims.EXPIRY: datetime.now(UTC)
             + timedelta(minutes=self.config.ACCESS_TOKEN_EXPIRE_MINUTES),
         }
         return jwt.encode(
@@ -28,9 +28,9 @@ class TokenService:
 
     def create_refresh_token(self, email: str) -> str:
         payload: dict[str, str | datetime] = {
-            TokenFields.SUBJECT: email,
-            TokenFields.TYPE: TokenType.REFRESH,
-            TokenFields.EXPIRY: datetime.now(UTC)
+            TokenClaims.SUBJECT: email,
+            TokenClaims.TYPE: TokenType.REFRESH,
+            TokenClaims.EXPIRY: datetime.now(UTC)
             + timedelta(days=self.config.REFRESH_TOKEN_EXPIRE_DAYS),
         }
         return jwt.encode(
