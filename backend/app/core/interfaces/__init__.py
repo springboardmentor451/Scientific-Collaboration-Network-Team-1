@@ -1,3 +1,3 @@
-from app.core.interfaces.email_notifier import IEmailNotifier
+from app.core.interfaces.email_notifier import EmailNotifier
 
-__all__ = ["IEmailNotifier"]
+__all__ = ["EmailNotifier"]

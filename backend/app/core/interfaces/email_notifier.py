@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class IEmailNotifier(ABC):
+class EmailNotifier(ABC):
     @abstractmethod
     def send_approval_notification(self, email: str) -> None: ...
     @abstractmethod
