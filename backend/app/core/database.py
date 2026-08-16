@@ -9,7 +9,7 @@ from app.core.config import Config, get_config
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-configure: type[Config] = get_config()
+configure: Config = get_config()
 
 engine: AsyncEngine = create_async_engine(
     url=configure.DATABASE_URL,
