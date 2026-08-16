@@ -1,56 +1,51 @@
 from datetime import date, datetime
 from typing import Self
 
-from pydantic import Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.schemas.base import ResponseBase
-from app.schemas.common import CreateBase, UpdateBase
+from app.core.constants import PROJECT_NAME_MAX_LENGTH, ProjectRole, ProjectStatus
+from app.schemas.base import ResponseBase, validate_dates
 
 
-class ProjectRequest(CreateBase):
-    name: str = Field(min_length=1, max_length=255)
-    description: str | None = None
+# -- Core Model --
+class ProjectDatesMixin(BaseModel):
     start_date: date | None = None
     end_date: date | None = None
+
+    @model_validator(mode="after")
+    def check_dates(self) -> Self:
+        validate_dates(self.start_date, self.end_date)
+        return self
+
+
+# -- Requests --
+class ProjectRequest(ProjectDatesMixin):
+    model_config = ConfigDict(extra="forbid")
+    name: str = Field(min_length=5, max_length=PROJECT_NAME_MAX_LENGTH)
+    description: str | None = None
     researcher_ids: list[int] = Field(default_factory=list)
 
-    @model_validator(mode="after")
-    def validate_dates(self) -> Self:
-        if (
-            self.start_date is not None
-            and self.end_date is not None
-            and self.end_date < self.start_date
-        ):
-            raise ValueError("end_date cannot be before start_date")
-        return self
 
-
-class ProjectUpdateRequest(UpdateBase):
+class ProjectUpdateRequest(ProjectDatesMixin):
     name: str | None = Field(
-        default=None,
-        min_length=1,
-        max_length=255,
+        default=None, min_length=5, max_length=PROJECT_NAME_MAX_LENGTH
     )
     description: str | None = None
-    start_date: date | None = None
-    end_date: date | None = None
+    status: ProjectStatus | None = None
     researcher_ids: list[int] | None = None
 
-    @model_validator(mode="after")
-    def validate_dates(self) -> Self:
-        if (
-            self.start_date is not None
-            and self.end_date is not None
-            and self.end_date < self.start_date
-        ):
-            raise ValueError("end_date cannot be before start_date")
-        return self
+
+class ProjectMemberRequest(BaseModel):
+    researcher_id: int
+    role: ProjectRole = ProjectRole.MEMBER
 
 
+# -- Response --
 class ProjectResponse(ResponseBase):
     project_id: int
     name: str
     description: str | None
     start_date: date | None
     end_date: date | None
+    status: ProjectStatus
     created_at: datetime

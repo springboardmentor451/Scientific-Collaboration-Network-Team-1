@@ -1,13 +1,22 @@
 import re
 from datetime import datetime
-from typing import ClassVar
+from typing import ClassVar, Self
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    SecretStr,
+    field_validator,
+    model_validator,
+)
 
 from app.core.constants import (
     PASSWORD_MAX_LENGTH,
     PASSWORD_MIN_LENGTH,
     VERIFICATION_CODE_LENGTH,
+    TokenType,
     UserRole,
     UserStatus,
 )
@@ -41,10 +50,12 @@ class UserBase(BaseModel):
 
 
 class PasswordValidatorMixin(BaseModel):
-    @field_validator("password", mode="after")
-    @classmethod
-    def check_strength(cls, password: SecretStr)  -> SecretStr:
-        return validate_password_strength(password)
+    @model_validator(mode="after")
+    def check_strength(self) -> Self:
+        password: SecretStr | None = getattr(self, "password", None)
+        if password is not None:
+            validate_password_strength(password)
+        return self
 
 
 class RequiredPasswordMixin(PasswordValidatorMixin):
@@ -97,7 +108,7 @@ class UserResponse(ResponseBase):
 class TokenPayload(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     sub: str
-    token_type: str = Field(alias="type")
+    token_type: TokenType = Field(alias="type")
     exp: datetime
 
 
