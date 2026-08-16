@@ -2,12 +2,11 @@ from fastapi import APIRouter
 
 from app.routes.deps import AuthServiceDeps, DBSession, UserServiceDeps
 from app.schemas import (
-    EmailVerifyRequest,
-    LoginCodeRequest,
     MessageResponse,
     RefreshRequest,
     TokenResponse,
     UserRequest,
+    VerificationCodeRequest,
 )
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
@@ -24,7 +23,7 @@ async def register(
 
 @auth_router.post("/verify-email", response_model=MessageResponse)
 async def verify_email(
-    body: EmailVerifyRequest,
+    body: VerificationCodeRequest,
     auth_service: AuthServiceDeps,
     user_service: UserServiceDeps,
 ) -> MessageResponse:
@@ -42,7 +41,9 @@ async def login(
 
 @auth_router.post("/verify-login-code", response_model=TokenResponse)
 async def verify_login_code(
-    body: LoginCodeRequest, auth_service: AuthServiceDeps, user_service: UserServiceDeps
+    body: VerificationCodeRequest,
+    auth_service: AuthServiceDeps,
+    user_service: UserServiceDeps,
 ) -> TokenResponse:
     return await auth_service.verify_login_code(body, user_service)
 
