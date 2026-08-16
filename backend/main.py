@@ -17,8 +17,7 @@ from granian import Granian
 from granian.constants import Interfaces
 
 logger: logging.Logger = logging.getLogger(__name__)
-config: type[Config] = get_config()
-config.validate()
+config: Config = get_config()
 
 
 @asynccontextmanager
@@ -63,4 +62,5 @@ if __name__ == "__main__":
         port=8000,
         interface=Interfaces.ASGI,
         reload=True,
+        reload_ignore_dirs=["logs"],
     ).serve()
