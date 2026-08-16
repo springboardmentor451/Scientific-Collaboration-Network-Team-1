@@ -5,8 +5,8 @@ from sqlalchemy import select
 from sqlalchemy.engine.result import ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.institution import Institution
-from app.schemas.institution import (
+from app.models import Institution
+from app.schemas import (
     InstitutionRequest,
     InstitutionResponse,
     InstitutionUpdateRequest,
@@ -18,6 +18,19 @@ logger: logging.Logger = logging.getLogger(__name__)
 class InstitutionService:
     def __init__(self, session: AsyncSession) -> None:
         self.session: AsyncSession = session
+
+    async def get_all(self) -> list[InstitutionResponse]:
+        logger.info("fetching all institutions")
+        institutions: ScalarResult[Institution] = await self.session.scalars(
+            select(Institution)
+        )
+        return [
+            InstitutionResponse.from_orm(institution) for institution in institutions
+        ]
+
+    async def get_institution(self, institution_id: int) -> InstitutionResponse:
+        institution: Institution = await self._get_by_id(institution_id)
+        return InstitutionResponse.from_orm(institution)
 
     async def create(self, data: InstitutionRequest) -> InstitutionResponse:
         logger.info("creating institution: %s", data.name)
@@ -37,19 +50,6 @@ class InstitutionService:
         self.session.add(institution)
         await self.session.commit()
         logger.info("institution created: %s", data.name)
-        return InstitutionResponse.from_orm(institution)
-
-    async def get_all(self) -> list[InstitutionResponse]:
-        logger.info("fetching all institutions")
-        institutions: ScalarResult[Institution] = await self.session.scalars(
-            select(Institution)
-        )
-        return [
-            InstitutionResponse.from_orm(institution) for institution in institutions
-        ]
-
-    async def get_institution(self, institution_id: int) -> InstitutionResponse:
-        institution: Institution = await self._get_by_id(institution_id)
         return InstitutionResponse.from_orm(institution)
 
     async def update(

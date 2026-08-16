@@ -53,10 +53,10 @@ class ResearcherService:
             )
         researcher = Researcher(
             user_id=user.user_id,
-            full_name=data.full_name,
+            name=data.name,
             bio=data.bio,
             department=data.department,
-            orcid_id=data.orcid_id,
+            orcid_id=data.orcid,
             skills=data.skills,
             research_interests=data.research_interests,
             institution_id=data.institution_id,
