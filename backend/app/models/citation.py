@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, UniqueConstraint, func
+from sqlalchemy import DateTime, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core import Base
@@ -15,9 +15,7 @@ if TYPE_CHECKING:
 class Citation(Base):
     __tablename__: str = "citations"
 
-    citation_id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True
-    )
+    citation_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     citing_publication_id: Mapped[int] = mapped_column(
         ForeignKey("publications.publication_id", ondelete="CASCADE"),
         nullable=False,

@@ -3,11 +3,16 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, DateTime, Enum, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Date, DateTime, Enum, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core import Base
-from app.core.constants import PublicationStatus, PublicationType
+from app.core.constants import (
+    DOI_MAX_LENGTH,
+    TITLE_MAX_LENGTH,
+    PublicationStatus,
+    PublicationType,
+)
 
 if TYPE_CHECKING:
     from app.models.citation import Citation
@@ -18,13 +23,11 @@ if TYPE_CHECKING:
 class Publication(Base):
     __tablename__: str = "publications"
 
-    publication_id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True
-    )
-    title: Mapped[str] = mapped_column(String, nullable=False)
+    publication_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(TITLE_MAX_LENGTH), nullable=False)
     abstract: Mapped[str | None] = mapped_column(Text, nullable=True)
     doi: Mapped[str | None] = mapped_column(
-        String, unique=True, nullable=True, index=True
+        String(DOI_MAX_LENGTH), unique=True, nullable=True, index=True
     )
     publication_type: Mapped[PublicationType] = mapped_column(
         Enum(PublicationType), nullable=False, default=PublicationType

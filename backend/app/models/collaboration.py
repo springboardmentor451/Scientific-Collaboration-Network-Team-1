@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Integer, String
+from sqlalchemy import DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core import Base
+from app.core.constants import COLLABORATION_TYPE_MAX_LENGTH
 
 if TYPE_CHECKING:
     from app.models.researcher import Researcher
@@ -15,14 +16,15 @@ if TYPE_CHECKING:
 class Collaboration(Base):
     __tablename__: str = "collaborations"
 
-    collaboration_id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True
+    collaboration_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    collaboration_type: Mapped[str | None] = mapped_column(
+        String(COLLABORATION_TYPE_MAX_LENGTH), nullable=True
     )
-    collaboration_type: Mapped[str | None] = mapped_column(String, nullable=True)
-    collaboration_count: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    collaboration_count: Mapped[int] = mapped_column(default=1, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(UTC), nullable=False
+        DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+
     researchers: Mapped[list[Researcher]] = relationship(
         "Researcher",
         secondary="collaboration_researchers",
