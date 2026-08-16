@@ -1,39 +1,44 @@
-# from fastapi import APIRouter
-# from app.schemas import CollaborationRequest, CollaborationResponse
+import logging
 
-# from app.routes.deps import CurrentUser, UserServiceDeps
+from fastapi import APIRouter
 
-# collaboration_router = APIRouter(prefix="/collaboration", tags=["collaboration"])
+from app.routes.deps import CollaborationServiceDeps, CurrentResearcher, CurrentUser
+from app.schemas import CollaborationRequest, CollaborationResponse
 
-
-# @collaboration_router.get("/", response_model=list[CollaborationResponse])
-# async def get_collaborations(
-#     user_service: UserServiceDeps,
-# ) -> list[CollaborationResponse]:
-#     return await user_service.get_all_collaborations()
+logger: logging.Logger = logging.getLogger(__name__)
+collaboration_router = APIRouter(prefix="/collaborations", tags=["collaborations"])
 
 
-# @collaboration_router.get("/{collaboration_id}", response_model=CollaborationResponse)
-# async def get_collaboration(
-#     collaboration_id: int,
-#     user_service: UserServiceDeps,
-# ) -> CollaborationResponse:
-#     return await user_service.get_collaboration(collaboration_id)
+@collaboration_router.get("/", response_model=list[CollaborationResponse])
+async def get_collaborations(
+    collaboration_service: CollaborationServiceDeps,
+) -> list[CollaborationResponse]:
+    return await collaboration_service.get_all()
 
 
-# @collaboration_router.post("/", response_model=CollaborationResponse, status_code=201)
-# async def create_collaboration(
-#     body: CollaborationRequest,
-#     current_user: CurrentUser,
-#     user_service: UserServiceDeps,
-# ) -> CollaborationResponse:
-#     return await user_service.create_collaboration(body, current_user)
+@collaboration_router.get("/my", response_model=list[CollaborationResponse])
+async def get_my_collaborations(
+    current_researcher: CurrentResearcher,
+    collaboration_service: CollaborationServiceDeps,
+) -> list[CollaborationResponse]:
+    return await collaboration_service.get_by_researcher(
+        current_researcher.researcher_id
+    )
 
 
-# @collaboration_router.delete("/{collaboration_id}", status_code=204)
-# async def delete_collaboration(
-#     collaboration_id: int,
-#     current_user: CurrentUser,
-#     user_service: UserServiceDeps,
-# ) -> None:
-#     await user_service.delete_collaboration(collaboration_id, current_user)
+@collaboration_router.post("/", response_model=CollaborationResponse, status_code=201)
+async def create_collaboration(
+    data: CollaborationRequest,
+    _: CurrentUser,
+    collaboration_service: CollaborationServiceDeps,
+) -> CollaborationResponse:
+    return await collaboration_service.create(data)
+
+
+@collaboration_router.delete("/{collaboration_id}", status_code=204)
+async def delete_collaboration(
+    collaboration_id: int,
+    _: CurrentUser,
+    collaboration_service: CollaborationServiceDeps,
+) -> None:
+    await collaboration_service.delete(collaboration_id)

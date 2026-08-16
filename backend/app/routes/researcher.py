@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from app.routes.deps import CurrentUser, ResearcherServiceDeps
-from app.schemas.researcher import (
+from app.schemas import (
     ResearcherRequest,
     ResearcherResponse,
     ResearcherUpdateRequest,

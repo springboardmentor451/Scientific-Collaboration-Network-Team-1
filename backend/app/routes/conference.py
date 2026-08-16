@@ -1,47 +1,47 @@
-# from fastapi import APIRouter
-# from app.schemas import ConferenceRequest, ConferenceResponse
+import logging
 
-# from app.routes.deps import CurrentUser, UserServiceDeps
+from fastapi import APIRouter
 
-# conference_router = APIRouter(prefix="/conference", tags=["conference"])
+from app.routes.deps import AdminUser, ConferenceServiceDeps
+from app.schemas import ConferenceRequest, ConferenceResponse, ConferenceUpdateRequest
 
-
-# @conference_router.get("/", response_model=list[ConferenceResponse])
-# async def get_conferences(user_service: UserServiceDeps) -> list[ConferenceResponse]:
-#     return await user_service.get_all_conferences()
+logger: logging.Logger = logging.getLogger(__name__)
+conference_router = APIRouter(prefix="/conferences", tags=["conferences"])
 
 
-# @conference_router.get("/{conference_id}", response_model=ConferenceResponse)
-# async def get_conference(
-#     conference_id: int,
-#     user_service: UserServiceDeps,
-# ) -> ConferenceResponse:
-#     return await user_service.get_conference(conference_id)
+@conference_router.get("/", response_model=list[ConferenceResponse])
+async def get_conferences(
+    conference_service: ConferenceServiceDeps,
+) -> list[ConferenceResponse]:
+    return await conference_service.get_all()
 
 
-# @conference_router.post("/", response_model=ConferenceResponse, status_code=201)
-# async def create_conference(
-#     body: ConferenceRequest,
-#     current_user: CurrentUser,
-#     user_service: UserServiceDeps,
-# ) -> ConferenceResponse:
-#     return await user_service.create_conference(body, current_user)
+@conference_router.get("/{conference_id}", response_model=ConferenceResponse)
+async def get_conference(
+    conference_id: int, conference_service: ConferenceServiceDeps
+) -> ConferenceResponse:
+    return await conference_service.get_by_id(conference_id)
 
 
-# @conference_router.put("/{conference_id}", response_model=ConferenceResponse)
-# async def update_conference(
-#     conference_id: int,
-#     body: ConferenceRequest,
-#     current_user: CurrentUser,
-#     user_service: UserServiceDeps,
-# ) -> ConferenceResponse:
-#     return await user_service.update_conference(conference_id, body, current_user)
+@conference_router.post("/", response_model=ConferenceResponse, status_code=201)
+async def create_conference(
+    data: ConferenceRequest, _: AdminUser, conference_service: ConferenceServiceDeps
+) -> ConferenceResponse:
+    return await conference_service.create(data)
 
 
-# @conference_router.delete("/{conference_id}", status_code=204)
-# async def delete_conference(
-#     conference_id: int,
-#     current_user: CurrentUser,
-#     user_service: UserServiceDeps,
-# ) -> None:
-#     await user_service.delete_conference(conference_id, current_user)
+@conference_router.patch("/{conference_id}", response_model=ConferenceResponse)
+async def update_conference(
+    conference_id: int,
+    data: ConferenceUpdateRequest,
+    _: AdminUser,
+    conference_service: ConferenceServiceDeps,
+) -> ConferenceResponse:
+    return await conference_service.update(conference_id, data)
+
+
+@conference_router.delete("/{conference_id}", status_code=204)
+async def delete_conference(
+    conference_id: int, _: AdminUser, conference_service: ConferenceServiceDeps
+) -> None:
+    await conference_service.delete(conference_id)

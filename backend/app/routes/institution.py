@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter
 
 from app.routes.deps import AdminUser, InstitutionServiceDeps
-from app.schemas.institution import (
+from app.schemas import (
     InstitutionRequest,
     InstitutionResponse,
     InstitutionUpdateRequest,

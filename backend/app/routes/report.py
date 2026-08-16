@@ -1,34 +1,33 @@
-# from fastapi import APIRouter
-# from fastapi.responses import FileResponse
-# from app.schemas import ReportRequest
+import logging
 
-# from app.routes.deps import CurrentUser, UserServiceDeps
+from fastapi import APIRouter
+from fastapi.responses import StreamingResponse
 
-# report_router = APIRouter(prefix="/report", tags=["report"])
+from app.routes.deps import CurrentUser, ReportServiceDeps
+from app.schemas import CollaborationReportFilter, PublicationReportFilter
 
-
-# @report_router.post("/publications/pdf")
-# async def export_publications_pdf(
-#     body: ReportRequest,
-#     current_user: CurrentUser,
-#     user_service: UserServiceDeps,
-# ) -> FileResponse:
-#     return await user_service.export_publications_pdf(body, current_user)
+logger: logging.Logger = logging.getLogger(__name__)
+report_router = APIRouter(prefix="/reports", tags=["reports"])
 
 
-# @report_router.post("/publications/excel")
-# async def export_publications_excel(
-#     body: ReportRequest,
-#     current_user: CurrentUser,
-#     user_service: UserServiceDeps,
-# ) -> FileResponse:
-#     return await user_service.export_publications_excel(body, current_user)
+@report_router.post("/publications/csv")
+async def publications_csv(
+    filters: PublicationReportFilter, _: CurrentUser, report_service: ReportServiceDeps
+) -> StreamingResponse:
+    return await report_service.publication_report_csv(filters)
 
 
-# @report_router.post("/collaborations/pdf")
-# async def export_collaborations_pdf(
-#     body: ReportRequest,
-#     current_user: CurrentUser,
-#     user_service: UserServiceDeps,
-# ) -> FileResponse:
-#     return await user_service.export_collaborations_pdf(body, current_user)
+@report_router.post("/publications/json")
+async def publications_json(
+    filters: PublicationReportFilter, _: CurrentUser, report_service: ReportServiceDeps
+) -> StreamingResponse:
+    return await report_service.publication_report_json(filters)
+
+
+@report_router.post("/collaborations/csv")
+async def collaborations_csv(
+    filters: CollaborationReportFilter,
+    _: CurrentUser,
+    report_service: ReportServiceDeps,
+) -> StreamingResponse:
+    return await report_service.collaboration_report_csv(filters)

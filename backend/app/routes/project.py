@@ -1,47 +1,56 @@
-# from fastapi import APIRouter
-# from app.schemas import ProjectRequest, ProjectResponse
+import logging
 
-# from app.routes.deps import CurrentUser, UserServiceDeps
+from fastapi import APIRouter
 
-# project_router = APIRouter(prefix="/project", tags=["project"])
+from app.routes.deps import CurrentResearcher, ProjectServiceDeps
+from app.schemas import ProjectRequest, ProjectResponse, ProjectUpdateRequest
 
-
-# @project_router.get("/", response_model=list[ProjectResponse])
-# async def get_projects(user_service: UserServiceDeps) -> list[ProjectResponse]:
-#     return await user_service.get_all_projects()
+logger: logging.Logger = logging.getLogger(__name__)
+project_router = APIRouter(prefix="/projects", tags=["projects"])
 
 
-# @project_router.get("/{project_id}", response_model=ProjectResponse)
-# async def get_project(
-#     project_id: int,
-#     user_service: UserServiceDeps,
-# ) -> ProjectResponse:
-#     return await user_service.get_project(project_id)
+@project_router.get("/", response_model=list[ProjectResponse])
+async def get_projects(project_service: ProjectServiceDeps) -> list[ProjectResponse]:
+    return await project_service.get_all()
 
 
-# @project_router.post("/", response_model=ProjectResponse, status_code=201)
-# async def create_project(
-#     body: ProjectRequest,
-#     current_user: CurrentUser,
-#     user_service: UserServiceDeps,
-# ) -> ProjectResponse:
-#     return await user_service.create_project(body, current_user)
+@project_router.get("/my", response_model=list[ProjectResponse])
+async def get_my_projects(
+    current_researcher: CurrentResearcher, project_service: ProjectServiceDeps
+) -> list[ProjectResponse]:
+    return await project_service.get_by_researcher(current_researcher.researcher_id)
 
 
-# @project_router.put("/{project_id}", response_model=ProjectResponse)
-# async def update_project(
-#     project_id: int,
-#     body: ProjectRequest,
-#     current_user: CurrentUser,
-#     user_service: UserServiceDeps,
-# ) -> ProjectResponse:
-#     return await user_service.update_project(project_id, body, current_user)
+@project_router.get("/{project_id}", response_model=ProjectResponse)
+async def get_project(
+    project_id: int, project_service: ProjectServiceDeps
+) -> ProjectResponse:
+    return await project_service.get_by_id(project_id)
 
 
-# @project_router.delete("/{project_id}", status_code=204)
-# async def delete_project(
-#     project_id: int,
-#     current_user: CurrentUser,
-#     user_service: UserServiceDeps,
-# ) -> None:
-#     await user_service.delete_project(project_id, current_user)
+@project_router.post("/", response_model=ProjectResponse, status_code=201)
+async def create_project(
+    data: ProjectRequest,
+    current_researcher: CurrentResearcher,
+    project_service: ProjectServiceDeps,
+) -> ProjectResponse:
+    return await project_service.create(data, current_researcher)
+
+
+@project_router.patch("/{project_id}", response_model=ProjectResponse)
+async def update_project(
+    project_id: int,
+    data: ProjectUpdateRequest,
+    current_researcher: CurrentResearcher,
+    project_service: ProjectServiceDeps,
+) -> ProjectResponse:
+    return await project_service.update(project_id, data, current_researcher)
+
+
+@project_router.delete("/{project_id}", status_code=204)
+async def delete_project(
+    project_id: int,
+    current_researcher: CurrentResearcher,
+    project_service: ProjectServiceDeps,
+) -> None:
+    await project_service.delete(project_id, current_researcher)
