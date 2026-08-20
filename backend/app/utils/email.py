@@ -6,6 +6,7 @@ from email.mime.text import MIMEText
 
 from fastapi import HTTPException
 
+from app.core.constants import TOTP_INTERVAL
 from app.core.interfaces import EmailNotifier
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -20,33 +21,36 @@ class SMTPConfig:
 
 
 class ConsoleEmailNotifier(EmailNotifier):
+    TOTP_MINUTES = int(TOTP_INTERVAL.total_seconds() // 60)
+
     def __init__(self) -> None:
         pass
 
     def send_verification_email(self, email: str, code: str) -> None:
-        print(f"\n{'= ' * 50}\nVerification Code for {email} is {code}\n{'= ' * 50}\n")
-        logger.info("verification code generated for: %s", email)
+        print(
+            f"{'= ' * 50}\nVerification Code for {email} is {code}."
+            f"This code will expire in {self.TOTP_MINUTES} minute{'s' if self.TOTP_MINUTES > 1 else ''}.\n{'= ' * 50}"
+        )
 
     def send_approval_notification(self, email: str) -> None:
         print(
             f"\n{'= ' * 50}\nAccount Approved\nEmail : {email}\nYour account has been approved. You can now login.\n{'= ' * 50}\n"
         )
-        logger.info("approval notification sent to: %s", email)
 
     def send_rejection_notification(self, email: str) -> None:
         print(
             f"\n{'= ' * 50}\nAccount Rejected\nEmail : {email}\nYour registration was not approved.\n{'= ' * 50}\n"
         )
-        logger.warning("rejection notification sent to: %s", email)
 
     def send_ban_notification(self, email: str) -> None:
         print(
             f"\n{'= ' * 50}\nAccount Banned\nEmail : {email}\nYour account has been banned by the administrator.\n{'= ' * 50}\n"
         )
-        logger.warning("account banned notification sent to: %s", email)
 
 
 class SMTPEmailNotifier(EmailNotifier):
+    TOTP_MINUTES = int(TOTP_INTERVAL.total_seconds() // 60)
+
     def __init__(self, smtp_config: SMTPConfig) -> None:
         self.smtp_config: SMTPConfig = smtp_config
 
@@ -62,16 +66,16 @@ class SMTPEmailNotifier(EmailNotifier):
                 server.starttls()
                 server.login(self.smtp_config.user, self.smtp_config.password)
                 server.sendmail(self.smtp_config.user, to, message.as_string())
-            logger.info("email sent to %s with subject '%s'", to, subject)
+            logger.info("email sent to [redacted] with subject %s", subject)
 
         except smtplib.SMTPException as e:
-            logger.error("failed to send email to %s: %s", to, e)
+            logger.error("failed to send email to [redacted]: %s", e)
             raise HTTPException(status_code=500, detail="failed to send email")
 
     def send_verification_email(self, email: str, code: str) -> None:
         body: str = f"""
         Your verification code is: {code}
-        This code expires in 5 minutes.
+        This code expires in {self.TOTP_MINUTES} minute{"s" if self.TOTP_MINUTES > 1 else ""}.
         If you did not register, ignore this email.
         """
         self._send_email(email, "Research Platform - Email Verification", body)
