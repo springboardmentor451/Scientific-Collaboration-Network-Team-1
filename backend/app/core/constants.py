@@ -15,7 +15,7 @@ DOI_MAX_LENGTH: Final[int] = 255
 COLLABORATION_TYPE_MAX_LENGTH: Final[int] = 255
 INSTITUTION_NAME_MAX_LENGTH: Final[int] = 255
 DEPARTMENT_MAX_LENGTH: Final[int] = 255
-TOTP_INTERVAL: Final[timedelta] = timedelta(seconds=300)
+TOTP_INTERVAL: Final[timedelta] = timedelta(minutes=5)
 
 
 class TokenClaims:
@@ -46,6 +46,10 @@ class UserStatus(StrEnum):
 
 class InstitutionType(StrEnum):
     UNIVERSITY = "university"
+    RESEARCH_INSTITUTE = "research_institute"
+    GOVERNMENT_LAB = "government_lab"
+    PRIVATE_COMPANY = "private_company"
+    NONPROFIT_ORGANIZATION = "non_profit_organization"
 
 
 class PublicationType(StrEnum):
@@ -78,3 +82,9 @@ class ProjectRole(StrEnum):
     PI = "principal_investigator"
     CO_PI = "co_investigator"
     MEMBER = "member"
+
+
+class VerificationPurpose(StrEnum):
+    REGISTER = "register"
+    LOGIN = "login"
+    CHANGE_EMAIL = "change_email"
