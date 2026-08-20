@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Depends, HTTPException
@@ -23,6 +24,7 @@ from app.services import (
     TokenService,
     UserAdminService,
     UserService,
+    VerificationCodeService,
 )
 from app.utils import ConsoleEmailNotifier, SMTPConfig, SMTPEmailNotifier
 
@@ -34,6 +36,7 @@ Token = Annotated[str, Depends(oauth2_scheme)]
 
 
 # -- Service factories --
+@lru_cache
 def get_email_notifier() -> EmailNotifier:
     if config.DEBUG or config.TESTING:
         return ConsoleEmailNotifier()
@@ -54,12 +57,20 @@ def get_user_admin_service(session: DBSession) -> UserAdminService:
     return UserAdminService(session, get_email_notifier())
 
 
+@lru_cache
 def get_token_service() -> TokenService:
     return TokenService(config)
 
 
-def get_auth_service() -> AuthService:
-    return AuthService(get_token_service(), get_email_notifier())
+def get_verification_code_service(session: DBSession) -> VerificationCodeService:
+    return VerificationCodeService(session, get_email_notifier())
+
+
+def get_auth_service(session: DBSession) -> AuthService:
+    return AuthService(
+        get_token_service(),
+        get_verification_code_service(session),
+    )
 
 
 def get_researcher_service(session: DBSession) -> ResearcherService:

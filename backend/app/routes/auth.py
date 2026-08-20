@@ -1,7 +1,8 @@
 from fastapi import APIRouter
 
-from app.routes.deps import AuthServiceDeps, DBSession, UserServiceDeps
+from app.routes.deps import AuthServiceDeps, CurrentUser, DBSession, UserServiceDeps
 from app.schemas import (
+    EmailChangeRequest,
     MessageResponse,
     RefreshRequest,
     TokenResponse,
@@ -12,7 +13,7 @@ from app.schemas import (
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@auth_router.post("/register", status_code=201, response_model=MessageResponse)
+@auth_router.post("/register", response_model=MessageResponse, status_code=201)
 async def register(
     credentials: UserRequest,
     auth_service: AuthServiceDeps,
@@ -60,8 +61,26 @@ async def refresh_token(
 
 @auth_router.post("/logout", status_code=204)
 async def logout(
-    body: RefreshRequest,
-    auth_service: AuthServiceDeps,
-    session: DBSession,
+    body: RefreshRequest, auth_service: AuthServiceDeps, session: DBSession
 ) -> None:
-    return await auth_service.logout(body.refresh_token, session)
+    await auth_service.logout(body.refresh_token, session)
+
+
+@auth_router.post("/request-email-change")
+async def request_email_change(
+    data: EmailChangeRequest,
+    current_user: CurrentUser,
+    auth_service: AuthServiceDeps,
+    user_service: UserServiceDeps,
+) -> MessageResponse:
+    return await auth_service.request_email_change(data, current_user, user_service)
+
+
+@auth_router.post("/verify-email-change")
+async def verify_email_change(
+    data: VerificationCodeRequest,
+    current_user: CurrentUser,
+    auth_service: AuthServiceDeps,
+    user_service: UserServiceDeps,
+) -> MessageResponse:
+    return await auth_service.verify_change_email(data, current_user, user_service)

@@ -10,7 +10,7 @@ from app.schemas import (
 researcher_router = APIRouter(prefix="/researchers", tags=["researchers"])
 
 
-@researcher_router.post("/", status_code=201)
+@researcher_router.post("/", response_model=ResearcherResponse, status_code=201)
 async def create_researcher(
     data: ResearcherRequest,
     current_user: CurrentUser,
@@ -19,14 +19,14 @@ async def create_researcher(
     return await researcher_service.create(data, current_user)
 
 
-@researcher_router.get("/")
+@researcher_router.get("/", response_model=list[ResearcherResponse])
 async def get_researchers(
     researcher_service: ResearcherServiceDeps,
 ) -> list[ResearcherResponse]:
     return await researcher_service.get_all()
 
 
-@researcher_router.get("/{researcher_id")
+@researcher_router.get("/researcher_id", response_model=ResearcherResponse)
 async def get_researcher(
     researcher_id: int,
     researcher_service: ResearcherServiceDeps,
@@ -34,7 +34,7 @@ async def get_researcher(
     return await researcher_service.get_by_id(researcher_id)
 
 
-@researcher_router.patch("/me")
+@researcher_router.patch("/me", response_model=ResearcherResponse)
 async def update_researcher(
     data: ResearcherUpdateRequest,
     current_user: CurrentUser,
@@ -44,8 +44,8 @@ async def update_researcher(
 
 
 # admin update researcher_id from URL (add later when roles are implemented)
-@researcher_router.patch("/{researcher_id}")
-async def admin_update_researcher(): ...
+# @researcher_router.patch("/{researcher_id}")
+# async def admin_update_researcher(): ...
 
 
 @researcher_router.delete("/me", status_code=204)

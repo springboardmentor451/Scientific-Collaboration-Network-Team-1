@@ -51,9 +51,9 @@ async def change_role(
 
 @user_router.delete("/{user_id}", status_code=204)
 async def delete_user(
-    user_id: int, _: AdminUser, user_service: UserServiceDeps
+    user_id: int, _: AdminUser, user_admin_service: UserAdminServiceDeps
 ) -> None:
-    await user_service.delete_by_id(user_id)
+    await user_admin_service.delete_by_id(user_id)
 
 
 @user_router.patch("/{user_id}/ban", response_model=UserResponse)
