@@ -20,7 +20,7 @@ class InstitutionUpdateRequest(InstitutionBase):
     name: str | None = Field(default=None)
     city: str | None = Field(default=None, max_length=LOCATION_MAX_LENGTH)
     country: str | None = Field(default=None, max_length=LOCATION_MAX_LENGTH)
-    type: str | None = Field(default=None)
+    type: InstitutionType | None = Field(default=None)
 
 
 class InstitutionResponse(ResponseBase):

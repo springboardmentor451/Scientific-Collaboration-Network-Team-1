@@ -44,4 +44,4 @@ class ConferenceResponse(ResponseBase):
     start_date: date | None
     end_date: date | None
     created_at: datetime
-    website: str | None
+    website: HttpUrl | None

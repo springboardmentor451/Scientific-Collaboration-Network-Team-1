@@ -9,7 +9,7 @@ from app.schemas.base import ResponseBase, validate_unique_ids
 
 class CollaborationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    researcher_ids: list[int] = Field(min_length=2)
+    researcher_ids: list[int] = Field(..., min_length=2)
     collaboration_type: str | None = Field(
         default=None, min_length=1, max_length=COLLABORATION_TYPE_MAX_LENGTH
     )

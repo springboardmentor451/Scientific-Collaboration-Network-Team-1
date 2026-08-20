@@ -41,7 +41,7 @@ class PublicationUpdateRequest(PublicationBase):
 
 class PublicationAuthorRequest(BaseModel):
     researcher_id: int
-    author_id: int = Field(default=1, ge=1)
+    author_order: int = Field(default=1, ge=1)
     is_corresponding: bool = False
 
 
