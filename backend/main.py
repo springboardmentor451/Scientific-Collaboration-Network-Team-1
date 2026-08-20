@@ -6,9 +6,9 @@ from app.core import (
     Config,
     engine,
     get_config,
-    logging_config,  # noqa: F401
 )
 from app.core.domains import load_domains
+from app.core.logging_config import setup_logging
 from app.routes import router
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,14 +19,22 @@ from granian.constants import Interfaces
 logger: logging.Logger = logging.getLogger(__name__)
 config: Config = get_config()
 
+setup_logging(debug=config.DEBUG)
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("starting up Research Management Platform")
-    await load_domains()
+    try:
+        await load_domains()
+        logger.info("startup complete")
+    except Exception as e:
+        logger.error("startup failed: %s", e)
+        raise
     yield
     logger.info("shutting down")
     await engine.dispose()
+    logger.info("shutdown complete")
 
 
 app = FastAPI(
