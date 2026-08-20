@@ -10,6 +10,7 @@ from app.models.publication_author import PublicationAuthor
 from app.models.researcher import Researcher
 from app.models.revoked_token import RevokedToken
 from app.models.user import User
+from app.models.verification_code import VerificationCode
 
 __all__: list[str] = [
     "Citation",
@@ -24,4 +25,5 @@ __all__: list[str] = [
     "Researcher",
     "RevokedToken",
     "User",
+    "VerificationCode",
 ]
