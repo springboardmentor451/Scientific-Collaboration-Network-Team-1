@@ -11,6 +11,7 @@ from app.services.researcher import ResearcherService
 from app.services.token import TokenService
 from app.services.user import UserService
 from app.services.user_admin import UserAdminService
+from app.services.verification_code import VerificationCodeService
 
 __all__: list[str] = [
     "AuthService",
@@ -26,4 +27,5 @@ __all__: list[str] = [
     "TokenService",
     "UserAdminService",
     "UserService",
+    "VerificationCodeService",
 ]
