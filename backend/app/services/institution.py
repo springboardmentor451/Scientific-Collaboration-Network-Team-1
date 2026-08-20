@@ -33,7 +33,6 @@ class InstitutionService:
         return InstitutionResponse.from_orm(institution)
 
     async def create(self, data: InstitutionRequest) -> InstitutionResponse:
-        logger.info("creating institution: %s", data.name)
         existing: Institution | None = await self.session.scalar(
             select(Institution).where(Institution.name == data.name)
         )
@@ -49,13 +48,12 @@ class InstitutionService:
         )
         self.session.add(institution)
         await self.session.commit()
-        logger.info("institution created: %s", data.name)
+        logger.info("institution created: %d", institution.institution_id)
         return InstitutionResponse.from_orm(institution)
 
     async def update(
         self, institution_id: int, data: InstitutionUpdateRequest
     ) -> InstitutionResponse:
-        logger.info("updating institution: %d", institution_id)
         institution: Institution = await self._get_by_id(institution_id)
         updates = data.model_dump(exclude_none=True)
         for key, val in updates.items():
@@ -65,11 +63,10 @@ class InstitutionService:
         return InstitutionResponse.from_orm(institution)
 
     async def delete(self, institution_id: int) -> None:
-        logger.info("deleting institution: %d", institution_id)
         institution: Institution = await self._get_by_id(institution_id)
         await self.session.delete(institution)
         await self.session.commit()
-        logger.warning("institution deleted: %d", institution_id)
+        logger.info("institution deleted: %d", institution_id)
 
     async def _get_by_id(self, institution_id: int) -> Institution:
         logger.info("fetching institution: %d", institution_id)
@@ -77,6 +74,5 @@ class InstitutionService:
             Institution, institution_id
         )
         if not institution:
-            logger.warning("institution not found: %d", institution_id)
             raise HTTPException(status_code=404, detail="institution not found")
         return institution

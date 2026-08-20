@@ -25,7 +25,6 @@ class ResearcherService:
             select(Researcher).where(Researcher.researcher_id == researcher_id)
         )
         if not researcher:
-            logger.warning("researcher not found: %d", researcher_id)
             raise HTTPException(status_code=404, detail="researcher not found")
         return ResearcherResponse.from_orm(researcher)
 
@@ -43,10 +42,8 @@ class ResearcherService:
         return [ResearcherResponse.from_orm(r) for r in result.all()]
 
     async def create(self, data: ResearcherRequest, user: User) -> ResearcherResponse:
-        logger.debug("creating researcher profile for user: %s", user.email)
         existing: Researcher | None = await self.get_by_user_id(user.user_id)
         if existing:
-            logger.warning("researcher profile already exists for user: %s", user.email)
             raise HTTPException(
                 status_code=409,
                 detail="researcher profile already exists",
@@ -56,37 +53,33 @@ class ResearcherService:
             name=data.name,
             bio=data.bio,
             department=data.department,
-            orcid_id=data.orcid,
+            orcid=data.orcid,
             skills=data.skills,
             research_interests=data.research_interests,
             institution_id=data.institution_id,
         )
         self.session.add(researcher)
         await self.session.commit()
-        logger.info("researcher profile created for user: %s", user.email)
+        logger.info("researcher profile created for user: %d", user.user_id)
         return ResearcherResponse.from_orm(researcher)
 
     async def update(
         self, data: ResearcherUpdateRequest, user: User
     ) -> ResearcherResponse:
-        logger.debug("updating researcher profile for user: %s", user.email)
         researcher: Researcher | None = await self.get_by_user_id(user.user_id)
         if not researcher:
-            logger.warning("researcher profile not found for user: %s", user.email)
             raise HTTPException(status_code=404, detail="researcher profile not found")
         updates = data.model_dump(exclude_none=True)
         for key, val in updates.items():
             setattr(researcher, key, val)
         await self.session.commit()
-        logger.info("researcher profile updated for user: %s", user.email)
+        logger.info("researcher profile updated for user: %d", user.user_id)
         return ResearcherResponse.from_orm(researcher)
 
     async def delete(self, user: User) -> None:
-        logger.debug("deleting researcher profile for user: %s", user.email)
         researcher: Researcher | None = await self.get_by_user_id(user.user_id)
         if not researcher:
-            logger.warning("researcher profile not found for user: %s", user.email)
             raise HTTPException(status_code=404, detail="researcher profile not found")
         await self.session.delete(researcher)
         await self.session.commit()
-        logger.warning("researcher profile deleted for user: %s", user.email)
+        logger.info("researcher profile deleted for user: %d", user.user_id)

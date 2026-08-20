@@ -65,7 +65,7 @@ class CitationService:
             raise HTTPException(status_code=404, detail="citation not found")
         await self.session.delete(citation)
         await self.session.commit()
-        logger.warning("citation deleted: %d", citation_id)
+        logger.info("citation deleted: %d", citation_id)
 
     async def _get_publication(self, publication_id: int) -> Publication:
         pub: Publication | None = await self.session.get(Publication, publication_id)

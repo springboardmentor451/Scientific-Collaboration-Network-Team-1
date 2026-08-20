@@ -34,7 +34,6 @@ class ProjectService:
     async def create(
         self, data: ProjectRequest, researcher: Researcher
     ) -> ProjectResponse:
-        logger.info("creating project: %s", data.name)
         project = Project(
             name=data.name,
             description=data.description,
@@ -87,7 +86,7 @@ class ProjectService:
             )
         await self.session.delete(project)
         await self.session.commit()
-        logger.warning("project deleted: %d", project_id)
+        logger.info("project deleted: %d", project_id)
 
     async def _get_by_id(self, project_id: int) -> Project:
         project: Project | None = await self.session.get(Project, project_id)

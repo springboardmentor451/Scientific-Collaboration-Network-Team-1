@@ -43,7 +43,6 @@ class PublicationService:
     async def create(
         self, data: PublicationRequest, researcher: Researcher
     ) -> PublicationResponse:
-        logger.debug("creating publication: %s", data.title[:50])
         if data.doi:
             existing: Publication | None = await self.session.scalar(
                 select(Publication).where(Publication.doi == data.doi)
@@ -74,7 +73,6 @@ class PublicationService:
         self.session.add(primary_author)
         await self._add_additional_researchers(data, publication)
         await self.session.commit()
-        logger.info("publication created: %d", publication.publication_id)
         return PublicationResponse.from_orm(publication)
 
     async def update(
@@ -109,7 +107,6 @@ class PublicationService:
                 self.session.add(author)
 
         await self.session.commit()
-        logger.info("publication updated: %d", publication_id)
         return PublicationResponse.from_orm(publication)
 
     async def delete(self, publication_id: int, researcher: Researcher) -> None:
@@ -117,7 +114,6 @@ class PublicationService:
         await self._check_ownership(publication, researcher)
         await self.session.delete(publication)
         await self.session.commit()
-        logger.warning("publication deleted: %d", publication_id)
 
     async def upload_file(
         self, publication_id: int, file: UploadFile, researcher: Researcher
@@ -146,7 +142,6 @@ class PublicationService:
 
         publication.file_path = file_path
         await self.session.commit()
-        logger.info("file uploaded for publication: %d", publication_id)
         return PublicationResponse.from_orm(publication)
 
     async def _check_ownership(
@@ -169,7 +164,6 @@ class PublicationService:
             Publication, publication_id
         )
         if not publication:
-            logger.warning("publication not found: %d", publication_id)
             raise HTTPException(status_code=404, detail="publication not found")
         return publication
 
@@ -178,7 +172,6 @@ class PublicationService:
             Researcher, researcher_id
         )
         if not researcher:
-            logger.warning("researcher not found: %d", researcher_id)
             raise HTTPException(
                 status_code=404, detail=f"researcher {researcher_id} not found"
             )

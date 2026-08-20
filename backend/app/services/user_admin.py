@@ -35,43 +35,44 @@ class UserAdminService:
         return [UserResponse.from_orm(user) for user in result.all()]
 
     async def approve(self, user_id: int) -> UserResponse:
-        logger.debug("approving user %d", user_id)
         user: User = await self._get_by_id(user_id)
         await self._set_status(user, UserStatus.ACTIVE, require_pending=True)
         self.email_notifier.send_approval_notification(user.email)
-        logger.info("user approved: %s", user.email)
+        logger.info("user approved: %d", user.user_id)
         return UserResponse.from_orm(user)
 
     async def reject(self, user_id: int) -> UserResponse:
-        logger.debug("rejecting user %d", user_id)
         user: User = await self._get_by_id(user_id)
         await self._set_status(user, UserStatus.REJECTED, require_pending=True)
         self.email_notifier.send_rejection_notification(user.email)
-        logger.warning("user rejected: %s", user.email)
+        logger.info("user rejected: %d", user.user_id)
         return UserResponse.from_orm(user)
 
     async def ban(self, user_id: int) -> UserResponse:
-        logger.debug("banning user: %d", user_id)
         user: User = await self._get_by_id(user_id)
         await self._set_status(user, UserStatus.BANNED)
         self.email_notifier.send_ban_notification(user.email)
-        logger.warning("user banned: %s", user.email)
+        logger.info("user banned: %d", user.user_id)
         return UserResponse.from_orm(user)
 
     async def change_role(
         self, user_id: int, data: UserRoleUpdateRequest
     ) -> UserResponse:
-        logger.debug("changing role for user: %d to %s", user_id, data.role)
         user: User = await self._get_by_id(user_id)
         user.role = data.role
         await self.session.commit()
         logger.info("role changed for user: %d", user_id)
         return UserResponse.from_orm(user)
 
+    async def delete_by_id(self, user_id: int) -> None:
+        user: User = await self._get_by_id(user_id)
+        await self.session.delete(user)
+        await self.session.commit()
+        logger.info("user deleted: %d", user_id)
+
     async def _get_by_id(self, user_id: int) -> User:
         user: User | None = await self.session.get(User, user_id)
         if not user:
-            logger.warning("user not found: %d", user_id)
             raise HTTPException(status_code=404, detail="user not found")
         return user
 

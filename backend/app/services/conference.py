@@ -29,7 +29,6 @@ class ConferenceService:
         return ConferenceResponse.from_orm(conference)
 
     async def create(self, data: ConferenceRequest) -> ConferenceResponse:
-        logger.info("creating conference: %s", data.name)
         conference = Conference(
             name=data.name,
             description=data.description,
@@ -60,7 +59,7 @@ class ConferenceService:
         conference: Conference = await self._get_by_id(conference_id)
         await self.session.delete(conference)
         await self.session.commit()
-        logger.warning("conference deleted: %d", conference_id)
+        logger.info("conference deleted: %d", conference_id)
 
     async def _get_by_id(self, conference_id: int) -> Conference:
         conference: Conference | None = await self.session.get(

@@ -61,7 +61,7 @@ class ReportService:
         publications: list[Publication] = await self._get_publications(filters)
 
         output = io.StringIO()
-        writer: Writer = csv.writer(output)
+        writer = csv.writer(output)
         writer.writerow(
             [
                 "ID",
