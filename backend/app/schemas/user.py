@@ -33,14 +33,14 @@ def validate_research_email(email: str) -> str:
 def validate_password_strength(password: SecretStr) -> SecretStr:
     raw: str = password.get_secret_value()
     if not re.search(r"[A-Za-z]", raw):
-        raise ValueError("password must contain atleast one letter")
+        raise ValueError("password must contain at least one letter")
     if not re.search(r"\d", raw):
-        raise ValueError("password must contain atleast one number")
+        raise ValueError("password must contain at least one number")
     return password
 
 
 # -- Core Models --
-class UserBase(BaseModel):
+class EmailValidatorMixin(BaseModel):
     email: EmailStr
 
     @field_validator("email", mode="before")
@@ -71,26 +71,40 @@ class OptionalPasswordMixin(PasswordValidatorMixin):
 
 
 # -- Requests --
-class UserRequest(UserBase, RequiredPasswordMixin):
+class UserRequest(EmailValidatorMixin, RequiredPasswordMixin):
     model_config = ConfigDict(extra="forbid")
+    requested_role: UserRole = Field(default=UserRole.RESEARCHER)
+
+    @field_validator("requested_role")
+    @classmethod
+    def validate_role(cls, role: UserRole) -> UserRole:
+        if role == UserRole.SYSTEM_ADMIN:
+            raise ValueError("system admin role cannot be self-declared")
+        return role
 
 
 class UserUpdateRequest(OptionalPasswordMixin):
     PASSWORD_FIELD: ClassVar[str] = "password"
 
 
-class UserStatusUpdateRequest(BaseModel):
-    status: UserStatus
-
-
 class UserRoleUpdateRequest(BaseModel):
     role: UserRole
 
 
-class VerificationCodeRequest(UserBase):
+class VerificationCodeRequest(EmailValidatorMixin):
     code: str = Field(
         min_length=VERIFICATION_CODE_LENGTH, max_length=VERIFICATION_CODE_LENGTH
     )
+
+
+class EmailChangeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    new_email: EmailStr
+
+    @field_validator("new_email", mode="before")
+    @classmethod
+    def check_domain(cls, new_email) -> str:
+        return validate_research_email(new_email)
 
 
 class RefreshRequest(BaseModel):

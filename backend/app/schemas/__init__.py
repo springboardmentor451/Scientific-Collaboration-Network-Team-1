@@ -35,13 +35,13 @@ from app.schemas.researcher import (
     ResearcherUpdateRequest,
 )
 from app.schemas.user import (
+    EmailChangeRequest,
     RefreshRequest,
     TokenPayload,
     TokenResponse,
     UserRequest,
     UserResponse,
     UserRoleUpdateRequest,
-    UserStatusUpdateRequest,
     UserUpdateRequest,
     VerificationCodeRequest,
 )
@@ -56,6 +56,7 @@ __all__: list[str] = [
     "ConferenceRequest",
     "ConferenceResponse",
     "ConferenceUpdateRequest",
+    "EmailChangeRequest",
     "InstitutionRequest",
     "InstitutionResponse",
     "InstitutionStats",
@@ -82,7 +83,6 @@ __all__: list[str] = [
     "UserRequest",
     "UserResponse",
     "UserRoleUpdateRequest",
-    "UserStatusUpdateRequest",
     "UserUpdateRequest",
     "VerificationCodeRequest",
 ]
