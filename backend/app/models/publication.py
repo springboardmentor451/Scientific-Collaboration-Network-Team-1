@@ -30,7 +30,7 @@ class Publication(Base):
         String(DOI_MAX_LENGTH), unique=True, nullable=True, index=True
     )
     publication_type: Mapped[PublicationType] = mapped_column(
-        Enum(PublicationType), nullable=False, default=PublicationType
+        Enum(PublicationType), nullable=False, default=PublicationType.JOURNAL
     )
     status: Mapped[PublicationStatus] = mapped_column(
         Enum(PublicationStatus),

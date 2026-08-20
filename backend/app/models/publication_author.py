@@ -14,7 +14,9 @@ class PublicationAuthor(Base):
         ForeignKey("researchers.researcher_id", ondelete="CASCADE"), primary_key=True
     )
     author_order: Mapped[int] = mapped_column(nullable=False, default=1)
-    is_corresponding: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    is_corresponding: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
 
     def __repr__(self) -> str:
         return (

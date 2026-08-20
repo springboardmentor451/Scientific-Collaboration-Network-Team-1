@@ -18,7 +18,7 @@ class Collaboration(Base):
 
     collaboration_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     collaboration_type: Mapped[str | None] = mapped_column(
-        String(COLLABORATION_TYPE_MAX_LENGTH), nullable=True
+        String(COLLABORATION_TYPE_MAX_LENGTH), nullable=True, index=True
     )
     collaboration_count: Mapped[int] = mapped_column(default=1, nullable=False)
     created_at: Mapped[datetime] = mapped_column(

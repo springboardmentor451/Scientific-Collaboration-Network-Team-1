@@ -21,7 +21,7 @@ class Institution(Base):
 
     institution_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(
-        String(INSTITUTION_NAME_MAX_LENGTH), unique=True, nullable=False
+        String(INSTITUTION_NAME_MAX_LENGTH), unique=True, nullable=False, index=True
     )
     city: Mapped[str] = mapped_column(String(LOCATION_MAX_LENGTH), nullable=False)
     country: Mapped[str | None] = mapped_column(
