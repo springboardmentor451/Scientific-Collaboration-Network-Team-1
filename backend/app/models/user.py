@@ -7,13 +7,8 @@ from sqlalchemy import Enum, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core import Base
-from app.core.constants import (
-    PASSWORD_MAX_LENGTH,
-    VERIFICATION_CODE_LENGTH,
-    UserRole,
-    UserStatus,
-)
-from app.core.security import hash_password, verify_password
+from app.core.constants import UserRole, UserStatus
+from app.core.security import verify_code
 
 if TYPE_CHECKING:
     from app.models.researcher import Researcher
@@ -24,37 +19,22 @@ class User(Base):
 
     user_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
-    password: Mapped[str] = mapped_column(String(PASSWORD_MAX_LENGTH), nullable=False)
-    verification_code: Mapped[str | None] = mapped_column(
-        String(VERIFICATION_CODE_LENGTH), nullable=True
-    )
-    is_verified: Mapped[bool] = mapped_column(default=False, nullable=False)
+    password: Mapped[str] = mapped_column(String(256), nullable=False)
     role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole), default=UserRole.RESEARCHER, nullable=False
+        Enum(UserRole), default=UserRole.RESEARCHER, nullable=False, index=True
     )
+    is_verified: Mapped[bool] = mapped_column(default=False, nullable=False, index=True)
     status: Mapped[UserStatus] = mapped_column(
         Enum(UserStatus), default=UserStatus.PENDING, nullable=False, index=True
     )
-    login_code: Mapped[str | None] = mapped_column(String, nullable=True)
+    pending_email: Mapped[str | None] = mapped_column(String, nullable=True)
 
     researcher: Mapped[Researcher | None] = relationship(
         "Researcher", back_populates="user", uselist=False
     )
 
-    def __init__(
-        self,
-        email: str,
-        password: SecretStr,
-        role: UserRole = UserRole.RESEARCHER,
-        status: UserStatus = UserStatus.PENDING,
-    ) -> None:
-        self.email = email
-        self.password = hash_password(password)
-        self.role = role
-        self.status = status
-
     def check_password(self, plain_password: SecretStr) -> bool:
-        return verify_password(plain_password, self.password)
+        return verify_code(plain_password, self.password)
 
     def __repr__(self) -> str:
-        return f"<User(email={self.email}, role={self.role}, status={self.status})>"
+        return f"<User(email={self.user_id}, role={self.role}, status={self.status})>"
