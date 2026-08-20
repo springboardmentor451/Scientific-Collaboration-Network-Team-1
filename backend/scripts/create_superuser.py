@@ -12,7 +12,7 @@ load_dotenv()
 from app.core import logging_config  # noqa: F401
 from app.core.constants import UserRole, UserStatus
 from app.core.database import session
-from app.core.security import hash_password, verify_password
+from app.core.security import hash_code, verify_code
 from app.models import User
 from pydantic import SecretStr
 from sqlalchemy import select
@@ -75,14 +75,14 @@ async def replace_superuser() -> None:
             raise SystemExit("[replace_admin] No system admin found")
 
         # Verify current credentials (email and password hash check)
-        if admin.email != current_email or not verify_password(
+        if admin.email != current_email or not verify_code(
             current_password, admin.password
         ):
             raise SystemExit("[replace_admin] Invalid current admin credentials")
 
         # Update to new credentials
         admin.email = new_email
-        admin.password = hash_password(new_password)
+        admin.password = hash_code(new_password)
         admin.is_verified = True
         await db.commit()
         logger.info("[replace_admin] System admin replaced with %s", new_email)
