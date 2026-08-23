@@ -66,6 +66,8 @@ class UserAdminService:
         self, user_id: int, data: UserRoleUpdateRequest
     ) -> UserResponse:
         user: User = await self._get_by_id(user_id)
+        if user.role == data.role:
+            raise HTTPException(status_code=409, detail="user already has this role")
         user.role = data.role
         user.requested_role = None
         await self.session.commit()
@@ -101,6 +103,10 @@ class UserAdminService:
         if require_pending and user.status != UserStatus.PENDING:
             raise HTTPException(
                 status_code=409, detail="user must be pending for this action"
+            )
+        if user.status == status:
+            raise HTTPException(
+                status_code=409, detail=f"user is already {status.value}"
             )
         user.status = status
         await self.session.commit()
