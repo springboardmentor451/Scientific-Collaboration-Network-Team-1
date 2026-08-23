@@ -1,5 +1,7 @@
 ALEMBIC SETUP
 
+(use "uv run" when you are not in a virtual environment)
+
 initialise inside backend/ folder:
 -> uv run alembic init migrations
 
