@@ -30,7 +30,7 @@ class UserService:
         for key, val in updates.items():
             setattr(user, key, val)
         await self.session.commit()
-        logger.info("user updated successfully: %d", user.user_id)
+        logger.info("user information updated successfully: %d", user.user_id)
         return UserResponse.from_orm(user)
 
     async def delete(self, user: User) -> None:
