@@ -39,6 +39,12 @@ def validate_password_strength(password: SecretStr) -> SecretStr:
     return password
 
 
+def validate_non_admin_role(role: UserRole) -> UserRole:
+    if role == UserRole.SYSTEM_ADMIN:
+        raise ValueError("system admin role cannot be self-declared")
+    return role
+
+
 # -- Core Models --
 class EmailValidatorMixin(BaseModel):
     email: EmailStr
@@ -58,6 +64,15 @@ class PasswordValidatorMixin(BaseModel):
         return self
 
 
+class RequestedRoleMixin(BaseModel):
+    requested_role: UserRole
+
+    @field_validator("requested_role")
+    @classmethod
+    def check_role(cls, role: UserRole) -> UserRole:
+        return validate_non_admin_role(role)
+
+
 class RequiredPasswordMixin(PasswordValidatorMixin):
     password: SecretStr = Field(
         min_length=PASSWORD_MIN_LENGTH, max_length=PASSWORD_MAX_LENGTH
@@ -71,16 +86,9 @@ class OptionalPasswordMixin(PasswordValidatorMixin):
 
 
 # -- Requests --
-class UserRequest(EmailValidatorMixin, RequiredPasswordMixin):
+class UserRequest(EmailValidatorMixin, RequiredPasswordMixin, RequestedRoleMixin):
     model_config = ConfigDict(extra="forbid")
     requested_role: UserRole = Field(default=UserRole.RESEARCHER)
-
-    @field_validator("requested_role")
-    @classmethod
-    def validate_role(cls, role: UserRole) -> UserRole:
-        if role == UserRole.SYSTEM_ADMIN:
-            raise ValueError("system admin role cannot be self-declared")
-        return role
 
 
 class UserUpdateRequest(OptionalPasswordMixin):
@@ -89,6 +97,11 @@ class UserUpdateRequest(OptionalPasswordMixin):
 
 class UserRoleUpdateRequest(BaseModel):
     role: UserRole
+
+
+class RoleChangeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    requested_role: UserRole
 
 
 class VerificationCodeRequest(EmailValidatorMixin):
@@ -117,6 +130,7 @@ class UserResponse(ResponseBase):
     email: EmailStr
     role: UserRole
     status: UserStatus
+    is_verified: bool
 
 
 class TokenPayload(BaseModel):

@@ -37,6 +37,7 @@ from app.schemas.researcher import (
 from app.schemas.user import (
     EmailChangeRequest,
     RefreshRequest,
+    RoleChangeRequest,
     TokenPayload,
     TokenResponse,
     UserRequest,
@@ -77,6 +78,7 @@ __all__: list[str] = [
     "ResearcherResponse",
     "ResearcherUpdateRequest",
     "ResponseBase",
+    "RoleChangeRequest",
     "SystemStats",
     "TokenPayload",
     "TokenResponse",
