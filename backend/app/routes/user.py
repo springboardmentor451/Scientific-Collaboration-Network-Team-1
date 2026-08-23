@@ -69,6 +69,23 @@ async def ban_user(
     return await user_admin_service.ban(user_id)
 
 
+@user_router.get("/role-change-requests", response_model=list[UserResponse])
+async def get_role_change_requests(
+    _: AdminUser,
+    user_admin_service: UserAdminServiceDeps,
+) -> list[UserResponse]:
+    return await user_admin_service.get_role_change_requests()
+
+
+@user_router.patch("/{user_id}/approve-role-change", response_model=UserResponse)
+async def approve_role_change(
+    user_id: int,
+    _: AdminUser,
+    user_admin_service: UserAdminServiceDeps,
+) -> UserResponse:
+    return await user_admin_service.approve_role_change(user_id)
+
+
 # self service routes
 @user_router.patch("/me", response_model=UserResponse)
 async def update_me(
@@ -91,20 +108,3 @@ async def request_role_change(
     user_service: UserServiceDeps,
 ) -> MessageResponse:
     return await user_service.request_role_change(data, current_user)
-
-
-@user_router.get("/role-change-requests", response_model=list[UserResponse])
-async def get_role_change_requests(
-    _: AdminUser,
-    user_admin_service: UserAdminServiceDeps,
-) -> list[UserResponse]:
-    return await user_admin_service.get_role_change_requests()
-
-
-@user_router.patch("/{user_id}/approve-role-change", response_model=UserResponse)
-async def approve_role_change(
-    user_id: int,
-    _: AdminUser,
-    user_admin_service: UserAdminServiceDeps,
-) -> UserResponse:
-    return await user_admin_service.approve_role_change(user_id)
