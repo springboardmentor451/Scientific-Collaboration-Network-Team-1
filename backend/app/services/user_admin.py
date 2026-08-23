@@ -34,6 +34,13 @@ class UserAdminService:
         )
         return [UserResponse.from_orm(user) for user in result.all()]
 
+    async def get_role_change_requests(self) -> list[UserResponse]:
+        logger.debug("fetching role change requests")
+        result: ScalarResult[User] = await self.session.scalars(
+            select(User).where(User.requested_role.isnot(None))
+        )
+        return [UserResponse.from_orm(user) for user in result.all()]
+
     async def approve(self, user_id: int) -> UserResponse:
         user: User = await self._get_by_id(user_id)
         await self._set_status(user, UserStatus.ACTIVE, require_pending=True)
@@ -60,6 +67,18 @@ class UserAdminService:
     ) -> UserResponse:
         user: User = await self._get_by_id(user_id)
         user.role = data.role
+        user.requested_role = None
+        await self.session.commit()
+        logger.info("role changed for user: %d", user_id)
+        return UserResponse.from_orm(user)
+
+    async def approve_role_change(self, user_id: int) -> UserResponse:
+        user: User = await self._get_by_id(user_id)
+        if not user.requested_role:
+            raise HTTPException(status_code=400, detail="no role change requested")
+        logger.debug("approving role change: user_id=%d", user_id)
+        user.role = user.requested_role
+        user.requested_role = None
         await self.session.commit()
         logger.info("role changed for user: %d", user_id)
         return UserResponse.from_orm(user)
