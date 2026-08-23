@@ -1,15 +1,15 @@
 import os
-from pathlib import Path
 
 from dotenv import load_dotenv
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+load_dotenv()
+
 ALLOWED_ALGORITHMS: frozenset[str] = frozenset({"HS256", "HS384", "HS512"})
 _SHARED_SETTINGS = SettingsConfigDict(env_file_encoding="utf-8", extra="ignore")
 
 
-# can I name this function that sounds more professional? what about "v", it does not sound professional?
 def validate_positive(value: int) -> int:
     if value <= 0:
         raise ValueError("Must be a positive integer")
@@ -90,7 +90,6 @@ _config: dict[str, type[Config]] = {
 
 
 def get_config() -> Config:
-    load_dotenv(Path(__file__).parent.parent / ".env")
     env: str = os.environ.get("FASTAPI_ENV", "development")
     if env not in _config:
         raise SystemExit(
