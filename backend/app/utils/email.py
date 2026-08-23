@@ -28,7 +28,7 @@ class ConsoleEmailNotifier(EmailNotifier):
 
     def send_verification_email(self, email: str, code: str) -> None:
         print(
-            f"{'= ' * 50}\nVerification Code for {email} is {code}."
+            f"{'= ' * 50}\nVerification Code for {email} is {code}. "
             f"This code will expire in {self.TOTP_MINUTES} minute{'s' if self.TOTP_MINUTES > 1 else ''}.\n{'= ' * 50}"
         )
 
