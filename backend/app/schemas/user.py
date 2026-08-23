@@ -103,6 +103,11 @@ class RoleChangeRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     requested_role: UserRole
 
+    @field_validator("requested_role")
+    @classmethod
+    def check_role(cls, role: UserRole) -> UserRole:
+        return validate_non_admin_role(role)
+
 
 class VerificationCodeRequest(EmailValidatorMixin):
     code: str = Field(
