@@ -2,13 +2,11 @@ from datetime import UTC, datetime, timedelta
 
 import pyotp
 from fastapi import HTTPException
-from pydantic import SecretStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import TOTP_INTERVAL, VerificationPurpose
 from app.core.interfaces import EmailNotifier
-from app.core.security import hash_code
 from app.models import VerificationCode
 
 
@@ -27,10 +25,10 @@ class VerificationCodeService:
     def send_code(self, email: str, code: str) -> None:
         self.email_notifier.send_verification_email(email, code)
 
-    async def create(
+    async def create_code(
         self,
         user_id: int,
-        code: str,
+        secret: str,
         purpose: VerificationPurpose,
         expires_in: timedelta = TOTP_INTERVAL,
     ) -> None:
@@ -46,20 +44,19 @@ class VerificationCodeService:
             await self.session.flush()
         verification_code = VerificationCode(
             user_id=user_id,
-            code=hash_code(SecretStr(code)),
+            secret=secret,
             purpose=purpose,
             expires_at=datetime.now(UTC) + expires_in,
         )
         self.session.add(verification_code)
         await self.session.commit()
 
-    async def verify(
+    async def verify_code(
         self, user_id: int, code: str, purpose: VerificationPurpose
     ) -> None:
         verification_code: VerificationCode | None = await self.session.scalar(
             select(VerificationCode).where(
                 VerificationCode.user_id == user_id,
-                VerificationCode.code == code,
                 VerificationCode.purpose == purpose,
                 VerificationCode.expires_at > datetime.now(UTC),
             )
