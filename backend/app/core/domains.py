@@ -10,9 +10,9 @@ logger: logging.Logger = logging.getLogger(__name__)
 DOMAINS_URL = "https://raw.githubusercontent.com/Hipo/university-domains-list/master/world_universities_and_domains.json"
 CACHE_FILE = Path("./data/research_domains.json")
 
-# global cache — loaded once at startup
-_research_domains: set[str] = set()
-_domains_loaded = False
+# global cache - loaded once at startup
+research_domains: set[str] = set()
+domains_loaded = False
 
 
 async def _fetch_remote() -> list[dict[str, Any]]:
@@ -60,15 +60,15 @@ async def fetch_domains() -> set[str]:
 
 
 async def load_domains() -> None:
-    global _research_domains, _domains_loaded
-    if _domains_loaded:
+    global research_domains, domains_loaded
+    if domains_loaded:
         logger.debug("domains already loaded, skipping")
         return
-    _research_domains = await fetch_domains()
-    _domains_loaded = True
-    logger.debug("loaded %d academic domains", len(_research_domains))
+    research_domains = await fetch_domains()
+    domains_loaded = True
+    logger.debug("loaded %d academic domains", len(research_domains))
 
 
 def is_research_email(email: str) -> bool:
     domain: str = email.split("@")[-1].lower()
-    return domain in _research_domains
+    return domain in research_domains
