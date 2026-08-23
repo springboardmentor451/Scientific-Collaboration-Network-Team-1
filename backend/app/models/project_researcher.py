@@ -12,7 +12,9 @@ class ProjectResearcher(Base):
         ForeignKey("projects.project_id", ondelete="CASCADE"), primary_key=True
     )
     researcher_id: Mapped[int] = mapped_column(
-        ForeignKey("researchers.researcher_id", ondelete="CASCADE"), primary_key=True
+        ForeignKey("researchers.researcher_id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
     )
     role: Mapped[ProjectRole] = mapped_column(
         Enum(ProjectRole), default=ProjectRole.MEMBER, nullable=False

@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, ForeignKey
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core import Base
@@ -11,12 +11,12 @@ class PublicationAuthor(Base):
         ForeignKey("publications.publication_id", ondelete="CASCADE"), primary_key=True
     )
     researcher_id: Mapped[int] = mapped_column(
-        ForeignKey("researchers.researcher_id", ondelete="CASCADE"), primary_key=True
+        ForeignKey("researchers.researcher_id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
     )
     author_order: Mapped[int] = mapped_column(nullable=False, default=1)
-    is_corresponding: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=False
-    )
+    is_corresponding: Mapped[bool] = mapped_column(nullable=False, default=False)
 
     def __repr__(self) -> str:
         return (

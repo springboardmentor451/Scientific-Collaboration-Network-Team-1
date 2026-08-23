@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, DateTime, Enum, ForeignKey, String, Text, func
+from sqlalchemy import JSON, Date, DateTime, Enum, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core import Base
@@ -38,8 +38,8 @@ class Publication(Base):
         default=PublicationStatus.DRAFT,
         index=True,
     )
-    file_path: Mapped[str] = mapped_column(String, nullable=True)
-    publication_date: Mapped[datetime | None] = mapped_column(Date, nullable=True)
+    file_path: Mapped[str | None] = mapped_column(String, nullable=True)
+    publication_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     conference_id: Mapped[int | None] = mapped_column(
         ForeignKey("conferences.conference_id", ondelete="SET NULL"),
         nullable=True,
@@ -53,6 +53,9 @@ class Publication(Base):
         server_default=func.now(),
         onupdate=func.now(),
         nullable=False,
+    )
+    external_authors: Mapped[list[str]] = mapped_column(
+        JSON, default=list, nullable=False
     )
 
     conference: Mapped[Conference | None] = relationship(

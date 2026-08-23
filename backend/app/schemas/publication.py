@@ -39,10 +39,10 @@ class PublicationUpdateRequest(PublicationBase):
     external_authors: list[str] | None = None
 
 
-class PublicationAuthorRequest(BaseModel):
-    researcher_id: int
-    author_order: int = Field(default=1, ge=1)
-    is_corresponding: bool = False
+# class PublicationAuthorRequest(BaseModel):
+#     researcher_id: int
+#     author_order: int = Field(default=1, ge=1)
+#     is_corresponding: bool = False
 
 
 class PublicationResponse(ResponseBase):
