@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import TOTP_INTERVAL, TokenType, UserStatus, VerificationPurpose
-from app.core.security import hash_code
+from app.core.security import hash_password
 from app.models import RevokedToken, User
 from app.schemas import (
     EmailChangeRequest,
@@ -59,7 +59,7 @@ class AuthService:
             )
         if user.is_verified:
             raise HTTPException(status_code=400, detail="user is already verified")
-        await self.verification_code_service.verify(
+        await self.verification_code_service.verify_code(
             user.user_id, data.code, VerificationPurpose.REGISTER
         )
         user.is_verified = True
@@ -70,7 +70,7 @@ class AuthService:
     async def login(
         self, credentials: UserRequest, user_service: UserService
     ) -> MessageResponse:
-        user: User | None = await user_service.get_by_email(str(credentials.email))
+        user: User | None = await user_service.get_by_email(credentials.email)
         if not user or not user.check_password(credentials.password):
             raise HTTPException(status_code=401, detail="invalid email or password")
         self._validate_user_status(user)
@@ -84,7 +84,7 @@ class AuthService:
         if not user:
             raise HTTPException(status_code=404, detail="user not found")
         self._validate_user_status(user)
-        await self.verification_code_service.verify(
+        await self.verification_code_service.verify_code(
             user.user_id, data.code, VerificationPurpose.LOGIN
         )
         logger.info("login successful: %d", user.user_id)
@@ -98,12 +98,7 @@ class AuthService:
         payload: TokenPayload = self.token_service.decode_token(refresh_token)
         if payload.token_type != TokenType.REFRESH:
             raise HTTPException(status_code=400, detail="invalid refresh token")
-        existing: RevokedToken | None = await session.scalar(
-            select(RevokedToken).where(RevokedToken.token == refresh_token)
-        )
-        if not existing:
-            session.add(RevokedToken(token=refresh_token))
-            await session.commit()
+        await self._revoke_token(refresh_token, session)
 
     async def refresh(
         self, refresh_token: str, user_service: UserService, session: AsyncSession
@@ -111,10 +106,7 @@ class AuthService:
         payload: TokenPayload = self.token_service.decode_token(refresh_token)
         if payload.token_type != TokenType.REFRESH:
             raise HTTPException(status_code=400, detail="invalid refresh token")
-        revoked: RevokedToken | None = await session.scalar(
-            select(RevokedToken).where(RevokedToken.token == refresh_token)
-        )
-        if revoked:
+        if await self._is_revoked(refresh_token, session):
             raise HTTPException(
                 status_code=401, detail="refresh token has been revoked"
             )
@@ -144,7 +136,7 @@ class AuthService:
     ) -> MessageResponse:
         if not user.pending_email:
             raise HTTPException(status_code=400, detail="no email change request")
-        await self.verification_code_service.verify(
+        await self.verification_code_service.verify_code(
             user.user_id, data.code, VerificationPurpose.CHANGE_EMAIL
         )
         user.email = user.pending_email
@@ -166,9 +158,9 @@ class AuthService:
     async def _verification_process(
         self, user: User, target_email: str, purpose: VerificationPurpose
     ) -> None:
-        _, code = self.verification_code_service.generate_code()
-        await self.verification_code_service.create(
-            user.user_id, code, purpose, TOTP_INTERVAL
+        secret, code = self.verification_code_service.generate_code()
+        await self.verification_code_service.create_code(
+            user.user_id, secret, purpose, TOTP_INTERVAL
         )
         self.verification_code_service.send_code(target_email, code)
 
@@ -177,7 +169,7 @@ class AuthService:
     ) -> User:
         user = User(
             email=credentials.email,
-            password=hash_code(credentials.password),
+            password=hash_password(credentials.password),
             role=credentials.requested_role,
             status=UserStatus.PENDING,
         )
@@ -195,3 +187,16 @@ class AuthService:
             raise HTTPException(status_code=403, detail="account rejected")
         if user.status == UserStatus.BANNED:
             raise HTTPException(status_code=403, detail="account banned")
+
+    async def _is_revoked(self, token: str, session: AsyncSession) -> bool:
+        return (
+            await session.scalar(
+                select(RevokedToken).where(RevokedToken.token == token)
+            )
+            is not None
+        )
+
+    async def _revoke_token(self, token: str, session: AsyncSession) -> None:
+        if not await self._is_revoked(token, session):
+            session.add(RevokedToken(token=token))
+            await session.commit()
