@@ -15,8 +15,7 @@ class VerificationCode(Base):
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.user_id"), nullable=False, index=True
     )
-    secret: Mapped[str] = mapped_column(String(256), nullable=False)
-    code: Mapped[SecretStr] = mapped_column(String(256), nullable=False)
+    secret: Mapped[str] = mapped_column(String(32), nullable=False)
     purpose: Mapped[VerificationPurpose] = mapped_column(
         Enum(VerificationPurpose), nullable=False, index=True
     )
