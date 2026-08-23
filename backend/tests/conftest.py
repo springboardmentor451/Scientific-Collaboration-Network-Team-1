@@ -55,6 +55,14 @@ async def create_tables(engine: AsyncEngine) -> AsyncGenerator[None]:
         await conn.run_sync(Base.metadata.drop_all)
 
 
+@pytest.fixture(autouse=True)
+async def clean_tables(engine: AsyncEngine) -> AsyncGenerator[None, Any]:
+    yield
+    async with engine.begin() as conn:
+        for table in reversed(Base.metadata.sorted_tables):
+            await conn.execute(table.delete())
+
+
 # Session - rolled back after every test
 @pytest.fixture
 async def session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
@@ -116,7 +124,7 @@ async def make_user(
     is_verified: bool = True,
 ) -> User:
     if email is None:
-        email = f"user_{uuid.uuid4().hex}@mit.edu"
+        email = f"user_{uuid.uuid4().hex[:8]}@mit.edu"
     user = User(email=email, password=hash_password(SecretStr("TestPass123")))
     user.role = role
     user.status = status
@@ -127,9 +135,7 @@ async def make_user(
 
 
 async def make_admin(session: AsyncSession) -> User:
-    return await make_user(
-        session, email="admin_system@harvard.edu", role=UserRole.SYSTEM_ADMIN
-    )
+    return await make_user(session, role=UserRole.SYSTEM_ADMIN)
 
 
 async def make_institution(session: AsyncSession) -> Institution:
@@ -142,10 +148,10 @@ async def make_institution(session: AsyncSession) -> Institution:
 async def make_researcher(session: AsyncSession, user: User) -> Researcher:
     researcher = Researcher(
         user_id=user.user_id,
-        full_name="John Smith",
+        name="John Smith",
         department="Computer Science",
-        skills=["Python", "ML"],
-        research_interests=["NLP"],
+        skills=["Python", "Web Development"],
+        research_interests=["Web"],
     )
     session.add(researcher)
     await session.commit()
