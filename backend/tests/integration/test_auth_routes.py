@@ -4,6 +4,7 @@ from httpx import AsyncClient, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from tests.conftest import (
     KNOWN_VERIFICATION_CODE,
+    auth_headers,
     make_user,
     mock_verification_code,
 )
@@ -171,7 +172,7 @@ async def test_verify_wrong_code(client: AsyncClient, session: AsyncSession) -> 
 
 
 async def test_verify_already_verified(
-    client: AsyncClient, session: AsyncSession, researcher_user: User
+    client: AsyncClient, researcher_user: User
 ) -> None:
     res: Response = await client.post(
         VERIFY_EMAIL_URL,
@@ -194,6 +195,74 @@ async def test_verify_banned_user_rejected(
         VERIFY_EMAIL_URL, json={"email": banned.email, "code": "000000"}
     )
     assert res.status_code == 403
+
+
+# Email change flow
+async def test_request_email_change_success(
+    client: AsyncClient, researcher_user: User, mock_verification_code: str
+) -> None:
+    res: Response = await client.post(
+        f"{AUTH_URL}/request-email-change",
+        json={"new_email": "newemail@ox.ac.uk"},
+        headers=auth_headers(researcher_user),
+    )
+    assert res.status_code == 200
+    assert "verification" in res.json()["message"].lower()
+
+
+async def test_request_email_change_invalid_domain(
+    client: AsyncClient, researcher_user: User
+) -> None:
+    res: Response = await client.post(
+        f"{AUTH_URL}/request-email-change",
+        json={"new_email": "newemail@gmail.com"},
+        headers=auth_headers(researcher_user),
+    )
+    assert res.status_code == 422
+
+
+async def test_request_email_change_already_in_use(
+    client: AsyncClient,
+    researcher_user: User,
+    session: AsyncSession,
+    mock_verification_code: str,
+) -> None:
+    other: User = await make_user(session, email="taken@ox.ac.uk")
+    res: Response = await client.post(
+        f"{AUTH_URL}/request-email-change",
+        json={"new_email": other.email},
+        headers=auth_headers(researcher_user),
+    )
+    assert res.status_code == 409
+
+
+async def test_verify_email_change_success(
+    client: AsyncClient, researcher_user: User, mock_verification_code: str
+) -> None:
+    await client.post(
+        f"{AUTH_URL}/request-email-change",
+        json={"new_email": "changed@ox.ac.uk"},
+        headers=auth_headers(researcher_user),
+    )
+    res: Response = await client.post(
+        f"{AUTH_URL}/verify-email-change",
+        json={"email": researcher_user.email, "code": KNOWN_VERIFICATION_CODE},
+        headers=auth_headers(researcher_user),
+    )
+    assert res.status_code == 200
+    assert "updated" in res.json()["message"].lower()
+
+
+async def test_verify_email_change_not_pending(
+    client: AsyncClient, researcher_user: User
+) -> None:
+    res: Response = await client.post(
+        f"{AUTH_URL}/verify-email-change",
+        json={"email": researcher_user.email, "code": KNOWN_VERIFICATION_CODE},
+        headers=auth_headers(researcher_user),
+    )
+    assert res.status_code == 400
+    assert "no email change" in res.json()["detail"]
 
 
 # Login
