@@ -55,6 +55,6 @@ class PublicationResponse(ResponseBase):
     file_path: str | None
     publication_date: date | None
     conference_id: int | None
-    external_authors: list[str]
+    external_authors: list[str] | None = None
     created_at: datetime
     updated_at: datetime
