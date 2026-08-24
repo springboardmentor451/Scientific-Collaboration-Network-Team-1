@@ -73,6 +73,7 @@ class PublicationService:
         self.session.add(primary_author)
         await self._add_additional_researchers(data, publication)
         await self.session.commit()
+        await self.session.refresh(publication)
         return PublicationResponse.from_orm(publication)
 
     async def update(
@@ -107,6 +108,7 @@ class PublicationService:
                 self.session.add(author)
 
         await self.session.commit()
+        await self.session.refresh(publication)
         return PublicationResponse.from_orm(publication)
 
     async def delete(self, publication_id: int, researcher: Researcher) -> None:
