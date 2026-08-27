@@ -1,2 +1,4 @@
  1. Refresh token goes in an httpOnly cookie, never in localStorage. 
     localStorage is accessible by JavaScript which means XSS attacks can steal it.
+
+   http://127.0.0.1:8000/docs
