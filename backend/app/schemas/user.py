@@ -125,6 +125,37 @@ class EmailChangeRequest(BaseModel):
         return validate_research_email(new_email)
 
 
+class ForgotPasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    email: EmailStr
+
+
+class PasswordResetRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    email: EmailStr
+    code: str = Field(
+        min_length=VERIFICATION_CODE_LENGTH, max_length=VERIFICATION_CODE_LENGTH
+    )
+    new_password: SecretStr = Field(
+        min_length=PASSWORD_MIN_LENGTH, max_length=PASSWORD_MAX_LENGTH
+    )
+    confirm_password: SecretStr
+
+    @model_validator(mode="after")
+    def passwords_match(self) -> Self:
+        if (
+            self.new_password.get_secret_value()
+            != self.confirm_password.get_secret_value()
+        ):
+            raise ValueError("passwords do not match")
+        return self
+
+    @field_validator("new_password", mode="after")
+    @classmethod
+    def validate_strength(cls, password: SecretStr) -> SecretStr:
+        return validate_password_strength(password)
+
+
 class RefreshRequest(BaseModel):
     refresh_token: str
 

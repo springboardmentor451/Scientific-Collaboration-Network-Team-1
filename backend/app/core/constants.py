@@ -88,3 +88,4 @@ class VerificationPurpose(StrEnum):
     REGISTER = "register"
     LOGIN = "login"
     CHANGE_EMAIL = "change_email"
+    PASSWORD_RESET = "password_reset"

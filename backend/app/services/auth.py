@@ -10,6 +10,7 @@ from app.models import RevokedToken, User
 from app.schemas import (
     EmailChangeRequest,
     MessageResponse,
+    PasswordResetRequest,
     TokenPayload,
     TokenResponse,
     UserRequest,
@@ -36,6 +37,7 @@ class AuthService:
     async def register(
         self, credentials: UserRequest, user_service: UserService
     ) -> MessageResponse:
+        logger.debug("registration attempt: [redacted]")
         existing: User | None = await user_service.get_by_email(credentials.email)
         if existing:
             if not existing.is_verified:
@@ -64,12 +66,13 @@ class AuthService:
         )
         user.is_verified = True
         await user_service.session.commit()
-        logger.info("email verified: %d", user.user_id)
+        logger.info("email verified: user_id=%d", user.user_id)
         return MessageResponse(message="email verified - awaiting admin approval")
 
     async def login(
         self, credentials: UserRequest, user_service: UserService
     ) -> MessageResponse:
+        logger.debug("login attempt: [redacted]")
         user: User | None = await user_service.get_by_email(credentials.email)
         if not user or not user.check_password(credentials.password):
             raise HTTPException(status_code=401, detail="invalid email or password")
@@ -87,7 +90,7 @@ class AuthService:
         await self.verification_code_service.verify_code(
             user.user_id, data.code, VerificationPurpose.LOGIN
         )
-        logger.info("login successful: %d", user.user_id)
+        logger.info("login successful: user_id=%d", user.user_id)
         return TokenResponse(
             access_token=self.token_service.create_access_token(user.email),
             refresh_token=self.token_service.create_refresh_token(user.email),
@@ -95,6 +98,7 @@ class AuthService:
         )
 
     async def logout(self, refresh_token: str, session: AsyncSession) -> None:
+        logger.debug("logout attempt: [redacted]")
         payload: TokenPayload = self.token_service.decode_token(refresh_token)
         if payload.token_type != TokenType.REFRESH:
             raise HTTPException(status_code=400, detail="invalid refresh token")
@@ -121,6 +125,7 @@ class AuthService:
     async def request_email_change(
         self, data: EmailChangeRequest, user: User, user_service: UserService
     ) -> MessageResponse:
+        logger.debug("email change requested: user_id=%d", user.user_id)
         existing: User | None = await user_service.get_by_email(data.new_email)
         if existing:
             raise HTTPException(status_code=409, detail="email already in use")
@@ -144,6 +149,36 @@ class AuthService:
         await user_service.session.commit()
         logger.info("email changed for user %d", user.user_id)
         return MessageResponse(message="email updated successfully")
+
+    async def forgot_password(
+        self, email: str, user_service: UserService
+    ) -> MessageResponse:
+        logger.debug("password reset requested: [redacted]")
+        user: User | None = await user_service.get_by_email(email)
+        if not user:
+            return MessageResponse(message="a code has been sent to existing email")
+        if user.status == UserStatus.BANNED:
+            raise HTTPException(status_code=403, detail="account banned")
+        await self._verification_process(
+            user, user.email, VerificationPurpose.PASSWORD_RESET
+        )
+        logger.info("password reset verification code sent: user_id=%d", user.user_id)
+        return MessageResponse(message="a code has been sent to existing email")
+
+    async def reset_password(
+        self, data: PasswordResetRequest, user_service: UserService
+    ) -> MessageResponse:
+        logger.debug("password reset verification: [redacted]")
+        user: User | None = await user_service.get_by_email(data.email)
+        if not user:
+            raise HTTPException(status_code=404, detail="user not found")
+        await self.verification_code_service.verify_code(
+            user.user_id, data.code, VerificationPurpose.PASSWORD_RESET
+        )
+        user.password = hash_password(data.new_password)
+        await user_service.session.commit()
+        logger.info("password reset successful: user_id=%d", user.user_id)
+        return MessageResponse(message="password updated successfully")
 
     async def _resend_verification_code(self, user: User) -> MessageResponse:
         if user.status in (UserStatus.BANNED, UserStatus.REJECTED):

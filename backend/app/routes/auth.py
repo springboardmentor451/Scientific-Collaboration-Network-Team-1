@@ -3,7 +3,9 @@ from fastapi import APIRouter
 from app.routes.deps import AuthServiceDeps, CurrentUser, DBSession, UserServiceDeps
 from app.schemas import (
     EmailChangeRequest,
+    ForgotPasswordRequest,
     MessageResponse,
+    PasswordResetRequest,
     RefreshRequest,
     TokenResponse,
     UserRequest,
@@ -84,3 +86,21 @@ async def verify_email_change(
     user_service: UserServiceDeps,
 ) -> MessageResponse:
     return await auth_service.verify_change_email(data, current_user, user_service)
+
+
+@auth_router.post("/forgot-password")
+async def forgot_password(
+    body: ForgotPasswordRequest,
+    auth_service: AuthServiceDeps,
+    user_service: UserServiceDeps,
+) -> MessageResponse:
+    return await auth_service.forgot_password(body.email, user_service)
+
+
+@auth_router.post("/reset-password")
+async def reset_password(
+    body: PasswordResetRequest,
+    auth_service: AuthServiceDeps,
+    user_service: UserServiceDeps,
+) -> MessageResponse:
+    return await auth_service.reset_password(body, user_service)
