@@ -1,0 +1,25 @@
+Files:-
+- pages/LandingPage.tsx 
+    Under Hero Section:-
+    {/* Word "Discover" is almost mixing in background */}
+    {/* <span className="text-transparent bg-clip-text bg-gradient-to-r from-navy-500 via-navy-600 to-indigo-500 dark:from-navy-400 dark:to-indigo-400">Discover Knowledge.</span><br/> */}
+    {/* Get Started is invisible in light mode */}
+    {/* <Link to="/login" className="px-6 py-3 bg-navy-600 hover:bg-navy-500 text-white rounded-xl font-bold shadow-lg shadow-navy-500/20 hover:scale-[1.02] flex items-center gap-2 transition-all group"> */}
+    {/* Sign In is invisible in light mode}
+    {/* <Link to="/login" className="px-4 py-2 bg-navy-600 hover:bg-navy-400 text-white rounded-lg text-sm font-semibold shadow-md shadow-navy-500/10 transition-all">Sign In</Link> */}
+
+- pages/auth/Login.tsx
+    // text was invisible
+    // className="w-full py-2.5 bg-navy-600 hover:bg-navy-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-navy-500/10 flex items-center justify-center gap-2 transition-all mt-6"
+
+    // Cannot consult admin for these problems
+    // onClick={() => alert("Please consult database administrator. Default passwords are password123.")}
+
+- pages/auth/Register.tsx
+    Under section Header:-
+    {/* <p className="text-xs text-slate-500 font-medium">Verify your institutional domain to begin collaborations.</p> */}
+    In button type="submit":-
+    // className="w-full py-2.5 bg-navy-600 hover:bg-navy-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-navy-500/10 flex items-center justify-center gap-2 transition-all mt-6"
+    {/* {loading ? 'Submitting registration...' : 'Verify Domain (Send OTP)'} */}
+
+
