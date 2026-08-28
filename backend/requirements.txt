@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+aiosqlite
+python-jose[cryptography]
+pwdlib[argon2]
+python-multipart
+email-validator
+PyJWT
+granian
