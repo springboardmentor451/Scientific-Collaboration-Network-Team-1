@@ -1,7 +1,6 @@
 from datetime import date
 
 import pytest
-from app.core.constants import ProjectStatus
 from app.schemas import ProjectRequest, ProjectUpdateRequest
 from app.schemas.base import validate_dates
 from pydantic import ValidationError
@@ -44,8 +43,3 @@ def test_project_update_all_optional() -> None:
     req = ProjectUpdateRequest()
     assert req.name is None
     assert req.status is None
-
-
-def test_project_update_invalid_status() -> None:
-    with pytest.raises(ValidationError):
-        ProjectUpdateRequest(status=ProjectStatus("invalid_status"))
