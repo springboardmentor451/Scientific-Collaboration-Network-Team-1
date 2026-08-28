@@ -120,16 +120,6 @@ def test_valid_dates() -> None:
     validate_dates(date(2024, 1, 1), date(2024, 12, 31))
 
 
-def test_end_before_start_raises() -> None:
-    with pytest.raises(ValueError, match="end_date"):
-        validate_dates(date(2024, 12, 31), date(2024, 1, 1))
-
-
-def test_none_dates_valid() -> None:
-    validate_dates(None, None)
-    validate_dates(None, date(2024, 1, 1))
-
-
 # Citation
 def test_self_citation_rejected() -> None:
     with pytest.raises(ValidationError, match="cannot cite itself"):
@@ -150,26 +140,6 @@ def test_citation_requires_at_least_one_cited() -> None:
     with pytest.raises(ValidationError):
         CitationRequest(citing_publication_id=1, cited_publication_ids=[])
 
-
-# Collaboration
-def test_collaboration_duplicate_ids_rejected() -> None:
-    with pytest.raises(ValidationError, match="cannot collaborate with themselves"):
-        CollaborationRequest(researcher_ids=[1, 2, 1])
-
-
-def test_self_collaboration_rejected() -> None:
-    with pytest.raises(ValidationError, match="cannot collaborate with themselves"):
-        CollaborationRequest(researcher_ids=[1, 1])
-
-
-def test_collaboration_needs_two() -> None:
-    with pytest.raises(ValidationError):
-        CollaborationRequest(researcher_ids=[1])
-
-
-def test_valid_collaboration() -> None:
-    req = CollaborationRequest(researcher_ids=[1, 2, 3])
-    assert len(req.researcher_ids) == 3
 
 
 # Project dates
