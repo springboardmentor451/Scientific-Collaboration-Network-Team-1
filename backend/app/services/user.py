@@ -24,6 +24,7 @@ class UserService:
         return await self.session.scalar(select(User).where(User.email == email))
 
     async def update(self, credentials: UserUpdateRequest, user: User) -> UserResponse:
+        logger.debug("update information: user_id=%d", user.user_id)
         updates = credentials.model_dump(exclude_none=True)
         if UserUpdateRequest.PASSWORD_FIELD in updates:
             user.password = hash_password(updates.pop(UserUpdateRequest.PASSWORD_FIELD))
@@ -34,14 +35,16 @@ class UserService:
         return UserResponse.from_orm(user)
 
     async def delete(self, user: User) -> None:
+        logger.debug("delete user: user_id=%d", user.user_id)
         user_id: int = user.user_id
         await self.session.delete(user)
         await self.session.commit()
-        logger.info("user deleted: %s", user_id)
+        logger.info("user deleted: %d", user_id)
 
     async def request_role_change(
         self, data: RoleChangeRequest, user: User
     ) -> MessageResponse:
+        logger.debug("request role change: user_id=%d", user.user_id)
         if data.requested_role == user.role:
             raise HTTPException(status_code=400, detail="already have this role")
         user.requested_role = data.requested_role

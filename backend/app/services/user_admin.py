@@ -42,24 +42,27 @@ class UserAdminService:
         return [UserResponse.from_orm(user) for user in result.all()]
 
     async def approve(self, user_id: int) -> UserResponse:
+        logger.debug("approve user: user_id=%d", user_id)
         user: User = await self._get_by_id(user_id)
         await self._set_status(user, UserStatus.ACTIVE, require_pending=True)
         self.email_notifier.send_approval_notification(user.email)
-        logger.info("user approved: %d", user.user_id)
+        logger.info("user approved: user_id=%d", user.user_id)
         return UserResponse.from_orm(user)
 
     async def reject(self, user_id: int) -> UserResponse:
+        logger.debug("reject user: user_id=%d", user_id)
         user: User = await self._get_by_id(user_id)
         await self._set_status(user, UserStatus.REJECTED, require_pending=True)
         self.email_notifier.send_rejection_notification(user.email)
-        logger.info("user rejected: %d", user.user_id)
+        logger.info("user rejected: user_id=%d", user.user_id)
         return UserResponse.from_orm(user)
 
     async def ban(self, user_id: int) -> UserResponse:
+        logger.debug("ban user: user_id=%d", user_id)
         user: User = await self._get_by_id(user_id)
         await self._set_status(user, UserStatus.BANNED)
         self.email_notifier.send_ban_notification(user.email)
-        logger.info("user banned: %d", user.user_id)
+        logger.info("user banned: user_id=%d", user.user_id)
         return UserResponse.from_orm(user)
 
     async def change_role(
@@ -68,10 +71,11 @@ class UserAdminService:
         user: User = await self._get_by_id(user_id)
         if user.role == data.role:
             raise HTTPException(status_code=409, detail="user already has this role")
+        logger.debug("change role: user_id=%d", user_id)
         user.role = data.role
         user.requested_role = None
         await self.session.commit()
-        logger.info("role changed for user: %d", user_id)
+        logger.info("role changed for user: user_id=%d", user_id)
         return UserResponse.from_orm(user)
 
     async def approve_role_change(self, user_id: int) -> UserResponse:
@@ -82,14 +86,15 @@ class UserAdminService:
         user.role = user.requested_role
         user.requested_role = None
         await self.session.commit()
-        logger.info("role changed for user: %d", user_id)
+        logger.info("role changed for user: user_id=%d", user_id)
         return UserResponse.from_orm(user)
 
     async def delete_by_id(self, user_id: int) -> None:
+        logger.debug("delete user: user_id=%d", user_id)
         user: User = await self._get_by_id(user_id)
         await self.session.delete(user)
         await self.session.commit()
-        logger.info("user deleted: %d", user_id)
+        logger.info("user deleted: user_id=%d", user_id)
 
     async def _get_by_id(self, user_id: int) -> User:
         user: User | None = await self.session.get(User, user_id)
