@@ -89,7 +89,11 @@ def mock_verification_code() -> Generator[Literal["123456"], Any, None]:
         patch(
             "app.services.verification_code.VerificationCodeService.send_code",
         ),
-        patch("pyotp.TOTP.verify", return_value=True),
+        # patch("pyotp.TOTP.verify", return_value=True),
+        patch(
+            "pyotp.TOTP.verify",
+            side_effect=lambda code, valid_window=1: code == KNOWN_VERIFICATION_CODE,
+        ),
     ):
         yield KNOWN_VERIFICATION_CODE
 
