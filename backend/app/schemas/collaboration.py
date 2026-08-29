@@ -30,7 +30,6 @@ class CollaborationUpdateRequest(BaseModel):
 
 class CollaborationResponse(ResponseBase):
     collaboration_id: int
-    researcher_ids: list[int]
     collaboration_type: str | None
     collaboration_count: int
     created_at: datetime

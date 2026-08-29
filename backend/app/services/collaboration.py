@@ -59,6 +59,7 @@ class CollaborationService:
             self.session.add(member)
 
         await self.session.commit()
+        await self.session.refresh(collaboration)
         logger.info("collaboration created: %d", collaboration.collaboration_id)
         return CollaborationResponse.from_orm(collaboration)
 
