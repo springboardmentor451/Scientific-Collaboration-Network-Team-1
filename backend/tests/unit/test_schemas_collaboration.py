@@ -1,5 +1,5 @@
 import pytest
-from app.schemas.collaboration import CollaborationRequest
+from app.schemas import CollaborationRequest
 from pydantic import ValidationError
 
 

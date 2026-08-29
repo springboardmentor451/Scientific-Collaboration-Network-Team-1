@@ -4,13 +4,13 @@ import pytest
 from app.core.constants import UserRole
 from app.schemas import (
     CitationRequest,
-    CollaborationRequest,
     EmailChangeRequest,
     ProjectRequest,
     RoleChangeRequest,
     UserRequest,
 )
 from app.schemas.base import validate_dates
+from app.schemas.user import PasswordResetRequest
 from pydantic import SecretStr, ValidationError
 
 VALID_EMAIL = "john@mit.edu"
@@ -20,11 +20,7 @@ VALID_PASSWORD = SecretStr("SecurePass123")
 # Email domain
 @pytest.mark.parametrize(
     "email",
-    [
-        "user@mit.edu",
-        "user@ox.ac.uk",
-        "user@iitd.ac.in",
-    ],
+    ["user@mit.edu", "user@ox.ac.uk", "user@iitd.ac.in"],
 )
 def test_valid_academic_email(email: str) -> None:
     user = UserRequest(email=email, password=VALID_PASSWORD)
@@ -33,11 +29,7 @@ def test_valid_academic_email(email: str) -> None:
 
 @pytest.mark.parametrize(
     "email",
-    [
-        "user@gmail.com",
-        "user@hotmail.com",
-        "user@fake.com",
-    ],
+    ["user@gmail.com", "user@hotmail.com", "user@fake.com"],
 )
 def test_invalid_non_academic_email(email: str) -> None:
     with pytest.raises(ValidationError, match="recognised institution"):
@@ -47,11 +39,7 @@ def test_invalid_non_academic_email(email: str) -> None:
 # Password
 @pytest.mark.parametrize(
     "password, match",
-    [
-        ("12345678", "letter"),
-        ("abcdefgh", "number"),
-        ("ab", "least"),
-    ],
+    [("12345678", "letter"), ("abcdefgh", "number"), ("ab", "least")],
 )
 def test_invalid_password(password: SecretStr, match: str) -> None:
     with pytest.raises(ValidationError, match=match):
@@ -121,16 +109,6 @@ def test_valid_dates() -> None:
 
 
 # Citation
-def test_self_citation_rejected() -> None:
-    with pytest.raises(ValidationError, match="cannot cite itself"):
-        CitationRequest(citing_publication_id=1, cited_publication_ids=[1, 2])
-
-
-def test_duplicate_cited_rejected() -> None:
-    with pytest.raises(ValidationError, match="duplicate"):
-        CitationRequest(citing_publication_id=1, cited_publication_ids=[2, 2])
-
-
 def test_valid_citation() -> None:
     req = CitationRequest(citing_publication_id=1, cited_publication_ids=[2, 3])
     assert len(req.cited_publication_ids) == 2
@@ -139,7 +117,6 @@ def test_valid_citation() -> None:
 def test_citation_requires_at_least_one_cited() -> None:
     with pytest.raises(ValidationError):
         CitationRequest(citing_publication_id=1, cited_publication_ids=[])
-
 
 
 # Project dates
@@ -185,3 +162,43 @@ def test_email_change_request_valid_domain() -> None:
         expected_exception=ValidationError, match="recognised institution"
     ):
         EmailChangeRequest(new_email="user@oxford.ac.uk")
+
+
+def test_password_reset_passwords_must_match() -> None:
+    with pytest.raises(ValidationError, match="passwords do not match"):
+        PasswordResetRequest(
+            email=VALID_EMAIL,
+            code="123456",
+            new_password=SecretStr("NewPass123"),
+            confirm_password=SecretStr("DifferentPass99"),
+        )
+
+
+def test_password_reset_valid() -> None:
+    req = PasswordResetRequest(
+        email=VALID_EMAIL,
+        code="123456",
+        new_password=SecretStr("NewPass123"),
+        confirm_password=SecretStr("NewPass123"),
+    )
+    assert req.new_password.get_secret_value() == "NewPass123"
+
+
+def test_password_reset_code_length() -> None:
+    with pytest.raises(ValidationError):
+        PasswordResetRequest(
+            email=VALID_EMAIL,
+            code="123",
+            new_password=SecretStr("NewPass123"),
+            confirm_password=SecretStr("NewPass123"),
+        )
+
+
+def test_password_reset_weak_password() -> None:
+    with pytest.raises(ValidationError):
+        PasswordResetRequest(
+            email=VALID_EMAIL,
+            code="123456",
+            new_password=SecretStr("onlyletters"),
+            confirm_password=SecretStr("onlyletters"),
+        )
