@@ -167,6 +167,7 @@ class UserResponse(ResponseBase):
     role: UserRole
     status: UserStatus
     is_verified: bool
+    requested_role: UserRole | None = None
 
 
 class TokenPayload(BaseModel):
