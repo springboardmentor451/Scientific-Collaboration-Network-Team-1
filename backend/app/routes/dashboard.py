@@ -26,8 +26,7 @@ async def system_dashboard(
 
 # Dynamic route
 @dashboard_router.get(
-    "/institution/{institution_id:int}",
-    response_model=InstitutionStats,
+    "/institution/{institution_id:int}", response_model=InstitutionStats
 )
 async def institution_dashboard(
     institution_id: int, _: AdminUser, dashboard_service: DashboardServiceDeps
