@@ -39,7 +39,7 @@ async def create_superuser() -> None:
 
         existing: User | None = await db.scalar(select(User).where(User.email == email))
         if existing:
-            raise SystemExit(f"[superuser] user already exists: {existing.user_id}")
+            raise SystemExit(f"[superuser] user already exists: user_id={existing.user_id}")
 
         admin = User(
             email=email,
@@ -50,7 +50,7 @@ async def create_superuser() -> None:
         )
         db.add(admin)
         await db.commit()
-        logger.info("[superuser] created: %d", admin.user_id)
+        logger.info("[superuser] created: user_id=%d", admin.user_id)
 
 
 async def replace_superuser() -> None:
@@ -81,7 +81,7 @@ async def replace_superuser() -> None:
         admin.password = hash_password(new_password)
         admin.is_verified = True
         await db.commit()
-        logger.info("[replace_admin] System admin replaced with %d", admin.user_id)
+        logger.info("[replace_admin] System admin replaced with userid=%d", admin.user_id)
 
 
 if __name__ == "__main__":
