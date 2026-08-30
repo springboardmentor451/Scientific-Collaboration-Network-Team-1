@@ -9,6 +9,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 citation_router = APIRouter(prefix="/citations", tags=["citations"])
 
 
+# Static route
 @citation_router.post("/", response_model=list[CitationResponse], status_code=201)
 async def create_citation(
     data: CitationRequest, _: CurrentUser, citation_service: CitationServiceDeps
@@ -16,8 +17,9 @@ async def create_citation(
     return await citation_service.create(data)
 
 
+# Dynamic routes
 @citation_router.get(
-    "/by-publication/{publication_id}", response_model=list[CitationResponse]
+    "/by-publication/{publication_id:int}", response_model=list[CitationResponse]
 )
 async def get_citations_by_publication(
     publication_id: int, citation_service: CitationServiceDeps
@@ -26,7 +28,7 @@ async def get_citations_by_publication(
 
 
 @citation_router.get(
-    "/cited-by/{publication_id}", response_model=list[CitationResponse]
+    "/cited-by/{publication_id:int}", response_model=list[CitationResponse]
 )
 async def get_cited_by(
     publication_id: int, citation_service: CitationServiceDeps
@@ -34,7 +36,7 @@ async def get_cited_by(
     return await citation_service.get_cited_by(publication_id)
 
 
-@citation_router.delete("/{citation_id}", status_code=204)
+@citation_router.delete("/{citation_id:int}", status_code=204)
 async def delete_citation(
     citation_id: int, _: CurrentUser, citation_service: CitationServiceDeps
 ) -> None:

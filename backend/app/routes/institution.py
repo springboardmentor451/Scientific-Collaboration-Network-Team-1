@@ -14,6 +14,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 institution_router = APIRouter(prefix="/institutions", tags=["institutions"])
 
 
+# Static routes
 @institution_router.post("/", response_model=InstitutionResponse, status_code=201)
 async def create_institution(
     data: InstitutionRequest,
@@ -30,7 +31,8 @@ async def get_institutions(
     return await institution_service.get_all()
 
 
-@institution_router.get("/{institution_id}", response_model=InstitutionResponse)
+# Dynamic routes
+@institution_router.get("/{institution_id:int}", response_model=InstitutionResponse)
 async def get_institution(
     institution_id: int,
     institution_service: InstitutionServiceDeps,
@@ -38,7 +40,7 @@ async def get_institution(
     return await institution_service.get_institution(institution_id)
 
 
-@institution_router.patch("/{institution_id}", response_model=InstitutionResponse)
+@institution_router.patch("/{institution_id:int}", response_model=InstitutionResponse)
 async def update_institution(
     institution_id: int,
     data: InstitutionUpdateRequest,
@@ -48,7 +50,7 @@ async def update_institution(
     return await institution_service.update(institution_id, data)
 
 
-@institution_router.delete("/{institution_id}", status_code=204)
+@institution_router.delete("/{institution_id:int}", status_code=204)
 async def delete_institution(
     institution_id: int,
     _: AdminUser,

@@ -9,6 +9,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 project_router = APIRouter(prefix="/projects", tags=["projects"])
 
 
+# Static routes
 @project_router.get("/", response_model=list[ProjectResponse])
 async def get_projects(project_service: ProjectServiceDeps) -> list[ProjectResponse]:
     return await project_service.get_all()
@@ -21,13 +22,6 @@ async def get_my_projects(
     return await project_service.get_by_researcher(current_researcher.researcher_id)
 
 
-@project_router.get("/{project_id}", response_model=ProjectResponse)
-async def get_project(
-    project_id: int, project_service: ProjectServiceDeps
-) -> ProjectResponse:
-    return await project_service.get_by_id(project_id)
-
-
 @project_router.post("/", response_model=ProjectResponse, status_code=201)
 async def create_project(
     data: ProjectRequest,
@@ -37,7 +31,15 @@ async def create_project(
     return await project_service.create(data, current_researcher)
 
 
-@project_router.patch("/{project_id}", response_model=ProjectResponse)
+# Dynamic routes
+@project_router.get("/{project_id:int}", response_model=ProjectResponse)
+async def get_project(
+    project_id: int, project_service: ProjectServiceDeps
+) -> ProjectResponse:
+    return await project_service.get_by_id(project_id)
+
+
+@project_router.patch("/{project_id:int}", response_model=ProjectResponse)
 async def update_project(
     project_id: int,
     data: ProjectUpdateRequest,
@@ -47,7 +49,7 @@ async def update_project(
     return await project_service.update(project_id, data, current_researcher)
 
 
-@project_router.delete("/{project_id}", status_code=204)
+@project_router.delete("/{project_id:int}", status_code=204)
 async def delete_project(
     project_id: int,
     current_researcher: CurrentResearcher,

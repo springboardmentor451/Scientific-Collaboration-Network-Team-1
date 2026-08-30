@@ -13,6 +13,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 publication_router = APIRouter(prefix="/publications", tags=["publications"])
 
 
+# Static routes
 @publication_router.get("/", response_model=list[PublicationResponse])
 async def get_publications(
     publication_service: PublicationServiceDeps,
@@ -27,13 +28,6 @@ async def get_my_publications(
     return await publication_service.get_by_researcher(current_researcher.researcher_id)
 
 
-@publication_router.get("/{publication_id}", response_model=PublicationResponse)
-async def get_publication(
-    publication_id: int, publication_service: PublicationServiceDeps
-) -> PublicationResponse:
-    return await publication_service.get_by_id(publication_id)
-
-
 @publication_router.post("/", response_model=PublicationResponse, status_code=201)
 async def create_publication(
     data: PublicationRequest,
@@ -43,7 +37,15 @@ async def create_publication(
     return await publication_service.create(data, current_researcher)
 
 
-@publication_router.patch("/{publication_id}", response_model=PublicationResponse)
+# Dynamic routes
+@publication_router.get("/{publication_id:int}", response_model=PublicationResponse)
+async def get_publication(
+    publication_id: int, publication_service: PublicationServiceDeps
+) -> PublicationResponse:
+    return await publication_service.get_by_id(publication_id)
+
+
+@publication_router.patch("/{publication_id:int}", response_model=PublicationResponse)
 async def update_publication(
     publication_id: int,
     data: PublicationUpdateRequest,
@@ -53,7 +55,7 @@ async def update_publication(
     return await publication_service.update(publication_id, data, current_researcher)
 
 
-@publication_router.delete("/{publication_id}", status_code=204)
+@publication_router.delete("/{publication_id:int}", status_code=204)
 async def delete_publication(
     publication_id: int,
     current_researcher: CurrentResearcher,
@@ -62,7 +64,9 @@ async def delete_publication(
     await publication_service.delete(publication_id, current_researcher)
 
 
-@publication_router.post("/{publication_id}/upload", response_model=PublicationResponse)
+@publication_router.post(
+    "/{publication_id:int}/upload", response_model=PublicationResponse
+)
 async def upload_file(
     publication_id: int,
     file: UploadFile,

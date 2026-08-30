@@ -9,6 +9,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 collaboration_router = APIRouter(prefix="/collaborations", tags=["collaborations"])
 
 
+# Static routes
 @collaboration_router.get("/", response_model=list[CollaborationResponse])
 async def get_collaborations(
     collaboration_service: CollaborationServiceDeps,
@@ -35,7 +36,8 @@ async def create_collaboration(
     return await collaboration_service.create(data)
 
 
-@collaboration_router.delete("/{collaboration_id}", status_code=204)
+# Dynamic route
+@collaboration_router.delete("/{collaboration_id:int}", status_code=204)
 async def delete_collaboration(
     collaboration_id: int,
     _: CurrentUser,
