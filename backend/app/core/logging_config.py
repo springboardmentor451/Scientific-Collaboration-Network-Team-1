@@ -1,13 +1,12 @@
 import logging
 import os
-from logging.handlers import RotatingFileHandler
+from logging.handlers import TimedRotatingFileHandler
 from typing import Final, TextIO
 
 # Constants
 FILE_NAME: Final[str] = "app.log"
 FILE_DIR: Final[str] = "./logs"
-FILE_SIZE: Final[int] = 1024 * 1024  # 1MB per file
-BACKUP_COUNT: Final[int] = 5  # keeps last 5 files = 5MB max
+BACKUP_COUNT: Final[int] = 10
 FORMAT: Final[str] = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 DEFAULT_NOISY_LOGGERS: Final[tuple[str, ...]] = (
     "watchfiles",
@@ -47,11 +46,13 @@ def _check_directory() -> None:
 
 # Handlers
 def _setup_handlers(log_format: str) -> list[logging.Handler]:
-    file_handler = RotatingFileHandler(
+    file_handler = TimedRotatingFileHandler(
         filename=str(os.path.join(FILE_DIR, FILE_NAME)),
-        maxBytes=FILE_SIZE,
+        when="midnight",
+        interval=1,
         backupCount=BACKUP_COUNT,
     )
+    file_handler.suffix = "%Y-%m-%d"
     file_handler.setFormatter(logging.Formatter(log_format))
     console_handler: logging.StreamHandler[TextIO] = logging.StreamHandler()
     console_handler.setFormatter(logging.Formatter(log_format))
