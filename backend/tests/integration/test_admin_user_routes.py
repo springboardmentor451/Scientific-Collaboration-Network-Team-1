@@ -12,7 +12,7 @@ async def test_get_pending_users_as_admin(
 ) -> None:
     await make_user(session, email="pending1@mit.edu", status=UserStatus.PENDING)
     res: Response = await client.get(
-        f"{USER_URL}/pending", headers=auth_headers(admin_user)
+        str(f"{USER_URL}/pending"), headers=auth_headers(admin_user)
     )
     assert res.status_code == 200
     assert isinstance(res.json(), list)
@@ -23,7 +23,7 @@ async def test_get_pending_users_as_researcher_forbidden(
     client: AsyncClient, researcher_user: User
 ) -> None:
     res: Response = await client.get(
-        f"{USER_URL}/pending", headers=auth_headers(researcher_user)
+        str(f"{USER_URL}/pending"), headers=auth_headers(researcher_user)
     )
     assert res.status_code == 403
 
@@ -33,7 +33,10 @@ async def test_approve_pending_user(
     client: AsyncClient, admin_user: User, session: AsyncSession
 ) -> None:
     pending: User = await make_user(
-        session, email="toapprove@mit.edu", status=UserStatus.PENDING
+        session,
+        email="toapprove@mit.edu",
+        status=UserStatus.PENDING,
+        requested_role=UserRole.RESEARCHER,
     )
     res: Response = await client.patch(
         f"{USER_URL}/{pending.user_id}/approve", headers=auth_headers(admin_user)

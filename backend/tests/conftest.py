@@ -126,6 +126,7 @@ async def make_user(
     role: UserRole = UserRole.RESEARCHER,
     status: UserStatus = UserStatus.ACTIVE,
     is_verified: bool = True,
+    requested_role: UserRole | None = None,
 ) -> User:
     if email is None:
         email = f"user_{uuid.uuid4().hex[:8]}@mit.edu"
@@ -133,6 +134,7 @@ async def make_user(
     user.role = role
     user.status = status
     user.is_verified = is_verified
+    user.requested_role = requested_role
     session.add(user)
     await session.commit()
     return user
