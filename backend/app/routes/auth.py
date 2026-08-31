@@ -1,6 +1,12 @@
 from fastapi import APIRouter
 
-from app.routes.deps import AuthServiceDeps, CurrentUser, DBSession, UserServiceDeps
+from app.routes.deps import (
+    AuthServiceDeps,
+    CurrentUser,
+    DBSession,
+    Token,
+    UserServiceDeps,
+)
 from app.schemas import (
     EmailChangeRequest,
     ForgotPasswordRequest,
@@ -63,9 +69,12 @@ async def refresh_token(
 
 @auth_router.post("/logout", status_code=204)
 async def logout(
-    body: RefreshRequest, auth_service: AuthServiceDeps, session: DBSession
+    access_token: Token,
+    body: RefreshRequest,
+    auth_service: AuthServiceDeps,
+    session: DBSession,
 ) -> None:
-    await auth_service.logout(body.refresh_token, session)
+    await auth_service.logout(access_token, body.refresh_token, session)
 
 
 @auth_router.post("/request-email-change")

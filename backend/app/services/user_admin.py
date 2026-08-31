@@ -44,6 +44,13 @@ class UserAdminService:
     async def approve(self, user_id: int) -> UserResponse:
         logger.debug("approve user: user_id=%d", user_id)
         user: User = await self._get_by_id(user_id)
+        if user.status == UserStatus.ACTIVE:
+            raise HTTPException(status_code=409, detail="user already active")
+        if user.status == UserStatus.PENDING and not user.requested_role:
+            raise HTTPException(status_code=400, detail="user has no requested role")
+        if user.requested_role:
+            user.role = user.requested_role
+            user.requested_role = None
         await self._set_status(user, UserStatus.ACTIVE, require_pending=True)
         self.email_notifier.send_approval_notification(user.email)
         logger.info("user approved: user_id=%d", user.user_id)
@@ -68,10 +75,10 @@ class UserAdminService:
     async def change_role(
         self, user_id: int, data: UserRoleUpdateRequest
     ) -> UserResponse:
+        logger.debug("change role: user_id=%d", user_id)
         user: User = await self._get_by_id(user_id)
         if user.role == data.role:
             raise HTTPException(status_code=409, detail="user already has this role")
-        logger.debug("change role: user_id=%d", user_id)
         user.role = data.role
         user.requested_role = None
         await self.session.commit()
@@ -79,14 +86,26 @@ class UserAdminService:
         return UserResponse.from_orm(user)
 
     async def approve_role_change(self, user_id: int) -> UserResponse:
+        logger.debug("approve role change: user_id=%d", user_id)
         user: User = await self._get_by_id(user_id)
         if not user.requested_role:
             raise HTTPException(status_code=400, detail="no role change requested")
-        logger.debug("approving role change: user_id=%d", user_id)
+        if user.status != UserStatus.ACTIVE:
+            raise HTTPException(status_code=400, detail="user must be active")
         user.role = user.requested_role
         user.requested_role = None
         await self.session.commit()
         logger.info("role changed for user: user_id=%d", user_id)
+        return UserResponse.from_orm(user)
+
+    async def reject_role_change(self, user_id: int) -> UserResponse:
+        logger.debug("reject role change: user_id=%d", user_id)
+        user: User = await self._get_by_id(user_id)
+        if not user.requested_role:
+            raise HTTPException(status_code=400, detail="no role change requested")
+        user.requested_role = None
+        await self.session.commit()
+        logger.info("role change rejected: user_id=%d", user_id)
         return UserResponse.from_orm(user)
 
     async def delete_by_id(self, user_id: int) -> None:

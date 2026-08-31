@@ -3,12 +3,13 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import Config, get_config, get_db
 from app.core.constants import UserRole
 from app.core.interfaces import EmailNotifier
-from app.models import Researcher, User
+from app.models import Researcher, RevokedToken, User
 from app.schemas import TokenPayload
 from app.services import (
     AuthService,
@@ -111,6 +112,12 @@ def get_report_service(session: DBSession) -> ReportService:
 
 # -- Auth guard --
 async def get_current_user(token: Token, session: DBSession) -> User:
+    revoked: RevokedToken | None = await session.scalar(
+        select(RevokedToken).where(RevokedToken.token == token)
+    )
+    if revoked:
+        raise HTTPException(status_code=401, detail="token has been revoked")
+
     token_service: TokenService = get_token_service()
     payload: TokenPayload = token_service.decode_token(token)
     if not payload.sub:

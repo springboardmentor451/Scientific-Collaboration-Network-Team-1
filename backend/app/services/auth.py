@@ -97,12 +97,16 @@ class AuthService:
             token_type=TokenType.BEARER,
         )
 
-    async def logout(self, refresh_token: str, session: AsyncSession) -> None:
+    async def logout(
+        self, access_token: str, refresh_token: str, session: AsyncSession
+    ) -> None:
         logger.debug("logout attempt: [redacted]")
         payload: TokenPayload = self.token_service.decode_token(refresh_token)
         if payload.token_type != TokenType.REFRESH:
             raise HTTPException(status_code=400, detail="invalid refresh token")
         await self._revoke_token(refresh_token, session)
+        await self._revoke_token(access_token, session)
+        logger.info("token revoked on logout")
 
     async def refresh(
         self, refresh_token: str, user_service: UserService, session: AsyncSession
@@ -205,7 +209,7 @@ class AuthService:
         user = User(
             email=credentials.email,
             password=hash_password(credentials.password),
-            role=credentials.requested_role,
+            requested_role=credentials.requested_role,
             status=UserStatus.PENDING,
         )
         user_service.session.add(user)
@@ -218,6 +222,10 @@ class AuthService:
             raise HTTPException(status_code=403, detail="email not verified")
         if user.status == UserStatus.PENDING:
             raise HTTPException(status_code=403, detail="account pending approval")
+        if user.role is None:
+            raise HTTPException(
+                status_code=403, detail="account pending role assignment"
+            )
         if user.status == UserStatus.REJECTED:
             raise HTTPException(status_code=403, detail="account rejected")
         if user.status == UserStatus.BANNED:
