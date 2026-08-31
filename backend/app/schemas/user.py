@@ -164,7 +164,7 @@ class RefreshRequest(BaseModel):
 class UserResponse(ResponseBase):
     user_id: int
     email: EmailStr
-    role: UserRole
+    role: UserRole | None = None
     status: UserStatus
     is_verified: bool
     requested_role: UserRole | None = None
