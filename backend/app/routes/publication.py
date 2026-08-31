@@ -21,13 +21,6 @@ async def get_publications(
     return await publication_service.get_all()
 
 
-@publication_router.get("/my", response_model=list[PublicationResponse])
-async def get_my_publications(
-    current_researcher: CurrentResearcher, publication_service: PublicationServiceDeps
-) -> list[PublicationResponse]:
-    return await publication_service.get_by_researcher(current_researcher.researcher_id)
-
-
 @publication_router.post("/", response_model=PublicationResponse, status_code=201)
 async def create_publication(
     data: PublicationRequest,
@@ -37,7 +30,28 @@ async def create_publication(
     return await publication_service.create(data, current_researcher)
 
 
+@publication_router.get("/my", response_model=list[PublicationResponse])
+async def get_my_publications(
+    current_researcher: CurrentResearcher, publication_service: PublicationServiceDeps
+) -> list[PublicationResponse]:
+    return await publication_service.get_by_researcher(current_researcher.researcher_id)
+
+
 # Dynamic routes
+@publication_router.post(
+    "/{publication_id:int}/upload", response_model=PublicationResponse
+)
+async def upload_file(
+    publication_id: int,
+    file: UploadFile,
+    current_researcher: CurrentResearcher,
+    publication_service: PublicationServiceDeps,
+) -> PublicationResponse:
+    return await publication_service.upload_file(
+        publication_id, file, current_researcher
+    )
+
+
 @publication_router.get("/{publication_id:int}", response_model=PublicationResponse)
 async def get_publication(
     publication_id: int, publication_service: PublicationServiceDeps
@@ -62,17 +76,3 @@ async def delete_publication(
     publication_service: PublicationServiceDeps,
 ) -> None:
     await publication_service.delete(publication_id, current_researcher)
-
-
-@publication_router.post(
-    "/{publication_id:int}/upload", response_model=PublicationResponse
-)
-async def upload_file(
-    publication_id: int,
-    file: UploadFile,
-    current_researcher: CurrentResearcher,
-    publication_service: PublicationServiceDeps,
-) -> PublicationResponse:
-    return await publication_service.upload_file(
-        publication_id, file, current_researcher
-    )

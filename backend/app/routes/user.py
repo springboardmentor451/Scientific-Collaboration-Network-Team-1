@@ -34,8 +34,7 @@ async def get_all_users(
 
 @user_router.get("/role-change-requests", response_model=list[UserResponse])
 async def get_role_change_requests(
-    _: AdminUser,
-    user_admin_service: UserAdminServiceDeps,
+    _: AdminUser, user_admin_service: UserAdminServiceDeps
 ) -> list[UserResponse]:
     return await user_admin_service.get_role_change_requests()
 
@@ -56,9 +55,7 @@ async def delete_me(current_user: CurrentUser, user_service: UserServiceDeps) ->
 
 @user_router.post("/me/request-role-change", response_model=MessageResponse)
 async def request_role_change(
-    data: RoleChangeRequest,
-    current_user: CurrentUser,
-    user_service: UserServiceDeps,
+    data: RoleChangeRequest, current_user: CurrentUser, user_service: UserServiceDeps
 ) -> MessageResponse:
     return await user_service.request_role_change(data, current_user)
 
@@ -88,13 +85,6 @@ async def change_role(
     return await user_admin_service.change_role(user_id, data)
 
 
-@user_router.delete("/{user_id:int}", status_code=204)
-async def delete_user(
-    user_id: int, _: AdminUser, user_admin_service: UserAdminServiceDeps
-) -> None:
-    await user_admin_service.delete_by_id(user_id)
-
-
 @user_router.patch("/{user_id:int}/ban", response_model=UserResponse)
 async def ban_user(
     user_id: int, _: AdminUser, user_admin_service: UserAdminServiceDeps
@@ -104,8 +94,20 @@ async def ban_user(
 
 @user_router.patch("/{user_id:int}/approve-role-change", response_model=UserResponse)
 async def approve_role_change(
-    user_id: int,
-    _: AdminUser,
-    user_admin_service: UserAdminServiceDeps,
+    user_id: int, _: AdminUser, user_admin_service: UserAdminServiceDeps
 ) -> UserResponse:
     return await user_admin_service.approve_role_change(user_id)
+
+
+@user_router.patch("/{user_id:int}/reject-role-change", response_model=UserResponse)
+async def reject_role_change(
+    user_id: int, _: AdminUser, user_admin_service: UserAdminServiceDeps
+) -> UserResponse:
+    return await user_admin_service.reject_role_change(user_id)
+
+
+@user_router.delete("/{user_id:int}", status_code=204)
+async def delete_user(
+    user_id: int, _: AdminUser, user_admin_service: UserAdminServiceDeps
+) -> None:
+    await user_admin_service.delete_by_id(user_id)

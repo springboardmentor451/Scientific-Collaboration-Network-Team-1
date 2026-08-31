@@ -10,6 +10,7 @@ from app.schemas import (
 researcher_router = APIRouter(prefix="/researchers", tags=["researchers"])
 
 
+# Static routes
 @researcher_router.post("/", response_model=ResearcherResponse, status_code=201)
 async def create_researcher(
     data: ResearcherRequest,
@@ -26,14 +27,6 @@ async def get_researchers(
     return await researcher_service.get_all()
 
 
-@researcher_router.get("/researcher_id", response_model=ResearcherResponse)
-async def get_researcher(
-    researcher_id: int,
-    researcher_service: ResearcherServiceDeps,
-) -> ResearcherResponse:
-    return await researcher_service.get_by_id(researcher_id)
-
-
 @researcher_router.patch("/me", response_model=ResearcherResponse)
 async def update_researcher(
     data: ResearcherUpdateRequest,
@@ -43,14 +36,21 @@ async def update_researcher(
     return await researcher_service.update(data, current_user)
 
 
-# admin update researcher_id from URL (add later when roles are implemented)
+@researcher_router.delete("/me", status_code=204)
+async def delete_researcher(
+    current_user: CurrentUser, researcher_service: ResearcherServiceDeps
+) -> None:
+    await researcher_service.delete(current_user)
+
+
+# admin update researcher_id from URL (may add later when roles are implemented)
 # @researcher_router.patch("/{researcher_id}")
 # async def admin_update_researcher(): ...
 
 
-@researcher_router.delete("/me", status_code=204)
-async def delete_researcher(
-    current_user: CurrentUser,
-    researcher_service: ResearcherServiceDeps,
-) -> None:
-    await researcher_service.delete(current_user)
+# Dynamic route
+@researcher_router.get("/{researcher_id:int}", response_model=ResearcherResponse)
+async def get_researcher(
+    researcher_id: int, researcher_service: ResearcherServiceDeps
+) -> ResearcherResponse:
+    return await researcher_service.get_by_id(researcher_id)

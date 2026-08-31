@@ -15,13 +15,6 @@ async def get_projects(project_service: ProjectServiceDeps) -> list[ProjectRespo
     return await project_service.get_all()
 
 
-@project_router.get("/my", response_model=list[ProjectResponse])
-async def get_my_projects(
-    current_researcher: CurrentResearcher, project_service: ProjectServiceDeps
-) -> list[ProjectResponse]:
-    return await project_service.get_by_researcher(current_researcher.researcher_id)
-
-
 @project_router.post("/", response_model=ProjectResponse, status_code=201)
 async def create_project(
     data: ProjectRequest,
@@ -29,6 +22,13 @@ async def create_project(
     project_service: ProjectServiceDeps,
 ) -> ProjectResponse:
     return await project_service.create(data, current_researcher)
+
+
+@project_router.get("/my", response_model=list[ProjectResponse])
+async def get_my_projects(
+    current_researcher: CurrentResearcher, project_service: ProjectServiceDeps
+) -> list[ProjectResponse]:
+    return await project_service.get_by_researcher(current_researcher.researcher_id)
 
 
 # Dynamic routes

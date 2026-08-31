@@ -17,6 +17,15 @@ async def get_collaborations(
     return await collaboration_service.get_all()
 
 
+@collaboration_router.post("/", response_model=CollaborationResponse, status_code=201)
+async def create_collaboration(
+    data: CollaborationRequest,
+    _: CurrentUser,
+    collaboration_service: CollaborationServiceDeps,
+) -> CollaborationResponse:
+    return await collaboration_service.create(data)
+
+
 @collaboration_router.get("/my", response_model=list[CollaborationResponse])
 async def get_my_collaborations(
     current_researcher: CurrentResearcher,
@@ -25,15 +34,6 @@ async def get_my_collaborations(
     return await collaboration_service.get_by_researcher(
         current_researcher.researcher_id
     )
-
-
-@collaboration_router.post("/", response_model=CollaborationResponse, status_code=201)
-async def create_collaboration(
-    data: CollaborationRequest,
-    _: CurrentUser,
-    collaboration_service: CollaborationServiceDeps,
-) -> CollaborationResponse:
-    return await collaboration_service.create(data)
 
 
 # Dynamic route
