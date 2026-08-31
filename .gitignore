@@ -5,7 +5,7 @@
 __pycache__/
 
 # Ignore log files
-*.log
+*.log*
 
 # Ignore build output
 dist/
