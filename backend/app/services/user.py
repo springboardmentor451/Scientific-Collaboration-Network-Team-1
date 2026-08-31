@@ -47,6 +47,10 @@ class UserService:
         logger.debug("request role change: user_id=%d", user.user_id)
         if data.requested_role == user.role:
             raise HTTPException(status_code=400, detail="already have this role")
+        if user.requested_role == data.requested_role:
+            raise HTTPException(
+                status_code=400, detail="you already requested this role"
+            )
         user.requested_role = data.requested_role
         await self.session.commit()
         logger.info(

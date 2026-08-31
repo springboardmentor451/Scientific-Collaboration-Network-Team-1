@@ -21,7 +21,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
     password: Mapped[str] = mapped_column(String(256), nullable=False)
     role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole), default=UserRole.RESEARCHER, nullable=False, index=True
+        Enum(UserRole), default=None, nullable=True, index=True
     )
     is_verified: Mapped[bool] = mapped_column(default=False, nullable=False, index=True)
     status: Mapped[UserStatus] = mapped_column(
@@ -29,7 +29,7 @@ class User(Base):
     )
     pending_email: Mapped[str | None] = mapped_column(String, nullable=True)
     requested_role: Mapped[UserRole | None] = mapped_column(
-        Enum(UserRole), nullable=True
+        Enum(UserRole), default=None, nullable=True
     )
 
     researcher: Mapped[Researcher | None] = relationship(
