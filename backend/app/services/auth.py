@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import TOTP_INTERVAL, TokenType, UserStatus, VerificationPurpose
 from app.core.security import hash_password
+from app.core.validator import UserStatusValidator
 from app.models import RevokedToken, User
 from app.schemas import (
     EmailChangeRequest,
@@ -76,7 +77,7 @@ class AuthService:
         user: User | None = await user_service.get_by_email(credentials.email)
         if not user or not user.check_password(credentials.password):
             raise HTTPException(status_code=401, detail="invalid email or password")
-        self._validate_user_status(user)
+        UserStatusValidator.ensure_authenticatable(user)
         await self._verification_process(user, user.email, VerificationPurpose.LOGIN)
         return MessageResponse(message="verification code sent to your email")
 
@@ -86,7 +87,7 @@ class AuthService:
         user: User | None = await user_service.get_by_email(data.email)
         if not user:
             raise HTTPException(status_code=404, detail="user not found")
-        self._validate_user_status(user)
+        UserStatusValidator.ensure_authenticatable(user)
         await self.verification_code_service.verify_code(
             user.user_id, data.code, VerificationPurpose.LOGIN
         )
@@ -216,20 +217,6 @@ class AuthService:
         await user_service.session.commit()
         logger.info("user created: %d", user.user_id)
         return user
-
-    def _validate_user_status(self, user: User) -> None:
-        if not user.is_verified:
-            raise HTTPException(status_code=403, detail="email not verified")
-        if user.status == UserStatus.PENDING:
-            raise HTTPException(status_code=403, detail="account pending approval")
-        if user.role is None:
-            raise HTTPException(
-                status_code=403, detail="account pending role assignment"
-            )
-        if user.status == UserStatus.REJECTED:
-            raise HTTPException(status_code=403, detail="account rejected")
-        if user.status == UserStatus.BANNED:
-            raise HTTPException(status_code=403, detail="account banned")
 
     async def _is_revoked(self, token: str, session: AsyncSession) -> bool:
         return (

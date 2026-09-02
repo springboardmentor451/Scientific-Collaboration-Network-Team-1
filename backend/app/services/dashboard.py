@@ -15,6 +15,7 @@ from app.models import (
     Citation,
     Collaboration,
     CollaborationResearcher,
+    Conference,
     Institution,
     Project,
     ProjectResearcher,
@@ -27,6 +28,7 @@ from app.schemas import (
     InstitutionStats,
     ProjectStats,
     PublicationStats,
+    PublicStats,
     ResearcherDashboard,
     SystemStats,
 )
@@ -177,4 +179,18 @@ class DashboardService:
             total_projects=await count(Project),
             total_collaborations=await count(Collaboration),
             total_citations=await count(Citation),
+        )
+
+    async def get_public_stats(self) -> PublicStats:
+        async def count(model) -> int:
+            return (
+                await self.session.scalar(select(func.count()).select_from(model)) or 0
+            )
+
+        return PublicStats(
+            total_researchers=await count(Researcher),
+            total_publications=await count(Publication),
+            total_institutions=await count(Institution),
+            total_conferences=await count(Conference),
+            total_collaborations=await count(Collaboration),
         )

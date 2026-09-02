@@ -5,9 +5,10 @@ from sqlalchemy import select
 from sqlalchemy.engine.result import ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.constants import UserStatus
+from app.core.constants import UserRole, UserStatus
 from app.core.interfaces import EmailNotifier
-from app.models import User
+from app.core.validator import UserStatusValidator
+from app.models import Institution, User
 from app.schemas import UserResponse, UserRoleUpdateRequest
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -44,14 +45,12 @@ class UserAdminService:
     async def approve(self, user_id: int) -> UserResponse:
         logger.debug("approve user: user_id=%d", user_id)
         user: User = await self._get_by_id(user_id)
-        if user.status == UserStatus.ACTIVE:
-            raise HTTPException(status_code=409, detail="user already active")
-        if user.status == UserStatus.PENDING and not user.requested_role:
-            raise HTTPException(status_code=400, detail="user has no requested role")
+        UserStatusValidator.ensure_approvable(user)
         if user.requested_role:
             user.role = user.requested_role
             user.requested_role = None
-        await self._set_status(user, UserStatus.ACTIVE, require_pending=True)
+        user.status = UserStatus.ACTIVE
+        await self.session.commit()
         self.email_notifier.send_approval_notification(user.email)
         logger.info("user approved: user_id=%d", user.user_id)
         return UserResponse.from_orm(user)
@@ -81,6 +80,7 @@ class UserAdminService:
             raise HTTPException(status_code=409, detail="user already has this role")
         user.role = data.role
         user.requested_role = None
+        await self._manage_institution_id(data, user)
         await self.session.commit()
         logger.info("role changed for user: user_id=%d", user_id)
         return UserResponse.from_orm(user)
@@ -134,3 +134,21 @@ class UserAdminService:
             )
         user.status = status
         await self.session.commit()
+
+    async def _manage_institution_id(
+        self, data: UserRoleUpdateRequest, user: User
+    ) -> None:
+        if data.role == UserRole.INSTITUTION_ADMIN:
+            if not data.managed_institution_id:
+                raise HTTPException(
+                    status_code=400,
+                    detail="managed_institution_id required for institution admin role",
+                )
+            institution: Institution | None = await self.session.get(
+                Institution, data.managed_institution_id
+            )
+            if not institution:
+                raise HTTPException(status_code=404, detail="institution not found")
+            user.managed_institution_id = data.managed_institution_id
+        else:
+            user.managed_institution_id = None

@@ -32,6 +32,11 @@ class InstitutionService:
         institution: Institution = await self._get_by_id(institution_id)
         return InstitutionResponse.from_orm(institution)
 
+    async def get_by_domain(self, domain: str) -> Institution | None:
+        return await self.session.scalar(
+            select(Institution).where(Institution.domain == domain)
+        )
+
     async def create(self, data: InstitutionRequest) -> InstitutionResponse:
         existing: Institution | None = await self.session.scalar(
             select(Institution).where(Institution.name == data.name)
@@ -45,6 +50,7 @@ class InstitutionService:
             country=data.country,
             type=data.type,
             website=str(data.website) if data.website else None,
+            domain=data.domain,
         )
         self.session.add(institution)
         await self.session.commit()

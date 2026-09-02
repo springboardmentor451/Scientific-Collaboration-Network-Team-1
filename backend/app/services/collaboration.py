@@ -32,43 +32,31 @@ class CollaborationService:
         )
         return [CollaborationResponse.from_orm(c) for c in result.all()]
 
-    async def create(self, data: CollaborationRequest) -> CollaborationResponse:
-        logger.debug("creating collaboration for researchers: %s", data.researcher_ids)
+    async def create(
+        self, data: CollaborationRequest, researcher: Researcher
+    ) -> CollaborationResponse:
+        logger.debug("create collaboration: researchers=%s", data.researcher_ids)
+        self._ensure_creator_included(data, researcher)
+        if len(set(data.researcher_ids)) != len(data.researcher_ids):
+            raise HTTPException(
+                status_code=404, detail="duplicate researcher IDs not allowed"
+            )
         for researcher_id in data.researcher_ids:
             await self._get_researcher(researcher_id)
-
         existing: Collaboration | None = await self._find_existing(data.researcher_ids)
         if existing:
-            # increment count rather than reject
-            existing.collaboration_count += 1
-            await self.session.commit()
-            logger.info(
-                "collaboration count incremented: %d", existing.collaboration_id
-            )
-            return CollaborationResponse.from_orm(existing)
+            return await self._increment_existing(existing)
+        return await self._create_new(data)
 
-        collaboration = Collaboration(collaboration_type=data.collaboration_type)
-        self.session.add(collaboration)
-        await self.session.flush()
-
-        for researcher_id in data.researcher_ids:
-            member = CollaborationResearcher(
-                collaboration_id=collaboration.collaboration_id,
-                researcher_id=researcher_id,
-            )
-            self.session.add(member)
-
-        await self.session.commit()
-        await self.session.refresh(collaboration)
-        logger.info("collaboration created: %d", collaboration.collaboration_id)
-        return CollaborationResponse.from_orm(collaboration)
-
-    async def delete(self, collaboration_id: int) -> None:
+    async def delete(self, collaboration_id: int, researcher: Researcher) -> None:
+        logger.debug("delete collaboration: %d", collaboration_id)
         collaboration: Collaboration | None = await self.session.get(
             Collaboration, collaboration_id
         )
         if not collaboration:
+            logger.warning("collaboration not found: %d", collaboration_id)
             raise HTTPException(status_code=404, detail="collaboration not found")
+        await self._check_participant(collaboration_id, researcher.researcher_id)
         await self.session.delete(collaboration)
         await self.session.commit()
         logger.warning("collaboration deleted: %d", collaboration_id)
@@ -79,13 +67,12 @@ class CollaborationService:
         )
         if not researcher:
             raise HTTPException(
-                status_code=404,
-                detail=f"researcher {researcher_id} not found",
+                status_code=404, detail=f"researcher {researcher_id} not found"
             )
         return researcher
 
     async def _find_existing(self, researcher_ids: list[int]) -> Collaboration | None:
-        # find a collaboration that contains ALL the given researchers
+        # find a collaboration that contains all the given researchers
         # start with collaborations containing first researcher
         result: ScalarResult[Collaboration] = await self.session.scalars(
             select(Collaboration)
@@ -101,3 +88,56 @@ class CollaborationService:
             if set(members.all()) == set(researcher_ids):
                 return collab
         return None
+
+    async def _check_participant(
+        self, collaboration_id: int, researcher_id: int
+    ) -> None:
+        member: CollaborationResearcher | None = await self.session.scalar(
+            select(CollaborationResearcher).where(
+                CollaborationResearcher.collaboration_id == collaboration_id,
+                CollaborationResearcher.researcher_id == researcher_id,
+            )
+        )
+        if not member:
+            logger.warning(
+                "collaboration access denied: researcher_id=%d collaboration_id=%d",
+                researcher_id,
+                collaboration_id,
+            )
+            raise HTTPException(
+                status_code=403,
+                detail="you are not a participant in this collaboration",
+            )
+
+    def _ensure_creator_included(
+        self, data: CollaborationRequest, researcher: Researcher
+    ) -> None:
+        if researcher.researcher_id not in data.researcher_ids:
+            raise HTTPException(
+                status_code=403, detail="you must include yourself in the collaboration"
+            )
+
+    async def _increment_existing(
+        self, existing: Collaboration
+    ) -> CollaborationResponse:
+        existing.collaboration_count += 1
+        await self.session.commit()
+        await self.session.refresh(existing)
+        logger.info("collaboration count incremented: %d", existing.collaboration_id)
+        return CollaborationResponse.from_orm(existing)
+
+    async def _create_new(self, data: CollaborationRequest) -> CollaborationResponse:
+        collaboration = Collaboration(collaboration_type=data.collaboration_type)
+        self.session.add(collaboration)
+        await self.session.flush()
+        for researcher_id in data.researcher_ids:
+            self.session.add(
+                CollaborationResearcher(
+                    collaboration_id=collaboration.collaboration_id,
+                    researcher_id=researcher_id,
+                )
+            )
+        await self.session.commit()
+        await self.session.refresh(collaboration)
+        logger.info("collaboration created: %d", collaboration.collaboration_id)
+        return CollaborationResponse.from_orm(collaboration)
