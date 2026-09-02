@@ -2,7 +2,7 @@ import logging
 
 from fastapi import APIRouter
 
-from app.routes.deps import CollaborationServiceDeps, CurrentResearcher, CurrentUser
+from app.routes.deps import CollaborationServiceDeps, CurrentResearcher
 from app.schemas import CollaborationRequest, CollaborationResponse
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -20,10 +20,10 @@ async def get_collaborations(
 @collaboration_router.post("/", response_model=CollaborationResponse, status_code=201)
 async def create_collaboration(
     data: CollaborationRequest,
-    _: CurrentUser,
     collaboration_service: CollaborationServiceDeps,
+    current_researcher: CurrentResearcher,
 ) -> CollaborationResponse:
-    return await collaboration_service.create(data)
+    return await collaboration_service.create(data, current_researcher)
 
 
 @collaboration_router.get("/my", response_model=list[CollaborationResponse])
@@ -40,7 +40,7 @@ async def get_my_collaborations(
 @collaboration_router.delete("/{collaboration_id:int}", status_code=204)
 async def delete_collaboration(
     collaboration_id: int,
-    _: CurrentUser,
     collaboration_service: CollaborationServiceDeps,
+    current_researcher: CurrentResearcher,
 ) -> None:
-    await collaboration_service.delete(collaboration_id)
+    await collaboration_service.delete(collaboration_id, current_researcher)

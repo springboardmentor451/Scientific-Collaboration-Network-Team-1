@@ -2,7 +2,7 @@ import logging
 
 from fastapi import APIRouter
 
-from app.routes.deps import CitationServiceDeps, CurrentUser
+from app.routes.deps import CitationServiceDeps, CurrentResearcher
 from app.schemas import CitationRequest, CitationResponse
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -12,9 +12,11 @@ citation_router = APIRouter(prefix="/citations", tags=["citations"])
 # Static route
 @citation_router.post("/", response_model=list[CitationResponse], status_code=201)
 async def create_citation(
-    data: CitationRequest, _: CurrentUser, citation_service: CitationServiceDeps
+    data: CitationRequest,
+    researcher: CurrentResearcher,
+    citation_service: CitationServiceDeps,
 ) -> list[CitationResponse]:
-    return await citation_service.create(data)
+    return await citation_service.create(data, researcher)
 
 
 # Dynamic routes
@@ -38,6 +40,8 @@ async def get_cited_by(
 
 @citation_router.delete("/{citation_id:int}", status_code=204)
 async def delete_citation(
-    citation_id: int, _: CurrentUser, citation_service: CitationServiceDeps
+    citation_id: int,
+    researcher: CurrentResearcher,
+    citation_service: CitationServiceDeps,
 ) -> None:
-    await citation_service.delete(citation_id)
+    await citation_service.delete(citation_id, researcher)

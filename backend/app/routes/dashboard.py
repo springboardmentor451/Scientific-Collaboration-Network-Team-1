@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter
 
 from app.routes.deps import AdminUser, CurrentUser, DashboardServiceDeps
-from app.schemas import InstitutionStats, ResearcherDashboard, SystemStats
+from app.schemas import InstitutionStats, PublicStats, ResearcherDashboard, SystemStats
 
 logger: logging.Logger = logging.getLogger(__name__)
 dashboard_router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -22,6 +22,11 @@ async def system_dashboard(
     _: AdminUser, dashboard_service: DashboardServiceDeps
 ) -> SystemStats:
     return await dashboard_service.get_system_stats()
+
+
+@dashboard_router.get("/public", response_model=PublicStats)
+async def public_stats(dashboard_service: DashboardServiceDeps) -> PublicStats:
+    return await dashboard_service.get_public_stats()
 
 
 # Dynamic route

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.routes.deps import CurrentUser, ResearcherServiceDeps
+from app.routes.deps import CurrentUser, InstitutionServiceDeps, ResearcherServiceDeps
 from app.schemas import (
     ResearcherRequest,
     ResearcherResponse,
@@ -16,8 +16,9 @@ async def create_researcher(
     data: ResearcherRequest,
     current_user: CurrentUser,
     researcher_service: ResearcherServiceDeps,
+    institution_service: InstitutionServiceDeps,
 ) -> ResearcherResponse:
-    return await researcher_service.create(data, current_user)
+    return await researcher_service.create(data, current_user, institution_service)
 
 
 @researcher_router.get("/", response_model=list[ResearcherResponse])

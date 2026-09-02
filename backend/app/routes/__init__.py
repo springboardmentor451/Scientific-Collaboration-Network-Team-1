@@ -6,6 +6,7 @@ from app.routes.collaboration import collaboration_router
 from app.routes.conference import conference_router
 from app.routes.dashboard import dashboard_router
 from app.routes.institution import institution_router
+from app.routes.institution_admin import institution_admin_router
 from app.routes.project import project_router
 from app.routes.publication import publication_router
 from app.routes.report import report_router
@@ -24,3 +25,4 @@ router.include_router(report_router)
 router.include_router(institution_router)
 router.include_router(researcher_router)
 router.include_router(user_router)
+router.include_router(institution_admin_router)

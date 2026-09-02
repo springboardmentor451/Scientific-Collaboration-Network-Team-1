@@ -1,8 +1,14 @@
 import logging
 
 from fastapi import APIRouter, UploadFile
+from fastapi.responses import FileResponse
 
-from app.routes.deps import CurrentResearcher, PublicationServiceDeps
+from app.routes.deps import (
+    CurrentResearcher,
+    CurrentUser,
+    OptionalUser,
+    PublicationServiceDeps,
+)
 from app.schemas import (
     PublicationRequest,
     PublicationResponse,
@@ -16,9 +22,11 @@ publication_router = APIRouter(prefix="/publications", tags=["publications"])
 # Static routes
 @publication_router.get("/", response_model=list[PublicationResponse])
 async def get_publications(
-    publication_service: PublicationServiceDeps,
+    publication_service: PublicationServiceDeps, current_user: OptionalUser
 ) -> list[PublicationResponse]:
-    return await publication_service.get_all()
+    return await publication_service.get_all(
+        include_restricted=current_user is not None
+    )
 
 
 @publication_router.post("/", response_model=PublicationResponse, status_code=201)
@@ -50,6 +58,15 @@ async def upload_file(
     return await publication_service.upload_file(
         publication_id, file, current_researcher
     )
+
+
+@publication_router.get("/{publication_id:int}/download")
+async def download_publication(
+    publication_id: int,
+    current_user: CurrentUser,
+    publication_service: PublicationServiceDeps,
+) -> FileResponse:
+    return await publication_service.download(publication_id, current_user)
 
 
 @publication_router.get("/{publication_id:int}", response_model=PublicationResponse)

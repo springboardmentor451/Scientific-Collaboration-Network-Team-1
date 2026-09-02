@@ -30,6 +30,7 @@ from app.services import (
 from app.utils import ConsoleEmailNotifier, SMTPConfig, SMTPEmailNotifier
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+optional_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 config: Config = get_config()
 
 DBSession = Annotated[AsyncSession, Depends(get_db)]
@@ -129,6 +130,21 @@ async def get_current_user(token: Token, session: DBSession) -> User:
     return user
 
 
+async def get_optional_user(
+    token: Annotated[str | None, Depends(optional_oauth2_scheme)],
+    session: DBSession,
+) -> User | None:
+    if not token:
+        return None
+    try:
+        payload: TokenPayload = get_token_service().decode_token(token)
+    except HTTPException:
+        return None
+    if not payload.sub:
+        return None
+    return await UserService(session).get_by_email(payload.sub)
+
+
 def require_role(*roles: UserRole):
     async def checker(current_user: CurrentUser) -> User:
         if current_user.role not in roles:
@@ -154,14 +170,16 @@ CollaborationServiceDeps = Annotated[
 ]
 DashboardServiceDeps = Annotated[DashboardService, Depends(get_dashboard_service)]
 ReportServiceDeps = Annotated[ReportService, Depends(get_report_service)]
+OptionalUser = Annotated[User | None, Depends(get_optional_user)]
 
 # Role guards
 AdminUser = Annotated[User, Depends(require_role(UserRole.SYSTEM_ADMIN))]
 InstitutionAdminUser = Annotated[
-    User, Depends(require_role(UserRole.SYSTEM_ADMIN, UserRole.INSTITUTION_ADMIN))
+    User, Depends(require_role(UserRole.INSTITUTION_ADMIN))
 ]
-ReviewerUser = Annotated[
-    User, Depends(require_role(UserRole.REVIEWER, UserRole.SYSTEM_ADMIN))
+ReviewerUser = Annotated[User, Depends(require_role(UserRole.REVIEWER))]
+AnyAdminUser = Annotated[
+    User, Depends(require_role(UserRole.SYSTEM_ADMIN, UserRole.INSTITUTION_ADMIN))
 ]
 
 
@@ -177,4 +195,18 @@ async def get_current_researcher(
     return researcher
 
 
+async def get_current_institution_admin(
+    current_user: CurrentUser,
+) -> User:
+    if current_user.role != UserRole.INSTITUTION_ADMIN:
+        raise HTTPException(status_code=403, detail="institution admin role required")
+    if not current_user.managed_institution_id:
+        raise HTTPException(
+            status_code=400,
+            detail="no institution assigned to this admin",
+        )
+    return current_user
+
+
 CurrentResearcher = Annotated[Researcher, Depends(get_current_researcher)]
+CurrentInstitutionAdmin = Annotated[User, Depends(get_current_institution_admin)]
