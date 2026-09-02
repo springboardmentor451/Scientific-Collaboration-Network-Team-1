@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pydantic import SecretStr
-from sqlalchemy import Enum, String
+from sqlalchemy import Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core import Base
@@ -20,7 +20,7 @@ class User(Base):
     user_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
     password: Mapped[str] = mapped_column(String(256), nullable=False)
-    role: Mapped[UserRole] = mapped_column(
+    role: Mapped[UserRole | None] = mapped_column(
         Enum(UserRole), default=None, nullable=True, index=True
     )
     is_verified: Mapped[bool] = mapped_column(default=False, nullable=False, index=True)
@@ -35,9 +35,15 @@ class User(Base):
     researcher: Mapped[Researcher | None] = relationship(
         "Researcher", back_populates="user", uselist=False
     )
+    managed_institution_id: Mapped[int | None] = mapped_column(
+        ForeignKey("institutions.institution_id", ondelete="SET NULL"),
+        nullable=True,
+        default=None,
+        index=True,
+    )
 
     def check_password(self, plain_password: SecretStr) -> bool:
         return verify_password(plain_password, self.password)
 
     def __repr__(self) -> str:
-        return f"<User(email={self.user_id}, role={self.role}, status={self.status})>"
+        return f"<User(user_id={self.user_id}, role={self.role}, status={self.status})>"
