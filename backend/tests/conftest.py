@@ -7,6 +7,8 @@ from unittest.mock import patch
 # must be set before any app import - controls which Config class loads
 os.environ["FASTAPI_ENV"] = "testing"
 
+# import tempfile
+
 import pytest
 from app.core import Base, Config, get_config, get_db
 from app.core import domains as domains_module
@@ -31,9 +33,9 @@ KNOWN_VERIFICATION_CODE = "123456"
 
 
 # Inject test domains
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(autouse=True)
 def inject_test_domains() -> None:
-    """Bypass HTTP fetch — inject known domains directly into module state."""
+    """Bypass HTTP fetch, inject known domains directly into module state."""
     domains_module.research_domains = set(TEST_DOMAINS)
     domains_module.domains_loaded = True
 
@@ -98,6 +100,12 @@ def mock_verification_code() -> Generator[Literal["123456"], Any, None]:
         yield KNOWN_VERIFICATION_CODE
 
 
+# @pytest.fixture(scope="session", autouse=True)
+# def temp_uploads_dir(monkeypatch) -> None:
+#     tmpdir: str = tempfile.mkdtemp()
+#     monkeypatch.setattr("app.services.publication_service.UPLOAD_DIR", tmpdir)
+
+
 # HTTP client
 @pytest.fixture
 async def client(session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
@@ -123,7 +131,7 @@ def auth_headers(user: User) -> dict:
 async def make_user(
     session: AsyncSession,
     email: str | None = None,
-    role: UserRole = UserRole.RESEARCHER,
+    role: UserRole | None = UserRole.RESEARCHER,
     status: UserStatus = UserStatus.ACTIVE,
     is_verified: bool = True,
     requested_role: UserRole | None = None,
