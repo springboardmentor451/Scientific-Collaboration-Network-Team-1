@@ -20,7 +20,7 @@ VALID_PASSWORD = SecretStr("SecurePass123")
 # Email domain
 @pytest.mark.parametrize(
     "email",
-    ["user@mit.edu", "user@ox.ac.uk", "user@iitd.ac.in"],
+    ["user@mit.edu", "user@harvard.edu", "user@ibm.com"],
 )
 def test_valid_academic_email(email: str) -> None:
     user = UserRequest(email=email, password=VALID_PASSWORD)
@@ -158,10 +158,8 @@ def test_email_change_request_invalid_domain() -> None:
 
 
 def test_email_change_request_valid_domain() -> None:
-    with pytest.raises(
-        expected_exception=ValidationError, match="recognised institution"
-    ):
-        EmailChangeRequest(new_email="user@oxford.ac.uk")
+    req = EmailChangeRequest(new_email="user@ox.ac.uk")
+    assert str(req.new_email) == "user@ox.ac.uk"
 
 
 def test_password_reset_passwords_must_match() -> None:

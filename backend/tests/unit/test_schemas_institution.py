@@ -37,3 +37,15 @@ def test_update_all_optional() -> None:
     req = InstitutionUpdateRequest()
     assert req.name is None
     assert req.country is None
+
+
+def test_institution_domain_optional() -> None:
+    req = InstitutionRequest(name="MIT", country="USA", city="Cambridge")
+    assert req.domain is None
+
+
+def test_institution_domain_stored() -> None:
+    req = InstitutionRequest(
+        name="MIT", country="USA", city="Cambridge", domain="mit.edu"
+    )
+    assert req.domain == "mit.edu"
