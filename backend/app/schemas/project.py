@@ -36,8 +36,14 @@ class ProjectUpdateRequest(ProjectDatesMixin):
 
 
 class ProjectMemberRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     researcher_id: int
     role: ProjectRole = ProjectRole.MEMBER
+
+
+class ProjectMemberUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    role: ProjectRole
 
 
 # -- Response --
@@ -49,3 +55,9 @@ class ProjectResponse(ResponseBase):
     end_date: date | None
     status: ProjectStatus
     created_at: datetime
+
+
+class ProjectMemberResponse(ResponseBase):
+    project_id: int
+    researcher_id: int
+    role: ProjectRole

@@ -97,6 +97,7 @@ class UserUpdateRequest(OptionalPasswordMixin):
 
 class UserRoleUpdateRequest(BaseModel):
     role: UserRole
+    managed_institution_id: int | None = None
 
 
 class RoleChangeRequest(BaseModel):
@@ -168,6 +169,7 @@ class UserResponse(ResponseBase):
     status: UserStatus
     is_verified: bool
     requested_role: UserRole | None = None
+    managed_institution_id: int | None = None
 
 
 class TokenPayload(BaseModel):

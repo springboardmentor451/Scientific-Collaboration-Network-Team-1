@@ -14,6 +14,7 @@ from app.schemas.dashboard import (
     InstitutionStats,
     ProjectStats,
     PublicationStats,
+    PublicStats,
     ResearcherDashboard,
     SystemStats,
 )
@@ -22,7 +23,14 @@ from app.schemas.institution import (
     InstitutionResponse,
     InstitutionUpdateRequest,
 )
-from app.schemas.project import ProjectRequest, ProjectResponse, ProjectUpdateRequest
+from app.schemas.project import (
+    ProjectMemberRequest,
+    ProjectMemberResponse,
+    ProjectMemberUpdateRequest,
+    ProjectRequest,
+    ProjectResponse,
+    ProjectUpdateRequest,
+)
 from app.schemas.publication import (
     PublicationRequest,
     PublicationResponse,
@@ -67,10 +75,14 @@ __all__: list[str] = [
     "InstitutionUpdateRequest",
     "MessageResponse",
     "PasswordResetRequest",
+    "ProjectMemberRequest",
+    "ProjectMemberResponse",
+    "ProjectMemberUpdateRequest",
     "ProjectRequest",
     "ProjectResponse",
     "ProjectStats",
     "ProjectUpdateRequest",
+    "PublicStats",
     "PublicationReportFilter",
     "PublicationRequest",
     "PublicationResponse",
@@ -91,4 +103,4 @@ __all__: list[str] = [
     "UserRoleUpdateRequest",
     "UserUpdateRequest",
     "VerificationCodeRequest",
-]
+]  # type: ignore

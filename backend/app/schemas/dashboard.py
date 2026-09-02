@@ -40,3 +40,11 @@ class SystemStats(BaseModel):
     total_projects: int
     total_collaborations: int
     total_citations: int
+
+
+class PublicStats(BaseModel):
+    total_researchers: int
+    total_publications: int
+    total_institutions: int
+    total_conferences: int
+    total_collaborations: int

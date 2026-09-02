@@ -14,6 +14,7 @@ class InstitutionRequest(InstitutionBase):
     city: str | None = Field(max_length=LOCATION_MAX_LENGTH)
     country: str = Field(max_length=LOCATION_MAX_LENGTH)
     type: InstitutionType = Field(default=InstitutionType.UNIVERSITY)
+    domain: str | None = Field(default=None, max_length=255)
 
 
 class InstitutionUpdateRequest(InstitutionBase):
@@ -30,3 +31,4 @@ class InstitutionResponse(ResponseBase):
     country: str
     type: InstitutionType
     website: HttpUrl | None
+    domain: str | None
