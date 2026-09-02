@@ -60,6 +60,7 @@ class SMTPConfig(BaseSettings):
 class Config(AuthConfig, DatabaseConfig, SMTPConfig):
     DEBUG: bool = False
     TESTING: bool = False
+    ALLOWED_ORIGIN: str
 
 
 class DevelopmentConfig(Config):
