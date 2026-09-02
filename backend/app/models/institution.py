@@ -31,6 +31,9 @@ class Institution(Base):
         Enum(InstitutionType), default=InstitutionType.UNIVERSITY, nullable=False
     )
     website: Mapped[str | None] = mapped_column(String, nullable=True)
+    domain: Mapped[str | None] = mapped_column(
+        String(255), unique=True, nullable=True, index=True
+    )
 
     researchers: Mapped[list[Researcher]] = relationship(
         "Researcher", back_populates="institution"
