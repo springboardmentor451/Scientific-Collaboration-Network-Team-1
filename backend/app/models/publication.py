@@ -57,6 +57,7 @@ class Publication(Base):
     external_authors: Mapped[list[str]] = mapped_column(
         JSON, default=list, nullable=False
     )
+    is_open_access: Mapped[bool] = mapped_column(default=True, nullable=False)
 
     conference: Mapped[Conference | None] = relationship(
         "Conference", back_populates="publications"
