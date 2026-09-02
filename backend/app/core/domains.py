@@ -9,6 +9,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 DOMAINS_URL = "https://raw.githubusercontent.com/Hipo/university-domains-list/master/world_universities_and_domains.json"
 CACHE_FILE = Path("./data/research_domains.json")
+FALLBACK_FILE = Path("data/fallback_domains.json")
 
 # global cache - loaded once at startup
 research_domains: set[str] = set()
@@ -46,20 +47,39 @@ def _save_to_cache(domains: set[str]) -> None:
     logger.info("domains cached to %s", len(domains))
 
 
+def _load_from_fallback() -> set[str]:
+    """Load domains from bundled fallback file."""
+    logger.warning("loading domains from fallback")
+    return set(json.loads(FALLBACK_FILE.read_text()))
+
+
 async def fetch_domains() -> set[str]:
-    """
-    Get domains either from cache or remote.
-    Returns a set of lowercase domains.
-    """
+    """Get domains from cache, remote, or fallback."""
     if CACHE_FILE.exists():
-        return _load_from_cache()
-    raw_data: list[dict[str, Any]] = await _fetch_remote()
-    domains: set[str] = _parse_domains(raw_data)
-    _save_to_cache(domains)
-    return domains
+        try:
+            return _load_from_cache()
+        except (OSError, json.JSONDecodeError) as e:
+            logger.warning("cache read failed: %s", e)
+    try:
+        raw_data: list[dict[str, Any]] = await _fetch_remote()
+        domains: set[str] = _parse_domains(raw_data)
+        _save_to_cache(domains)
+        return domains
+    except (httpx.RequestError, httpx.HTTPStatusError, ValueError) as e:
+        logger.warning("network fetch failed: %s", e)
+
+    if FALLBACK_FILE.exists():
+        try:
+            return _load_from_fallback()
+        except (OSError, json.JSONDecodeError) as e:
+            logger.error("fallback read failed: %s", e)
+
+    logger.error("no domain source available — returning empty set")
+    return set()
 
 
 async def load_domains() -> None:
+    """Initialize global research_domains set."""
     global research_domains, domains_loaded
     if domains_loaded:
         logger.debug("domains already loaded, skipping")
@@ -70,5 +90,6 @@ async def load_domains() -> None:
 
 
 def is_research_email(email: str) -> bool:
+    """Check if email belongs to a research domain."""
     domain: str = email.split("@")[-1].lower()
     return domain in research_domains
