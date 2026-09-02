@@ -3,7 +3,7 @@ from app.models.publication import Publication
 from app.models.publication_author import PublicationAuthor
 from httpx import AsyncClient, Response
 from sqlalchemy.ext.asyncio import AsyncSession
-from tests.conftest import auth_headers
+from tests.conftest import auth_headers, make_researcher, make_user
 
 CITATION_URL = "/api/citations"
 
@@ -184,3 +184,47 @@ async def test_citation_unauthenticated(client: AsyncClient) -> None:
         json={"citing_publication_id": 1, "cited_publication_ids": [2]},
     )
     assert res.status_code in (401, 403)
+
+
+async def test_non_author_cannot_create_citation(
+    client: AsyncClient,
+    researcher_user: User,
+    researcher: Researcher,
+    session: AsyncSession,
+) -> None:
+    pub_a: int = await _create_publication(session, researcher)
+    pub_b: int = await _create_publication(session, researcher)
+
+    outsider: User = await make_user(session)
+    await make_researcher(session, outsider)
+
+    res: Response = await client.post(
+        f"{CITATION_URL}/",
+        json={"citing_publication_id": pub_a, "cited_publication_ids": [pub_b]},
+        headers=auth_headers(outsider),
+    )
+    assert res.status_code == 403
+
+
+async def test_non_author_cannot_delete_citation(
+    client: AsyncClient,
+    researcher_user: User,
+    researcher: Researcher,
+    session: AsyncSession,
+) -> None:
+    pub_a: int = await _create_publication(session, researcher)
+    pub_b: int = await _create_publication(session, researcher)
+
+    create_res: Response = await client.post(
+        f"{CITATION_URL}/",
+        json={"citing_publication_id": pub_a, "cited_publication_ids": [pub_b]},
+        headers=auth_headers(researcher_user),
+    )
+    citation_id = create_res.json()[0]["citation_id"]
+
+    outsider: User = await make_user(session)
+    await make_researcher(session, outsider)
+    res: Response = await client.delete(
+        f"{CITATION_URL}/{citation_id}", headers=auth_headers(outsider)
+    )
+    assert res.status_code == 403

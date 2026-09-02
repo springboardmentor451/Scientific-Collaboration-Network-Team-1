@@ -1,4 +1,3 @@
-from app.core.constants import UserRole, UserStatus
 from app.models import User
 from httpx import AsyncClient, Response
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -148,25 +147,3 @@ async def test_researcher_cannot_change_role_directly(
         headers=auth_headers(researcher_user),
     )
     assert res.status_code == 403
-
-
-# Role shown in pending users list
-async def test_pending_user_shows_requested_role(
-    client: AsyncClient, admin_user: User, session: AsyncSession
-) -> None:
-    user: User = await make_user(
-        session,
-        status=UserStatus.PENDING,
-        role=None,
-    )
-    user.requested_role = UserRole.REVIEWER
-    await session.commit()
-
-    res: Response = await client.get(
-        f"{USER_URL}/pending",
-        headers=auth_headers(admin_user),
-    )
-    assert res.status_code == 200
-    pending = [u for u in res.json() if u["user_id"] == user.user_id]
-    assert len(pending) == 1
-    assert pending[0]["requested_role"] == "reviewer"

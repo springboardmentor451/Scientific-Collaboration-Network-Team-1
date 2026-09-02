@@ -1,3 +1,5 @@
+from io import BytesIO
+
 from app.models import Researcher, User
 from httpx import AsyncClient, Response
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -74,10 +76,21 @@ async def test_get_my_publications(
 async def test_update_publication_status(
     client: AsyncClient, researcher_user: User, researcher: Researcher
 ) -> None:
+
     create_res: Response = await client.post(
         f"{PUB_URL}/", json=VALID_PUB, headers=auth_headers(researcher_user)
     )
+    assert create_res.status_code == 201
     pub_id = create_res.json()["publication_id"]
+
+    # upload file first, required before SUBMITTED
+    fake_pdf = b"%PDF-1.4 fake content"
+    upload_res: Response = await client.post(
+        f"{PUB_URL}/{pub_id}/upload",
+        files={"file": ("paper.pdf", BytesIO(fake_pdf), "application/pdf")},
+        headers=auth_headers(researcher_user),
+    )
+    assert upload_res.status_code == 200
     res: Response = await client.patch(
         f"{PUB_URL}/{pub_id}",
         json={"status": "submitted"},

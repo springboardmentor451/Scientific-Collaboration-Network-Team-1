@@ -174,3 +174,73 @@ async def test_delete_nonexistent_project(
         f"{PROJECT_URL}/99999", headers=auth_headers(researcher_user)
     )
     assert res.status_code in (403, 404)
+
+
+# Project members
+async def test_update_project_adds_members(
+    client: AsyncClient,
+    researcher_user: User,
+    researcher: Researcher,
+    session: AsyncSession,
+) -> None:
+    create_res: Response = await client.post(
+        f"{PROJECT_URL}/", json=VALID_PROJECT, headers=auth_headers(researcher_user)
+    )
+    project_id = create_res.json()["project_id"]
+
+    other_user: User = await make_user(session)
+    other_researcher: Researcher = await make_researcher(session, other_user)
+
+    res: Response = await client.patch(
+        f"{PROJECT_URL}/{project_id}",
+        json={"researcher_ids": [other_researcher.researcher_id]},
+        headers=auth_headers(researcher_user),
+    )
+    assert res.status_code == 200
+
+
+async def test_add_project_member(
+    client: AsyncClient,
+    researcher_user: User,
+    researcher: Researcher,
+    session: AsyncSession,
+) -> None:
+    create_res: Response = await client.post(
+        f"{PROJECT_URL}/", json=VALID_PROJECT, headers=auth_headers(researcher_user)
+    )
+    project_id = create_res.json()["project_id"]
+    other_user: User = await make_user(session)
+    other_researcher: Researcher = await make_researcher(session, other_user)
+
+    res: Response = await client.post(
+        f"{PROJECT_URL}/{project_id}/members",
+        json={"researcher_id": other_researcher.researcher_id, "role": "member"},
+        headers=auth_headers(researcher_user),
+    )
+    assert res.status_code == 201
+    assert res.json()["researcher_id"] == other_researcher.researcher_id
+
+
+async def test_remove_project_member(
+    client: AsyncClient,
+    researcher_user: User,
+    researcher: Researcher,
+    session: AsyncSession,
+) -> None:
+    create_res: Response = await client.post(
+        f"{PROJECT_URL}/", json=VALID_PROJECT, headers=auth_headers(researcher_user)
+    )
+    project_id = create_res.json()["project_id"]
+    other_user: User = await make_user(session)
+    other_researcher: Researcher = await make_researcher(session, other_user)
+
+    await client.post(
+        f"{PROJECT_URL}/{project_id}/members",
+        json={"researcher_id": other_researcher.researcher_id, "role": "member"},
+        headers=auth_headers(researcher_user),
+    )
+    res: Response = await client.delete(
+        f"{PROJECT_URL}/{project_id}/members/{other_researcher.researcher_id}",
+        headers=auth_headers(researcher_user),
+    )
+    assert res.status_code == 204

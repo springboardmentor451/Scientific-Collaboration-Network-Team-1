@@ -53,6 +53,7 @@ async def test_approve_active_user_rejected(
         headers=auth_headers(admin_user),
     )
     assert res.status_code == 409
+    assert "already active" in res.json()["detail"]
 
 
 # Reject
@@ -157,3 +158,29 @@ async def test_admin_delete_own_account_via_by_id(
         f"{USER_URL}/{admin.user_id}", headers=auth_headers(admin)
     )
     assert res.status_code == 204
+
+
+async def test_approve_banned_user_fails(
+    client: AsyncClient, admin_user: User, session: AsyncSession
+) -> None:
+    banned: User = await make_user(session, status=UserStatus.BANNED)
+    res: Response = await client.patch(
+        f"{USER_URL}/{banned.user_id}/approve", headers=auth_headers(admin_user)
+    )
+    assert res.status_code == 409
+
+
+async def test_approve_sets_role_from_requested_role(
+    client: AsyncClient, admin_user: User, session: AsyncSession
+) -> None:
+    user: User = await make_user(session, status=UserStatus.PENDING, role=None)
+    user.requested_role = UserRole.REVIEWER
+    await session.commit()
+
+    res: Response = await client.patch(
+        f"{USER_URL}/{user.user_id}/approve", headers=auth_headers(admin_user)
+    )
+    assert res.status_code == 200
+    assert res.json()["role"] == "reviewer"
+    assert res.json()["requested_role"] is None
+    assert res.json()["status"] == "active"
