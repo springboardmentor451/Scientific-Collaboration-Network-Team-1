@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.engine.result import ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.orm_utils import apply_updates
 from app.models import Institution
 from app.schemas import (
     InstitutionRequest,
@@ -61,9 +62,7 @@ class InstitutionService:
         self, institution_id: int, data: InstitutionUpdateRequest
     ) -> InstitutionResponse:
         institution: Institution = await self._get_by_id(institution_id)
-        updates = data.model_dump(exclude_none=True)
-        for key, val in updates.items():
-            setattr(institution, key, val)
+        apply_updates(institution, data)
         await self.session.commit()
         logger.info("institution updated: %d", institution_id)
         return InstitutionResponse.from_orm(institution)

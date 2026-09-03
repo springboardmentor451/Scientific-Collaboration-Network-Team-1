@@ -5,6 +5,7 @@ from sqlalchemy import ScalarResult, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import ProjectRole
+from app.core.orm_utils import apply_updates
 from app.models import Project, ProjectResearcher, Researcher
 from app.schemas import (
     ProjectMemberRequest,
@@ -45,11 +46,9 @@ class ProjectService:
             data.researcher_ids, exclude_id=researcher.researcher_id
         )
         await self._ensure_researchers_exist(member_ids)
-
         project: Project = await self._create_project_row(data)
         self._assign_pi(project.project_id, researcher.researcher_id)
         self._assign_members(project.project_id, member_ids)
-
         await self.session.commit()
         logger.info("project created: %d", project.project_id)
         return ProjectResponse.from_orm(project)
@@ -60,16 +59,7 @@ class ProjectService:
         logger.debug("update project: %d", project_id)
         project: Project = await self._get_by_id(project_id)
         await self._check_membership(project_id, researcher.researcher_id)
-        if data.name is not None:
-            project.name = data.name
-        if data.description is not None:
-            project.description = data.description
-        if data.start_date is not None:
-            project.start_date = data.start_date
-        if data.end_date is not None:
-            project.end_date = data.end_date
-        if data.status is not None:
-            project.status = data.status
+        apply_updates(project, data, exclude={"researcher_ids"})
         if data.researcher_ids is not None:
             pi_id: int = await self._get_pi_id(project_id)
             await self._update_members(project_id, data.researcher_ids, pi_id)
@@ -142,7 +132,7 @@ class ProjectService:
         if researcher_id == current_researcher.researcher_id:
             raise HTTPException(
                 status_code=400,
-                detail="PI cannot remove themselves — transfer PI role first",
+                detail="PI cannot remove themselves, transfer PI role first",
             )
         member: ProjectResearcher | None = await self.session.scalar(
             select(ProjectResearcher).where(
@@ -283,7 +273,6 @@ class ProjectService:
             researcher_ids, exclude_id=pi_id
         )
         await self._ensure_researchers_exist(member_ids)
-
         # remove all existing non-PI members
         existing: ScalarResult[ProjectResearcher] = await self.session.scalars(
             select(ProjectResearcher).where(

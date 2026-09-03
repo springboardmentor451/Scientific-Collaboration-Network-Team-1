@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.engine.result import ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.orm_utils import apply_updates
 from app.models import Institution, Researcher, User
 from app.schemas import (
     ResearcherRequest,
@@ -78,9 +79,10 @@ class ResearcherService:
         researcher: Researcher | None = await self.get_by_user_id(user.user_id)
         if not researcher:
             raise HTTPException(status_code=404, detail="researcher profile not found")
-        updates = data.model_dump(exclude_none=True)
-        for key, val in updates.items():
-            setattr(researcher, key, val)
+        apply_updates(researcher, data)
+        #  updates = data.model_dump(exclude_none=True)
+        # for key, val in updates.items():
+        #     setattr(researcher, key, val)
         await self.session.commit()
         logger.info("researcher profile updated for user: %d", user.user_id)
         return ResearcherResponse.from_orm(researcher)

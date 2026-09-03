@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.selectable import Select
 
 from app.core.constants import PublicationStatus, UserRole
+from app.core.orm_utils import apply_updates
 from app.models import Publication, PublicationAuthor, Researcher, User
 from app.schemas import (
     PublicationRequest,
@@ -73,8 +74,7 @@ class PublicationService:
         publication: Publication = await self._get_by_id(publication_id)
         await self._check_ownership(publication, researcher)
         self._ensure_valid_status_transition(data, publication)
-        self._apply_updates(publication, data)
-
+        apply_updates(publication, data, exclude={"researcher_ids"})
         if data.researcher_ids is not None:
             co_author_ids: list[int] = [
                 rid for rid in data.researcher_ids if rid != researcher.researcher_id
@@ -246,26 +246,6 @@ class PublicationService:
             raise HTTPException(
                 status_code=400, detail="assign a DOI before marking as published"
             )
-
-    def _apply_updates(
-        self, publication: Publication, data: PublicationUpdateRequest
-    ) -> None:
-        if data.title is not None:
-            publication.title = data.title
-        if data.abstract is not None:
-            publication.abstract = data.abstract
-        if data.doi is not None:
-            publication.doi = data.doi
-        if data.publication_type is not None:
-            publication.publication_type = data.publication_type
-        if data.status is not None:
-            publication.status = data.status
-        if data.publication_date is not None:
-            publication.publication_date = data.publication_date
-        if data.conference_id is not None:
-            publication.conference_id = data.conference_id
-        if data.external_authors is not None:
-            publication.external_authors = data.external_authors
 
     async def _update_authors(
         self,

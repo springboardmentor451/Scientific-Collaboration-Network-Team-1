@@ -29,7 +29,6 @@ class ReportService:
         self, filters: PublicationReportFilter
     ) -> list[Publication]:
         query = select(Publication)
-
         if filters.researcher_id:
             query: Select[tuple[Publication]] = query.join(PublicationAuthor).where(
                 PublicationAuthor.researcher_id == filters.researcher_id
@@ -50,7 +49,6 @@ class ReportService:
             query = query.where(Publication.publication_date >= filters.from_date)
         if filters.to_date:
             query = query.where(Publication.publication_date <= filters.to_date)
-
         result: ScalarResult[Publication] = await self.session.scalars(query)
         return list(result.all())
 
@@ -59,19 +57,10 @@ class ReportService:
     ) -> StreamingResponse:
         logger.info("generating publication CSV report")
         publications: list[Publication] = await self._get_publications(filters)
-
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(
-            [
-                "ID",
-                "Title",
-                "Type",
-                "Status",
-                "DOI",
-                "Publication Date",
-                "Created At",
-            ]
+            ["ID", "Title", "Type", "Status", "DOI", "Publication Date", "Created At"]
         )
         for p in publications:
             writer.writerow(
@@ -85,7 +74,6 @@ class ReportService:
                     p.created_at.date(),
                 ]
             )
-
         output.seek(0)
         return StreamingResponse(
             iter([output.getvalue()]),
@@ -98,7 +86,6 @@ class ReportService:
     ) -> StreamingResponse:
         logger.info("generating publication JSON report")
         publications: list[Publication] = await self._get_publications(filters)
-
         data: list[
             dict[str, int | str | PublicationType | PublicationStatus | None]
         ] = [
@@ -115,7 +102,6 @@ class ReportService:
             }
             for p in publications
         ]
-
         return StreamingResponse(
             iter([json.dumps(data, indent=2)]),
             media_type="application/json",
@@ -134,14 +120,11 @@ class ReportService:
             query = query.where(Collaboration.created_at >= filters.from_date)
         if filters.to_date:
             query = query.where(Collaboration.created_at <= filters.to_date)
-
         result: ScalarResult[Collaboration] = await self.session.scalars(query)
         collaborations: list[Collaboration] = list(result.all())
-
         output = io.StringIO()
         writer: Writer = csv.writer(output)
         writer.writerow(["ID", "Type", "Researcher IDs", "Count", "Created At"])
-
         for c in collaborations:
             members: ScalarResult[int] = await self.session.scalars(
                 select(CollaborationResearcher.researcher_id).where(
@@ -158,7 +141,6 @@ class ReportService:
                     c.created_at.date(),
                 ]
             )
-
         output.seek(0)
         return StreamingResponse(
             iter([output.getvalue()]),
