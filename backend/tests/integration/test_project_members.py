@@ -147,8 +147,8 @@ async def test_update_member_role(
     )
     res: Response = await client.patch(
         f"{PROJECT_URL}/{project_id}/members/{other.researcher_id}",
-        json={"researcher_id": other.researcher_id, "role": "co_pi"},
+        json={"role": "co_investigator"},
         headers=auth_headers(researcher_user),
     )
     assert res.status_code == 200
-    assert res.json()["role"] == "co_pi"
+    assert res.json()["role"] == "co_investigator"
