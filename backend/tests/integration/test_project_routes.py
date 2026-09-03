@@ -244,3 +244,36 @@ async def test_remove_project_member(
         headers=auth_headers(researcher_user),
     )
     assert res.status_code == 204
+
+
+async def test_create_project_pi_in_researcher_ids_silently_excluded(
+    client: AsyncClient, researcher_user: User, researcher: Researcher
+) -> None:
+    res: Response = await client.post(
+        f"{PROJECT_URL}/",
+        json={
+            "name": "Self Include Test",
+            "researcher_ids": [researcher.researcher_id],
+        },
+        headers=auth_headers(researcher_user),
+    )
+    assert res.status_code == 201
+
+
+async def test_create_project_duplicate_researcher_ids_rejected(
+    client: AsyncClient,
+    researcher_user: User,
+    researcher: Researcher,
+    session: AsyncSession,
+) -> None:
+    other_user: User = await make_user(session)
+    other: Researcher = await make_researcher(session, other_user)
+    res: Response = await client.post(
+        f"{PROJECT_URL}/",
+        json={
+            "name": "Duplicate Test",
+            "researcher_ids": [other.researcher_id, other.researcher_id],
+        },
+        headers=auth_headers(researcher_user),
+    )
+    assert res.status_code == 400
