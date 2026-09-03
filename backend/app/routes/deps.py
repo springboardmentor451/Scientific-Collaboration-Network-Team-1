@@ -131,8 +131,7 @@ async def get_current_user(token: Token, session: DBSession) -> User:
 
 
 async def get_optional_user(
-    token: Annotated[str | None, Depends(optional_oauth2_scheme)],
-    session: DBSession,
+    token: Annotated[str | None, Depends(optional_oauth2_scheme)], session: DBSession
 ) -> User | None:
     if not token:
         return None
@@ -195,9 +194,7 @@ async def get_current_researcher(
     return researcher
 
 
-async def get_current_institution_admin(
-    current_user: CurrentUser,
-) -> User:
+async def get_current_institution_admin(current_user: CurrentUser) -> User:
     if current_user.role != UserRole.INSTITUTION_ADMIN:
         raise HTTPException(status_code=403, detail="institution admin role required")
     if not current_user.managed_institution_id:
