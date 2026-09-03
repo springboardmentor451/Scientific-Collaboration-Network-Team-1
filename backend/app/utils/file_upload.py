@@ -4,12 +4,12 @@ from typing import Final
 
 from fastapi import HTTPException, UploadFile
 
-ALLOWED_EXTENSIONS: Final[set[str]] = {".pdf", ".docx"}
+from app.core.constants import PublicationFile
+
 ALLOWED_CONTENT_TYPES: Final[set[str]] = {
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 }
-MAX_FILE_SIZE: Final[int] = 25 * 1024 * 1024
 UPLOAD_DIR: Final[Path] = Path("uploads/publications")
 
 
@@ -28,17 +28,18 @@ async def save_publication_file(file: UploadFile, publication_id: int) -> str:
     if not file.filename:
         raise HTTPException(status_code=400, detail="no filename provided")
     suffix: str = Path(file.filename).suffix.lower()
-    if suffix not in ALLOWED_EXTENSIONS:
+    if suffix not in PublicationFile.ALLOWED_EXTENSIONS:
         raise HTTPException(
-            status_code=400, detail=f"file type not allowed, use {ALLOWED_EXTENSIONS}"
+            status_code=400,
+            detail=f"file type not allowed, use {PublicationFile.ALLOWED_EXTENSIONS}",
         )
     if file.content_type not in ALLOWED_CONTENT_TYPES:
         raise HTTPException(status_code=400, detail="invalid content type")
     content = await file.read()
-    if len(content) > MAX_FILE_SIZE:
+    if len(content) > PublicationFile.MAX_FILE_SIZE:
         raise HTTPException(
             status_code=400,
-            detail=f"file too large, maximum {MAX_FILE_SIZE // (1024 * 1024)}MB",
+            detail=f"file too large, maximum {PublicationFile.MAX_FILE_SIZE // (1024 * 1024)}MB",
         )
     ensure_upload_dir()
     safe_name: str = sanitize_filename(file.filename, publication_id)
