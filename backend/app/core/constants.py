@@ -69,7 +69,7 @@ class PublicationStatus(StrEnum):
 
 class PublicationFile:
     ALLOWED_EXTENSIONS: Final[set[str]] = {".docx", ".pdf"}
-    MAX_FILE_SIZE: Final[int] = 10 * 1024 * 1024
+    MAX_FILE_SIZE: Final[int] = 25 * 1024 * 1024
 
 
 class ProjectStatus(StrEnum):
