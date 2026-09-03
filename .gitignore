@@ -13,6 +13,7 @@ build/
 
 # Ignore all JSON files in data folder
 backend/data/*.json
+!fallback_domains.json
 
 # Ignore system files
 .DS_Store
