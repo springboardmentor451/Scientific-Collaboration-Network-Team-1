@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.orm_utils import apply_updates
 from app.core.security import hash_password
 from app.models import User
 from app.schemas import (
@@ -28,8 +29,7 @@ class UserService:
         updates = credentials.model_dump(exclude_none=True)
         if UserUpdateRequest.PASSWORD_FIELD in updates:
             user.password = hash_password(updates.pop(UserUpdateRequest.PASSWORD_FIELD))
-        for key, val in updates.items():
-            setattr(user, key, val)
+        apply_updates(user, credentials, exclude={UserUpdateRequest.PASSWORD_FIELD})
         await self.session.commit()
         logger.info("user information updated successfully: %d", user.user_id)
         return UserResponse.from_orm(user)

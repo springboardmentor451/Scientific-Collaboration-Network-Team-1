@@ -72,8 +72,10 @@ class CollaborationService:
         return researcher
 
     async def _find_existing(self, researcher_ids: list[int]) -> Collaboration | None:
-        # find a collaboration that contains all the given researchers
-        # start with collaborations containing first researcher
+        """
+        find a collaboration that contains all the given researchers
+        start with collaborations containing first researcher
+        """
         result: ScalarResult[Collaboration] = await self.session.scalars(
             select(Collaboration)
             .join(CollaborationResearcher)

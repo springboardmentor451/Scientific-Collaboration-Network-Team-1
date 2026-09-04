@@ -80,9 +80,6 @@ class ResearcherService:
         if not researcher:
             raise HTTPException(status_code=404, detail="researcher profile not found")
         apply_updates(researcher, data)
-        #  updates = data.model_dump(exclude_none=True)
-        # for key, val in updates.items():
-        #     setattr(researcher, key, val)
         await self.session.commit()
         logger.info("researcher profile updated for user: %d", user.user_id)
         return ResearcherResponse.from_orm(researcher)
