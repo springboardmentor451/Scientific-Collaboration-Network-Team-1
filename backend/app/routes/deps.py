@@ -207,3 +207,12 @@ async def get_current_institution_admin(current_user: CurrentUser) -> User:
 
 CurrentResearcher = Annotated[Researcher, Depends(get_current_researcher)]
 CurrentInstitutionAdmin = Annotated[User, Depends(get_current_institution_admin)]
+
+
+async def get_managed_institution_id(current_admin: CurrentInstitutionAdmin) -> int:
+    if current_admin.managed_institution_id is None:
+        raise HTTPException(status_code=400, detail="no institution assigned")
+    return current_admin.managed_institution_id
+
+
+ManagedInstitutionId = Annotated[int, Depends(get_managed_institution_id)]

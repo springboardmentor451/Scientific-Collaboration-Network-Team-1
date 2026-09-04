@@ -1,11 +1,11 @@
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from app.routes.deps import (
-    CurrentInstitutionAdmin,
     DashboardServiceDeps,
     InstitutionServiceDeps,
+    ManagedInstitutionId,
     ResearcherServiceDeps,
 )
 from app.schemas.dashboard import InstitutionStats
@@ -20,12 +20,9 @@ institution_admin_router = APIRouter(
 
 @institution_admin_router.get("/my-institution", response_model=InstitutionResponse)
 async def get_my_institution(
-    current_admin: CurrentInstitutionAdmin,
+    institution_id: ManagedInstitutionId,
     institution_service: InstitutionServiceDeps,
 ) -> InstitutionResponse:
-    institution_id: int | None = current_admin.managed_institution_id
-    if institution_id is None:
-        raise HTTPException(status_code=400, detail="no institution assigned")
     return await institution_service.get_institution(institution_id)
 
 
@@ -33,21 +30,15 @@ async def get_my_institution(
     "/my-researchers", response_model=list[ResearcherResponse]
 )
 async def get_my_researchers(
-    current_admin: CurrentInstitutionAdmin,
+    institution_id: ManagedInstitutionId,
     researcher_service: ResearcherServiceDeps,
 ) -> list[ResearcherResponse]:
-    institution_id: int | None = current_admin.managed_institution_id
-    if institution_id is None:
-        raise HTTPException(status_code=400, detail="no institution assigned")
     return await researcher_service.get_by_institution(institution_id)
 
 
 @institution_admin_router.get("/my-stats", response_model=InstitutionStats)
 async def get_my_stats(
-    current_admin: CurrentInstitutionAdmin,
+    institution_id: ManagedInstitutionId,
     dashboard_service: DashboardServiceDeps,
 ) -> InstitutionStats:
-    institution_id: int | None = current_admin.managed_institution_id
-    if institution_id is None:
-        raise HTTPException(status_code=400, detail="no institution assigned")
     return await dashboard_service.get_institution_stats(institution_id)
