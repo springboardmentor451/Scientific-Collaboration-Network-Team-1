@@ -65,7 +65,11 @@ class Config(AuthConfig, DatabaseConfig, SMTPConfig):
 
 class DevelopmentConfig(Config):
     JWT_KEY: SecretStr = SecretStr("dev-key-minimum-32-characters-long")
-    DATABASE_URL: str = Field(default="sqlite+aiosqlite:///database/dev.db")
+    DATABASE_URL: str = Field(
+        default_factory=lambda: os.environ.get(
+            "DEV_DATABASE_URL", "sqlite+aiosqlite:///database/dev.db"
+        )
+    )
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     DEBUG: bool = True
@@ -73,7 +77,11 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     JWT_KEY: SecretStr = SecretStr("test-key-minimum-32-characters-long")
-    DATABASE_URL: str = Field(default="sqlite+aiosqlite:///database/test.db")
+    DATABASE_URL: str = Field(
+        default_factory=lambda: os.environ.get(
+            "TEST_DATABASE_URL", "sqlite+aiosqlite:///database/test.db"
+        )
+    )
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     TESTING: bool = True
