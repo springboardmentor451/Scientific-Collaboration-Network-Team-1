@@ -1,0 +1,9 @@
+info:
+  name: auth
+  type: folder
+  seq: 1
+
+request:
+  variables:
+    - name: authUrl
+      value: "{{baseUrl}}/auth"

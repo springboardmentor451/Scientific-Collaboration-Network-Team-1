@@ -1,0 +1,49 @@
+info:
+  name: create-profile
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{researcherUrl}}/"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "name": "",
+        "department": "",
+        "bio": "",
+        "skills": [""],
+        "research_interests": [""],
+        "orcid": null,
+        "institution_id": null
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |
+        if (res.status === 201) {
+          bru.setEnvVar("researcherId", res.body.researcher_id);
+        }
+    - type: tests
+      code: |
+        test("status is 201", function() {
+          expect(res.status).to.equal(201);
+        });
+        test("researcherId saved", function() {
+          expect(res.body.researcher_id).to.be.a("number");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

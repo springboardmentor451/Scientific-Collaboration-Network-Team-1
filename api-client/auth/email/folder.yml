@@ -1,0 +1,9 @@
+info:
+  name: email
+  type: folder
+  seq: 3
+
+request:
+  variables:
+    - name: newEmail
+      value: role-change@mit.edu

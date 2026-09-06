@@ -1,0 +1,38 @@
+info:
+  name: change-role
+  type: http
+  seq: 7
+
+http:
+  method: PATCH
+  url: "{{userUrl}}/{{userId}}/role"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "role": "reviewer"
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  scripts:
+    - type: test
+      code: |
+        test("status is 200", function() {
+        expect(res.status).to.equal(200);
+        });
+        test("role changed", function() {
+          expect(res.body.role).to.equal("reviewer");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

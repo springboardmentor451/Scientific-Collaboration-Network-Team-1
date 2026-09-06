@@ -1,0 +1,32 @@
+info:
+  name: my-dashboard
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{dashboardUrl}}/me"
+  headers: []
+  body:
+    type: none
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |
+        test("status is 200", function() {
+          expect(res.status).to.equal(200);
+        });
+        test("has publication_stats", function() {
+          expect(res.body.publication_stats).to.be.an("object");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

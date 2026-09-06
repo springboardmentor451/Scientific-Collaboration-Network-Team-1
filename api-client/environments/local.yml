@@ -1,0 +1,41 @@
+name: local
+variables:
+  - name: baseUrl
+    value: http://localhost:8000/api
+    description: ""
+  - name: email
+    value: ""
+    description: ""
+  - name: adminEmail
+    value: ""
+    description: ""
+  - name: verificationCode
+    value: ""
+    description: ""
+  - name: uesrId
+    value: ""
+    description: ""
+  - name: researcherId
+    value: ""
+    description: ""
+  - name: publicationId
+    value: ""
+    description: ""
+  - name: projectId
+    value: ""
+    description: ""
+  - name: institutionId
+    value: ""
+    description: ""
+  - name: conferenceId
+    value: ""
+    description: ""
+  - name: collaborationId
+    value: ""
+    description: ""
+  - name: citationId
+    value: ""
+    description: ""
+  - secret: true
+    name: verificationCode
+    description: ""

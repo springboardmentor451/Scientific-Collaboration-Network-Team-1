@@ -1,0 +1,27 @@
+name: local-institution-admin
+variables:
+  - name: baseUrl
+    value: http://localhost:8000
+    description: ""
+  - name: email
+    value: ""
+    description: ""
+  - name: password
+    value: ""
+    description: ""
+    secret: true
+  - name: verificationCode
+    value: ""
+    descriptioin: ""
+    secret: true
+  - name: accessToken
+    value: ""
+    description: ""
+    secret: true
+  - name: refreshToken
+    value: ""
+    description: ""
+    secret: true
+  - name: managedInstitutionId
+    value: ""
+    description: ""

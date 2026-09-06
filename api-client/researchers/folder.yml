@@ -1,0 +1,13 @@
+info:
+  name: researchers
+  type: folder
+  seq: 3
+
+request:
+  auth:
+    type: bearer
+    token: "{{access_token}}"
+  variables:
+    - name: researcherUrl
+      value: "{{baseUrl}}/researchers"
+      description: ""

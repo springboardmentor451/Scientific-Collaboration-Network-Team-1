@@ -1,0 +1,36 @@
+info:
+  name: verify-email-already-verified
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{authUrl}}/verify-email"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "email": "{{email}}",
+        "code": "{{verificationCode}}"
+      }
+
+runtime:
+  scripts:
+    - type: tests
+      code: |
+        test("status is 400", function() {
+          expect(res.status).to.equal(400);
+        });
+        test("already verified detail", function() {
+          expect(res.body.detail).to.include("already verified");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

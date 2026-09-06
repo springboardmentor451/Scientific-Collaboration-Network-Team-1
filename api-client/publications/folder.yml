@@ -1,0 +1,10 @@
+info:
+  name: publications
+  type: folder
+  seq: 5
+
+request:
+  variables:
+    - name: publicationUrl
+      value: "{{baseUrl}}/publications"
+      description: ""

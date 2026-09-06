@@ -1,0 +1,34 @@
+info:
+  name: role-change-requests
+  type: http
+  seq: 15
+
+http:
+  method: GET
+  url: "{{userUrl}}/role-change-requests"
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        if (res.status === 200 && res.body.length > 0) {
+          bru.setVar("userId", res.body[0].user_id);
+        }
+    - type: tests
+      code: |-
+        test("status is 200", function() {
+          expect(res.status).to.equal(200);
+        });
+        test("all have requested_role", function() {
+          res.body.forEach(u => expect(u.requested_role).to.not.be.null);
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -1,0 +1,42 @@
+info:
+  name: update-member-role
+  type: http
+  seq: 7
+
+http:
+  method: PATCH
+  url: "{{projectMemberUrl}}/{{researcherId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "role": "{{newMemberRole}}"
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  variables:
+    - name: newMemberRole
+      value: ""
+      description: ""
+  scripts:
+    - type: tests
+      code: |
+        test("status is 200", function() {
+          expect(res.status).to.equal(200);
+        });
+        test("role updated", function() {
+          expect(res.body.role).to.equal("newMemberRole");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -1,0 +1,10 @@
+info:
+  name: dashboard
+  type: folder
+  seq: 10
+
+request:
+  variables:
+    - name: dashboardUrl
+      value: "{{baseUrl}}/dashboard"
+      description: ""

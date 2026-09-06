@@ -1,0 +1,42 @@
+info:
+  name: add-member
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{projectMemberUrl}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "researcher_id": {{researcherId}},
+        "role": "{{memberRole}}"
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  variables:
+    - name: memberRole
+      value: ""
+  scripts:
+    - type: tests
+      code: |
+        test("status is 201", function() {
+          expect(res.status).to.equal(201);
+        });
+        test("role is member", function() {
+          expect(res.body.role).to.equal(bru.getVar("memberole"));
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

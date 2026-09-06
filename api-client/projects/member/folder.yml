@@ -1,0 +1,10 @@
+info:
+  name: member
+  type: folder
+  seq: 1
+
+request:
+  auth: inherit
+  variables:
+    - name: projectMemberUrl
+      value: "{{projectUrl}}/members"

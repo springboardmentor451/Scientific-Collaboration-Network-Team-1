@@ -1,0 +1,44 @@
+info:
+  name: update-me
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: "{{researcherUrl}}/me"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "name": null,
+        "skills": null,
+        "research_interests": ["Cloud Computing", "Python"],
+        "bio": null,
+        "department": null,
+        "orcid": null,
+        "institution_id": null
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("status is 200", function() {
+          expect(res.status).to.equal(200);
+        });
+        test("bio updated", function() {
+          expect(res.body.bio).to.include("Updated bio");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

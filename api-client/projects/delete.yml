@@ -1,0 +1,26 @@
+info:
+  name: delete
+  type: http
+  seq: 9
+
+http:
+  method: DELETE
+  url: "{{projectUrl}}/{{projectId}}"
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |
+        test("status is 204", function() {
+          expect(res.status).to.equal(204);
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
