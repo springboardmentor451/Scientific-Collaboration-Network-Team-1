@@ -22,3 +22,6 @@ Thumbs.db
 
 # Ignore environment files
 .env
+
+# Ignore uploads folder
+uploads/
