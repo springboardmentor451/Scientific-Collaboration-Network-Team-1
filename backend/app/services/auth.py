@@ -2,6 +2,7 @@ import logging
 
 from fastapi import HTTPException
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import TOTP_INTERVAL, TokenType, UserStatus, VerificationPurpose
@@ -214,7 +215,11 @@ class AuthService:
             status=UserStatus.PENDING,
         )
         user_service.session.add(user)
-        await user_service.session.commit()
+        try:
+            await user_service.session.commit()
+        except IntegrityError:
+            await user_service.session.rollback()
+            raise HTTPException(status_code=409, detail="user already exists")
         logger.info("user created: %d", user.user_id)
         return user
 
@@ -227,6 +232,9 @@ class AuthService:
         )
 
     async def _revoke_token(self, token: str, session: AsyncSession) -> None:
-        if not await self._is_revoked(token, session):
-            session.add(RevokedToken(token=token))
+        session.add(RevokedToken(token=token))
+        try:
             await session.commit()
+        except IntegrityError:
+            await session.rollback()
+            

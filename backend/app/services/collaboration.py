@@ -1,7 +1,12 @@
+import hashlib
 import logging
+from collections.abc import Callable
 
 from fastapi import HTTPException
-from sqlalchemy import ScalarResult, select
+from sqlalchemy import Insert, ScalarResult, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+from sqlalchemy.engine.result import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Collaboration, CollaborationResearcher, Researcher
@@ -43,10 +48,15 @@ class CollaborationService:
             )
         for researcher_id in data.researcher_ids:
             await self._get_researcher(researcher_id)
-        existing: Collaboration | None = await self._find_existing(data.researcher_ids)
-        if existing:
-            return await self._increment_existing(existing)
-        return await self._create_new(data)
+        collaboration_id: int = await self._upsert_collaboration(data)
+        await self._ensure_members(collaboration_id, data.researcher_ids)
+        await self.session.commit()
+        collaboration: Collaboration | None = await self.session.get(
+            Collaboration, collaboration_id
+        )
+        await self.session.refresh(collaboration)
+        logger.info("collaboration upserted: %d", collaboration_id)
+        return CollaborationResponse.from_orm(collaboration)
 
     async def delete(self, collaboration_id: int, researcher: Researcher) -> None:
         logger.debug("delete collaboration: %d", collaboration_id)
@@ -70,26 +80,6 @@ class CollaborationService:
                 status_code=404, detail=f"researcher {researcher_id} not found"
             )
         return researcher
-
-    async def _find_existing(self, researcher_ids: list[int]) -> Collaboration | None:
-        """
-        find a collaboration that contains all the given researchers
-        start with collaborations containing first researcher
-        """
-        result: ScalarResult[Collaboration] = await self.session.scalars(
-            select(Collaboration)
-            .join(CollaborationResearcher)
-            .where(CollaborationResearcher.researcher_id == researcher_ids[0])
-        )
-        for collab in result.all():
-            members: ScalarResult[int] = await self.session.scalars(
-                select(CollaborationResearcher.researcher_id).where(
-                    CollaborationResearcher.collaboration_id == collab.collaboration_id
-                )
-            )
-            if set(members.all()) == set(researcher_ids):
-                return collab
-        return None
 
     async def _check_participant(
         self, collaboration_id: int, researcher_id: int
@@ -119,27 +109,41 @@ class CollaborationService:
                 status_code=403, detail="you must include yourself in the collaboration"
             )
 
-    async def _increment_existing(
-        self, existing: Collaboration
-    ) -> CollaborationResponse:
-        existing.collaboration_count += 1
-        await self.session.commit()
-        await self.session.refresh(existing)
-        logger.info("collaboration count incremented: %d", existing.collaboration_id)
-        return CollaborationResponse.from_orm(existing)
+    def _member_key(self, researcher_ids: list[int]) -> str:
+        canonical: str = ",".join(str(rid) for rid in sorted(set(researcher_ids)))
+        return hashlib.sha256(canonical.encode()).hexdigest()
 
-    async def _create_new(self, data: CollaborationRequest) -> CollaborationResponse:
-        collaboration = Collaboration(collaboration_type=data.collaboration_type)
-        self.session.add(collaboration)
-        await self.session.flush()
-        for researcher_id in data.researcher_ids:
-            self.session.add(
-                CollaborationResearcher(
-                    collaboration_id=collaboration.collaboration_id,
-                    researcher_id=researcher_id,
-                )
-            )
-        await self.session.commit()
-        await self.session.refresh(collaboration)
-        logger.info("collaboration created: %d", collaboration.collaboration_id)
-        return CollaborationResponse.from_orm(collaboration)
+    async def _upsert_collaboration(self, data: CollaborationRequest) -> int:
+        key: str = self._member_key(data.researcher_ids)
+        dialect: str = self.session.bind.dialect.name
+        insert_fn: Callable[..., Insert] = (
+            pg_insert if dialect == "postgresql" else sqlite_insert
+        )
+        stmt: Insert = insert_fn(Collaboration).values(
+            member_key=key,
+            collaboration_type=data.collaboration_type,
+            collaboration_count=1,
+        )
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["member_key"],
+            set_={"collaboration_count": Collaboration.collaboration_count + 1},
+        ).returning(Collaboration.collaboration_id)
+        result: Result[tuple[int]] = await self.session.execute(stmt)
+        return result.scalar_one()
+
+    async def _ensure_members(
+        self, collaboration_id: int, researcher_ids: list[int]
+    ) -> None:
+        dialact: str = self.session.bind.dialect.name
+        insert_fn: Callable[..., Insert] = (
+            pg_insert if dialact == "postgresql" else sqlite_insert
+        )
+        rows: list[dict[str, int]] = [
+            {"collaboration_id": collaboration_id, "researcher_id": researcher_id}
+            for researcher_id in researcher_ids
+        ]
+        stmt: Insert = insert_fn(CollaborationResearcher).values(rows)
+        stmt = stmt.on_conflict_do_nothing(
+            index_elements=["collaboration_id", "researcher_id"]
+        )
+        await self.session.execute(stmt)

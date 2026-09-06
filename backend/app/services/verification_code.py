@@ -1,8 +1,11 @@
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 
 import pyotp
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import Insert, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import TOTP_INTERVAL, VerificationPurpose
@@ -32,23 +35,19 @@ class VerificationCodeService:
         purpose: VerificationPurpose,
         expires_in: timedelta = TOTP_INTERVAL,
     ) -> None:
-        existing: VerificationCode | None = await self.session.scalar(
-            select(VerificationCode).where(
-                VerificationCode.user_id == user_id,
-                VerificationCode.purpose == purpose,
-                VerificationCode.expires_at > datetime.now(UTC),
-            )
+        dialect: str = self.session.bind.dialect.name
+        insert_fn: Callable[..., Insert] = (
+            pg_insert if dialect == "postgresql" else sqlite_insert
         )
-        if existing:
-            await self.session.delete(existing)
-            await self.session.flush()
-        verification_code = VerificationCode(
-            user_id=user_id,
-            secret=secret,
-            purpose=purpose,
-            expires_at=datetime.now(UTC) + expires_in,
+        expires_at: datetime = datetime.now(UTC) + expires_in
+        stmt: Insert = insert_fn(VerificationCode).values(
+            user_id=user_id, secret=secret, purpose=purpose, expires_at=expires_at
         )
-        self.session.add(verification_code)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["user_id", "purpose"],
+            set_={"secret": secret, "expires_at": expires_at},
+        )
+        await self.session.execute(stmt)
         await self.session.commit()
 
     async def verify_code(
