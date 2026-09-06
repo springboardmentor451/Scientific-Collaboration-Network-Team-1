@@ -1,7 +1,6 @@
 from datetime import datetime
 
-from pydantic import SecretStr
-from sqlalchemy import Enum, ForeignKey, String
+from sqlalchemy import Enum, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core import Base
@@ -10,6 +9,9 @@ from app.core.constants import VerificationPurpose
 
 class VerificationCode(Base):
     __tablename__: str = "verification_codes"
+    __table_args__ = (
+        UniqueConstraint("user_id", "purpose", name="uq_verification_user_purpose"),
+    )
 
     code_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(

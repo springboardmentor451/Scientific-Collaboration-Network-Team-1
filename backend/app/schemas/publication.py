@@ -25,6 +25,7 @@ class PublicationRequest(PublicationBase):
     status: PublicationStatus = PublicationStatus.DRAFT
     researcher_ids: list[int] = Field(default_factory=list)
     external_authors: list[str] = Field(default_factory=list)
+    is_open_access: bool = Field(default=True) 
 
 
 class PublicationUpdateRequest(PublicationBase):
@@ -37,6 +38,7 @@ class PublicationUpdateRequest(PublicationBase):
     status: PublicationStatus | None = None
     researcher_ids: list[int] | None = None
     external_authors: list[str] | None = None
+    is_open_access: bool | None = None 
 
 
 # class PublicationAuthorRequest(BaseModel):

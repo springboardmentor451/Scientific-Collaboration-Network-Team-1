@@ -24,6 +24,9 @@ class Collaboration(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+    member_key: Mapped[str] = mapped_column(
+        String(64), unique=True, nullable=False, index=True
+    )
 
     researchers: Mapped[list[Researcher]] = relationship(
         "Researcher",
