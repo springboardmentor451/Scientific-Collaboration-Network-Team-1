@@ -14,8 +14,17 @@ def test_testing_config_test_true() -> None:
 
 
 def test_production_config_debug_and_testing_false() -> None:
-    cfg: ProductionConfig = ProductionConfig.model_validate({})
+    cfg: ProductionConfig = ProductionConfig.model_validate(
+        {
+            "DATABASE_URL": "postgresql+asyncpg://user:pass@localhost/proddb",
+            "JWT_KEY": "prod-key-minimum-32-characters-long-value",
+            "ACCESS_TOKEN_EXPIRE_MINUTES": 15,
+            "REFRESH_TOKEN_EXPIRE_DAYS": 7,
+            "ALLOWED_ORIGIN": "https://yourapp.com",
+        }
+    )
     assert cfg.DEBUG is False
+    assert cfg.TESTING is False
 
 
 def test_invalid_algorithm_rejected(monkeypatch) -> None:
