@@ -55,17 +55,25 @@ class VerificationCodeService:
     ) -> None:
         verification_code: VerificationCode | None = await self.session.scalar(
             select(VerificationCode).where(
-                VerificationCode.user_id == user_id,
-                VerificationCode.purpose == purpose,
-                VerificationCode.expires_at > datetime.now(UTC),
+                VerificationCode.user_id == user_id, VerificationCode.purpose == purpose
             )
         )
         if not verification_code:
-            raise HTTPException(status_code=404, detail="invalid or expired code")
+            raise HTTPException(
+                status_code=404, detail="no verification code was requested"
+            )
+        expires_at: datetime = verification_code.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=UTC)
+        if expires_at <= datetime.now(UTC):
+            raise HTTPException(
+                status_code=400, detail="code expired, request a new one"
+            )
         totp = pyotp.TOTP(
             verification_code.secret, interval=int(TOTP_INTERVAL.total_seconds())
         )
         if not totp.verify(code, valid_window=1):
-            raise HTTPException(status_code=400, detail="invalid or expired code")
+            raise HTTPException(status_code=400, detail="incorrect code")
+
         await self.session.delete(verification_code)
         await self.session.commit()
