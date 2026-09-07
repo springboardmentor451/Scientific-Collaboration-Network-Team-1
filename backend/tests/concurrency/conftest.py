@@ -45,7 +45,7 @@ def engine() -> AsyncEngine:
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def create_tables(engine) -> AsyncGenerator[None, Any]:
+async def create_tables(engine: AsyncEngine) -> AsyncGenerator[None, Any]:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
@@ -54,7 +54,7 @@ async def create_tables(engine) -> AsyncGenerator[None, Any]:
 
 
 @pytest.fixture
-async def session(engine) -> AsyncGenerator:
+async def session(engine: AsyncEngine) -> AsyncGenerator:
     factory: async_sessionmaker[AsyncSession] = async_sessionmaker(
         engine, expire_on_commit=False
     )
@@ -64,11 +64,13 @@ async def session(engine) -> AsyncGenerator:
 
 
 @pytest.fixture
-async def client_factory(engine) -> AsyncGenerator[Callable[[], AsyncClient]]:
+async def client_factory(
+    engine: AsyncEngine,
+) -> AsyncGenerator[Callable[[], AsyncClient]]:
     """
-    Concurrency tests need multiple independent client+session pairs firing
-    at once, a single shared `client` fixture would serialize everything
-    through one session, defeating the purpose of the test.
+    Concurrency tests need multiple independent client+session pairs firing at once, 
+    a single shared 'client' fixture would serialize everything through one session, 
+    defeating the purpose of the test.
     """
     factory: async_sessionmaker[AsyncSession] = async_sessionmaker(
         engine, expire_on_commit=False
