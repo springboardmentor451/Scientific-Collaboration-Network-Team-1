@@ -33,7 +33,10 @@ class User(Base):
     )
 
     researcher: Mapped[Researcher | None] = relationship(
-        "Researcher", back_populates="user", uselist=False
+        "Researcher",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
     managed_institution_id: Mapped[int | None] = mapped_column(
         ForeignKey("institutions.institution_id", ondelete="SET NULL"),

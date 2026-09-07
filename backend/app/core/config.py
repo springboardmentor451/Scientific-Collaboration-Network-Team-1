@@ -88,7 +88,8 @@ class TestingConfig(Config):
 
 
 class ProductionConfig(Config):
-    pass
+    DEBUG: bool = False
+    TESTING: bool = False
 
 
 _config: dict[str, type[Config]] = {
