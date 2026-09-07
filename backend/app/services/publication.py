@@ -4,6 +4,7 @@ from pathlib import Path
 from fastapi import HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy import ScalarResult, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.selectable import Select
 
@@ -60,7 +61,6 @@ class PublicationService:
         )
         self._assign_co_authors(publication.publication_id, co_author_ids)
         await self.session.commit()
-        await self.session.refresh(publication)
         logger.info("publication created: %d", publication.publication_id)
         return PublicationResponse.from_orm(publication)
 
@@ -211,7 +211,11 @@ class PublicationService:
             external_authors=data.external_authors,
         )
         self.session.add(publication)
-        await self.session.flush()
+        try:
+            await self.session.flush()  # DOI unique constraint is enforced here
+        except IntegrityError:
+            await self.session.rollback()
+            raise HTTPException(status_code=409, detail="DOI already exists") from None
         return publication
 
     def _assign_primary_author(self, publication_id: int, researcher_id: int) -> None:

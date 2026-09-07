@@ -1,8 +1,8 @@
 import logging
 
 from fastapi import HTTPException
-from sqlalchemy import select
-from sqlalchemy.engine.result import ScalarResult
+from sqlalchemy import select, update
+from sqlalchemy.engine.result import Result, ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import UserRole, UserStatus
@@ -46,11 +46,23 @@ class UserAdminService:
         logger.debug("approve user: user_id=%d", user_id)
         user: User = await self._get_by_id(user_id)
         UserStatusValidator.ensure_approvable(user)
-        if user.requested_role:
-            user.role = user.requested_role
-            user.requested_role = None
+        new_role: UserRole | None = user.requested_role
+        result: Result[tuple[int]] = await self.session.execute(update(User)
+            .where(User.user_id == user_id, User.status == UserStatus.PENDING)
+            .values(
+                status=UserStatus.ACTIVE, role=new_role, requested_role=None
+            )
+            .returning(User.user_id)
+        )
+        updated_user_id: int | None = result.scalar_one_or_none()
+        if updated_user_id is None:
+            await self.session.rollback()
+            raise HTTPException(
+                status_code=409, detail="user is no longer pending approval"
+            )
         user.status = UserStatus.ACTIVE
         await self.session.commit()
+        await self.session.refresh(user)
         self.email_notifier.send_approval_notification(user.email)
         logger.info("user approved: user_id=%d", user.user_id)
         return UserResponse.from_orm(user)
