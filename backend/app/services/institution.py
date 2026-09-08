@@ -3,6 +3,7 @@ import logging
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.engine.result import ScalarResult
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.orm_utils import apply_updates
@@ -54,6 +55,14 @@ class InstitutionService:
             domain=data.domain,
         )
         self.session.add(institution)
+        try:
+            await self.session.commit()
+        except IntegrityError:
+            await self.session.rollback()
+            raise HTTPException(
+                status_code=409,
+                detail="an institution with this name or domain already exists",
+            )
         await self.session.commit()
         logger.info("institution created: %d", institution.institution_id)
         return InstitutionResponse.from_orm(institution)

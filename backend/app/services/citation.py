@@ -2,6 +2,7 @@ import logging
 
 from fastapi import HTTPException
 from sqlalchemy import ScalarResult, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Citation, Publication, PublicationAuthor, Researcher
@@ -48,8 +49,6 @@ class CitationService:
             for cited_id in data.cited_publication_ids
         ]
         await self.session.commit()
-        for c in created:
-            await self.session.refresh(c)
         logger.info(
             "citations created: %d, %s",
             data.citing_publication_id,
@@ -107,25 +106,17 @@ class CitationService:
         self, citing_publication_id: int, cited_publication_id: int
     ) -> Citation:
         await self._get_publication(cited_publication_id)
-        existing: Citation | None = await self.session.scalar(
-            select(Citation).where(
-                Citation.citing_publication_id == citing_publication_id,
-                Citation.cited_publication_id == cited_publication_id,
-            )
-        )
-        if existing:
-            logger.warning(
-                "citation already exists: %d, %d",
-                citing_publication_id,
-                cited_publication_id,
-            )
-            raise HTTPException(
-                status_code=409,
-                detail=f"citation {citing_publication_id}, {cited_publication_id} already exists",
-            )
         citation = Citation(
             citing_publication_id=citing_publication_id,
             cited_publication_id=cited_publication_id,
         )
         self.session.add(citation)
+        try:
+            await self.session.flush()
+        except IntegrityError:
+            await self.session.rollback()
+            raise HTTPException(
+                status_code=409,
+                detail=f"citation {citing_publication_id}, {cited_publication_id} already exists",
+            )
         return citation

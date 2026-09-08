@@ -2,6 +2,7 @@ import logging
 
 from fastapi import HTTPException
 from sqlalchemy import ScalarResult, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import ProjectRole
@@ -111,7 +112,11 @@ class ProjectService:
             project_id=project_id, researcher_id=data.researcher_id, role=data.role
         )
         self.session.add(member)
-        await self.session.commit()
+        try:
+            await self.session.commit()
+        except IntegrityError:
+            await self.session.rollback()
+            raise HTTPException(status_code=409, detail="researcher is already a member")
         await self.session.refresh(member)
         logger.info(
             "member added: project_id=%d researcher_id=%d",

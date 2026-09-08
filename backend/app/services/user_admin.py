@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.engine.result import Result, ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.dml import Update
 
 from app.core.constants import UserRole, UserStatus
 from app.core.interfaces import EmailNotifier
@@ -46,11 +47,11 @@ class UserAdminService:
         logger.debug("approve user: user_id=%d", user_id)
         user: User = await self._get_by_id(user_id)
         UserStatusValidator.ensure_approvable(user)
-        new_role: UserRole | None = user.requested_role
-        result: Result[tuple[int]] = await self.session.execute(update(User)
+        result: Result[tuple[int]] = await self.session.execute(
+            update(User)
             .where(User.user_id == user_id, User.status == UserStatus.PENDING)
             .values(
-                status=UserStatus.ACTIVE, role=new_role, requested_role=None
+                status=UserStatus.ACTIVE, role=User.requested_role, requested_role=None
             )
             .returning(User.user_id)
         )
@@ -69,16 +70,18 @@ class UserAdminService:
 
     async def reject(self, user_id: int) -> UserResponse:
         logger.debug("reject user: user_id=%d", user_id)
-        user: User = await self._get_by_id(user_id)
-        await self._set_status(user, UserStatus.REJECTED, require_pending=True)
+        # user: User = await self._get_by_id(user_id)
+        user: User = await self._set_status(
+            user_id, UserStatus.REJECTED, require_current=UserStatus.PENDING
+        )
         self.email_notifier.send_rejection_notification(user.email)
         logger.info("user rejected: user_id=%d", user.user_id)
         return UserResponse.from_orm(user)
 
     async def ban(self, user_id: int) -> UserResponse:
         logger.debug("ban user: user_id=%d", user_id)
-        user: User = await self._get_by_id(user_id)
-        await self._set_status(user, UserStatus.BANNED)
+        # user: User = await self._get_by_id(user_id)
+        user: User = await self._set_status(user_id, UserStatus.BANNED)
         self.email_notifier.send_ban_notification(user.email)
         logger.info("user banned: user_id=%d", user.user_id)
         return UserResponse.from_orm(user)
@@ -134,18 +137,30 @@ class UserAdminService:
         return user
 
     async def _set_status(
-        self, user: User, status: UserStatus, require_pending: bool = False
-    ) -> None:
-        if require_pending and user.status != UserStatus.PENDING:
+        self,
+        user_id: int,
+        target_status: UserStatus,
+        require_current: UserStatus | None = None,
+    ) -> User:
+        await self._get_by_id(user_id)
+        stmt: Update = (
+            update(User).where(User.user_id == user_id).values(status=target_status)
+        )
+        stmt = stmt.where(
+            User.status == require_current
+            if require_current is not None
+            else User.status != target_status
+        )
+        stmt = stmt.returning(User.user_id)
+        result: Result[tuple[int]] = await self.session.execute(stmt)
+        if result.scalar_one_or_none() is None:
+            await self.session.rollback()
             raise HTTPException(
-                status_code=409, detail="user must be pending for this action"
+                status_code=409,
+                detail=f"user status transition rejected, already {target_status.value} or invalid current state",
             )
-        if user.status == status:
-            raise HTTPException(
-                status_code=409, detail=f"user is already {status.value}"
-            )
-        user.status = status
         await self.session.commit()
+        return await self._get_by_id(user_id)
 
     async def _manage_institution_id(
         self, data: UserRoleUpdateRequest, user: User
