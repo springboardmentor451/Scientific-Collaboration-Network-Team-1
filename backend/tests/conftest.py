@@ -4,10 +4,8 @@ from collections.abc import AsyncGenerator, Generator
 from typing import Any, Literal
 from unittest.mock import patch
 
-# must be set before any app import - controls which Config class loads
+# must be set before any app import, controls which Config class loads
 os.environ["FASTAPI_ENV"] = "testing"
-
-# import tempfile
 
 import pytest
 from app.core import Base, Config, get_config, get_db
@@ -76,7 +74,7 @@ async def session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
         await sess.rollback()
 
 
-# Verification code mock - patches generate_code to return KNOWN_VERIFICATION_CODE
+# Verification code mock, patches generate_code to return KNOWN_VERIFICATION_CODE
 @pytest.fixture
 def mock_verification_code() -> Generator[Literal["123456"], Any, None]:
     """
@@ -91,19 +89,12 @@ def mock_verification_code() -> Generator[Literal["123456"], Any, None]:
         patch(
             "app.services.verification_code.VerificationCodeService.send_code",
         ),
-        # patch("pyotp.TOTP.verify", return_value=True),
         patch(
             "pyotp.TOTP.verify",
             side_effect=lambda code, valid_window=1: code == KNOWN_VERIFICATION_CODE,
         ),
     ):
         yield KNOWN_VERIFICATION_CODE
-
-
-# @pytest.fixture(scope="session", autouse=True)
-# def temp_uploads_dir(monkeypatch) -> None:
-#     tmpdir: str = tempfile.mkdtemp()
-#     monkeypatch.setattr("app.services.publication_service.UPLOAD_DIR", tmpdir)
 
 
 # HTTP client
@@ -114,8 +105,7 @@ async def client(session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 
     app.dependency_overrides[get_db] = override_get_db
     async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test",
+        transport=ASGITransport(app=app), base_url="http://test"
     ) as c:
         yield c
     app.dependency_overrides.clear()

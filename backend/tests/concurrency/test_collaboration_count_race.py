@@ -1,9 +1,8 @@
 """
 The critical concurrency test in this suite.
-
 This is a classic read-modify-write race. If N requests read the same starting count simultaneously,
-all N compute count+1 independently andvthe final stored value is count+1,
-not count+N. Updates are silently lost.
+all N compute count+1 independently andvthe final stored value is count+1, not count+N.
+Updates are silently lost.
 """
 
 import asyncio
