@@ -14,6 +14,11 @@ if TYPE_CHECKING:
 
 class Citation(Base):
     __tablename__: str = "citations"
+    __table_args__ = (
+        UniqueConstraint(
+            "citing_publication_id", "cited_publication_id", name="uq_citation_pair"
+        ),
+    )
 
     citation_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     citing_publication_id: Mapped[int] = mapped_column(
@@ -37,14 +42,6 @@ class Citation(Base):
         "Publication",
         foreign_keys=[cited_publication_id],
         back_populates="citations_received",
-    )
-
-    __table_args__ = (
-        UniqueConstraint(
-            "citing_publication_id",
-            "cited_publication_id",
-            name="uq_publication_citation",
-        ),
     )
 
     def __repr__(self) -> str:
