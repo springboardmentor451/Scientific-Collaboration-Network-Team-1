@@ -15,7 +15,7 @@ runtime:
     - type: after-response
       code: |-
         if (res.status === 200 && res.body.length > 0) {
-          bru.setVar("userId", res.body[0].user_id);
+          bru.setEnvVar("userId", res.body[0].user_id);
         }
     - type: tests
       code: |-
