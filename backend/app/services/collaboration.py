@@ -54,7 +54,6 @@ class CollaborationService:
         collaboration: Collaboration | None = await self.session.get(
             Collaboration, collaboration_id
         )
-        await self.session.refresh(collaboration)
         logger.info("collaboration upserted: %d", collaboration_id)
         return CollaborationResponse.from_orm(collaboration)
 

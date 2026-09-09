@@ -108,7 +108,6 @@ class ResearcherService:
         )
         self.session.add(researcher)
         await self.session.commit()
-        await self.session.refresh(researcher)
         logger.info("researcher profile created for user: %d", user.user_id)
         return researcher
 
