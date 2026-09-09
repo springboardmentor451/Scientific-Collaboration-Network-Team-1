@@ -119,4 +119,5 @@ class CitationService:
                 status_code=409,
                 detail=f"citation {citing_publication_id}, {cited_publication_id} already exists",
             )
+        await self.session.refresh(citation)
         return citation

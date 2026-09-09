@@ -59,5 +59,5 @@ class UserService:
             data.requested_role,
         )
         return MessageResponse(
-            message="role change request submitted — awaiting admin approval"
+            message="role change request submitted, awaiting admin approval"
         )

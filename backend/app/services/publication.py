@@ -61,6 +61,7 @@ class PublicationService:
         )
         self._assign_co_authors(publication.publication_id, co_author_ids)
         await self.session.commit()
+        await self.session.refresh(publication)
         logger.info("publication created: %d", publication.publication_id)
         return PublicationResponse.from_orm(publication)
 
@@ -100,7 +101,7 @@ class PublicationService:
         logger.debug("uploade file: publication_id=%d", publication_id)
         publication: Publication = await self._get_by_id(publication_id)
         await self._check_ownership(publication, researcher)
-        file_path = await save_publication_file(file, publication_id)
+        file_path: str = await save_publication_file(file, publication_id)
         publication.file_path = file_path
         await self.session.commit()
         await self.session.refresh(publication)

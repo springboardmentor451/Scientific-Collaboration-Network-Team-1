@@ -65,7 +65,7 @@ class ProjectService:
             pi_id: int = await self._get_pi_id(project_id)
             await self._update_members(project_id, data.researcher_ids, pi_id)
         await self.session.commit()
-        await self.session.refresh(project)
+        # await self.session.refresh(project)
         logger.info("project updated: %d", project_id)
         return ProjectResponse.from_orm(project)
 
@@ -117,7 +117,7 @@ class ProjectService:
         except IntegrityError:
             await self.session.rollback()
             raise HTTPException(status_code=409, detail="researcher is already a member")
-        await self.session.refresh(member)
+        # await self.session.refresh(member)
         logger.info(
             "member added: project_id=%d researcher_id=%d",
             project_id,
