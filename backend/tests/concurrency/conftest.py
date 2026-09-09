@@ -16,9 +16,8 @@ import pytest
 from app.core import Base, get_config, get_db
 from app.core import domains as domains_module
 from app.core.constants import UserRole, UserStatus
-from app.models.researcher import Researcher
-from app.models.user import User
-from app.services.token import TokenService
+from app.models import Researcher, User
+from app.services import TokenService
 from httpx import ASGITransport, AsyncClient
 from main import app
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
