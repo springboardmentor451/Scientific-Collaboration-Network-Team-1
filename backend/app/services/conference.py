@@ -39,6 +39,7 @@ class ConferenceService:
         )
         self.session.add(conference)
         await self.session.commit()
+        await self.session.refresh(conference)
         logger.info("conference created: %d", conference.conference_id)
         return ConferenceResponse.from_orm(conference)
 

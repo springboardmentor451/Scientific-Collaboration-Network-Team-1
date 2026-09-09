@@ -239,6 +239,7 @@ class ProjectService:
         )
         self.session.add(project)
         await self.session.flush()
+        await self.session.refresh(project)
         return project
 
     def _assign_pi(self, project_id: int, researcher_id: int) -> None:
