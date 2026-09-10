@@ -1,0 +1,8 @@
+- Registration or sign up require email, password and user role only no full name, keep it simple and mimimal.
+- There is no option to close sign in and sign up windows.
+- Anyone can explore the website without sign up or sign in. 
+    Accessibility will be limited. 
+    For now there is no option for that.
+- Do not set default passwords.
+- Add theme toggle or switch theme in the upper right corner.
+- Remove mock data in production.
