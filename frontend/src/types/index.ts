@@ -256,6 +256,21 @@ export interface ProjectUpdateRequest {
   researcher_ids?: number[];
 }
 
+export interface ProjectMemberRequest {
+  researcher_id: number;
+  role: ProjectRole;
+}
+
+export interface ProjectMemberUpdateRequest {
+  role: ProjectRole;
+}
+
+export interface ProjectMemberResponse {
+  project_id: number;
+  researcher_id: number;
+  role: ProjectRole;
+}
+
 export interface CollaborationRequest {
   researcher_ids: number[];
   collaboration_type?: string | null;
@@ -298,6 +313,14 @@ export interface CollaborationReportFilter {
   institution_id?: number;
   from_date?: string;
   to_date?: string;
+}
+
+export interface PublicStats {
+  total_researchers: number;
+  total_publications: number;
+  total_institutions: number;
+  total_conferences: number;
+  total_collaborations: number;
 }
 
 // --- Aggregate Analytics Schemas ---
