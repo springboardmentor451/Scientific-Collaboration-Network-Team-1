@@ -1,6 +1,11 @@
 from fastapi import APIRouter
 
-from app.routes.deps import CurrentUser, InstitutionServiceDeps, ResearcherServiceDeps
+from app.routes.deps import (
+    CurrentResearcher,
+    CurrentUser,
+    InstitutionServiceDeps,
+    ResearcherServiceDeps,
+)
 from app.schemas import (
     ResearcherRequest,
     ResearcherResponse,
@@ -27,6 +32,15 @@ async def get_researchers(
 ) -> list[ResearcherResponse]:
     return await researcher_service.get_all()
 
+# @researcher_router.get("/me", response_model=ResearcherResponse)
+# async def get_my_researcher_profile(current_user: CurrentUser, researcher_service: ResearcherServiceDeps) -> ResearcherResponse:
+#     researcher = await researcher_service.get_by_user_id(current_user.user_id)
+#     if not researcher:
+#         raise HTTPException(status_code=404, detail="researcher profile not found")
+#     return ResearcherResponse.from_orm(researcher)
+@researcher_router.get("/me", response_model=ResearcherResponse)
+async def get_my_researcher_profile(current_researcher: CurrentResearcher) -> ResearcherResponse:
+    return ResearcherResponse.from_orm(current_researcher)
 
 @researcher_router.patch("/me", response_model=ResearcherResponse)
 async def update_researcher(
