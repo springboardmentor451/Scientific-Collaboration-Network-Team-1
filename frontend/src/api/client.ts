@@ -1,20 +1,22 @@
 import axios from 'axios';
 
 // Base API URL falls back to local port 8000 (FastAPI default)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE_URL = 'http://localhost:8000/api';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // headers: {
+  //   'Content-Type': 'application/json',
+  // },
 });
 
 // Request Interceptor: Attach JWT token if present
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('scn_token');
-    if (token && config.headers) {
+    const token = localStorage.getItem("scn_token");
+    // if (token && config.headers) {
+    if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { User, Researcher, UserRequest, VerificationCodeRequest, TokenResponse, MessageResponse } from '../types';
 import { AuthService } from '../services/authService';
 import { ResearcherService } from '../services/researcherService';
+import { UserRole } from "../types";
 
 interface AuthContextType {
   user: User | null;
@@ -26,9 +27,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const currentUser = await AuthService.getCurrentUser();
       setUser(currentUser);
-      if (currentUser) {
-        const currentRes = await ResearcherService.getByUserId(currentUser.user_id);
-        setResearcher(currentRes);
+      // if (currentUser) {
+      //   const currentRes = await ResearcherService.getMyProfile();
+      //   setResearcher(currentRes);
+      // } else {
+      //   setResearcher(null);
+      // }
+      if (currentUser?.role === UserRole.RESEARCHER) {
+        try {
+          const currentRes = await ResearcherService.getMyProfile();
+          setResearcher(currentRes);
+        } catch (err) {
+          console.error("Error loading researcher profile:", err);
+          setResearcher(null);
+        }
       } else {
         setResearcher(null);
       }

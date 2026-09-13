@@ -6,6 +6,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { RoleProtectedRoute } from './components/RoleProtectedRoute';
 import { AppLayout } from './layouts/AppLayout';
 import { UserRole } from './types';
+import { ThemeToggle } from './components/ThemeToggle';
 
 // Page Imports
 import { LandingPage } from './pages/LandingPage';
@@ -321,6 +322,7 @@ export const App: React.FC = () => {
             {/* Redirect fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          <ThemeToggle variant="floating" />
         </AuthProvider>
       </ThemeProvider>
     </Router>
