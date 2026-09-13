@@ -1,6 +1,6 @@
+import apiClient from '../api/client';
 import type { User, UserUpdateRequest } from '../types';
 import { UserRole } from '../types';
-import { getStoredUsers, saveStoredUsers } from '../data/mockData';
 import { AuthService } from './authService';
 
 export class UserService {
@@ -11,48 +11,30 @@ export class UserService {
   }
 
   static async updateMe(data: UserUpdateRequest): Promise<User> {
-    const currentUser = await this.getMe();
-    const users = getStoredUsers();
-    const userIndex = users.findIndex(u => u.user_id === currentUser.user_id);
-
-    if (userIndex === -1) throw new Error("User profile not found");
-
-    if (data.password) {
-      localStorage.setItem(`pwd_${currentUser.email}`, String(data.password));
-    }
-
-    const updatedUser = {
-      ...users[userIndex]
-    };
-
-    users[userIndex] = updatedUser;
-    saveStoredUsers(users);
-
-    return updatedUser;
+    // const currentUser = await this.getMe();
+    // const { data: updated } = await apiClient.patch<User>(`/users/${currentUser.user_id}`, data);
+    const { data: updated } = await apiClient.patch<User>(`/users/me`, data);
+    return updated;
   }
 
   static async deleteMe(): Promise<void> {
-    const currentUser = await this.getMe();
-    const users = getStoredUsers();
-    const filteredUsers = users.filter(u => u.user_id !== currentUser.user_id);
-    saveStoredUsers(filteredUsers);
-    await AuthService.logout({ refresh_token: "" });
+    // const currentUser = await this.getMe();
+    await apiClient.delete(`/users/me`);
+    await AuthService.logout({ refresh_token: localStorage.getItem("scn_refresh_token") || "" });
   }
 
   static async requestRoleChange(requestedRole: UserRole): Promise<{ message: string }> {
-    const currentUser = await this.getMe();
-    const users = getStoredUsers();
-    const userIndex = users.findIndex(u => u.user_id === currentUser.user_id);
-
-    if (userIndex === -1) throw new Error("User not found");
+    // const currentUser = await this.getMe();
 
     if (requestedRole === UserRole.SYSTEM_ADMIN) {
       throw new Error("System admin role cannot be self-declared");
     }
 
-    users[userIndex].requested_role = requestedRole;
-    saveStoredUsers(users);
-
-    return { message: `Requested role upgrade to ${requestedRole.toUpperCase()} submitted for admin approval.` };
+    const { data } = await apiClient.post<{ message: string }>(
+      // `/users/${currentUser.user_id}/request-role-change`,
+      `/users/me/request-role-change`,
+      { requested_role: requestedRole }
+    );
+    return data;
   }
 }
