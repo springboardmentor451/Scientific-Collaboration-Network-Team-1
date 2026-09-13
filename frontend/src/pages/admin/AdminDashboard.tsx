@@ -160,7 +160,7 @@ export const AdminDashboard: React.FC = () => {
               <Tooltip />
               <Legend />
               <Bar dataKey="users" fill="#ef4444" name="Registered Users" />
-              <Bar dataKey="publications" fill="#2156a1" name="Logged Publications" />
+              <Bar dataKey="publications" fill="#123B63" name="Logged Publications" />
               <Bar dataKey="collaborations" fill="#10b981" name="Collaboration Edges" />
             </BarChart>
           </ResponsiveContainer>

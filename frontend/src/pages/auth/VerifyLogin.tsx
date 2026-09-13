@@ -3,9 +3,11 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/Auth';
 import { GitFork, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { AuthService } from '../../services/authService';
+import { ThemeToggle } from '../../components/ThemeToggle';
+
 
 export const VerifyLogin: React.FC = () => {
-  const { verifyLoginCode } = useAuth();
+  const { verifyLoginCode, refreshUser } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -34,7 +36,7 @@ export const VerifyLogin: React.FC = () => {
     setLoading(true);
     try {
       await verifyLoginCode({ email, code });
-      
+      await refreshUser()
       navigate("/dashboard");
     } catch (err: any) {
       setError(err.message || "Invalid or expired verification code.");
@@ -60,9 +62,12 @@ export const VerifyLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200 relative">
+      <div className="absolute top-5 right-5 z-20">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-8 space-y-6">
-        
+
         {/* Header */}
         <div className="text-center space-y-2">
           <Link to="/" className="inline-flex items-center gap-2 font-bold text-navy-600 dark:text-navy-400 text-lg mb-1">
@@ -86,8 +91,8 @@ export const VerifyLogin: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 font-medium">Enter 6-Digit OTP</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               required
               maxLength={6}
               placeholder="000000"
@@ -98,7 +103,7 @@ export const VerifyLogin: React.FC = () => {
             />
           </div>
 
-          <button 
+          <button
             type="submit"
             disabled={loading || code.length !== 6}
             className="w-full py-2.5 bg-navy-600 hover:bg-navy-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-navy-500/10 flex items-center justify-center gap-2 transition-all mt-4"
@@ -113,13 +118,13 @@ export const VerifyLogin: React.FC = () => {
             {countdown > 0 ? (
               <span className="text-slate-400">Resend in {countdown}s</span>
             ) : (
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={handleResend}
                 className="font-semibold text-navy-600 dark:text-navy-400 hover:underline"
               >
                 Resend Code
-                </button>
+              </button>
             )}
           </div>
         </form>

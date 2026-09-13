@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/Auth';
 import { GitFork, AlertTriangle, CheckCircle, ArrowLeft } from 'lucide-react';
 import { AuthService } from '../../services/authService';
+import { ThemeToggle } from '../../components/ThemeToggle';
 
 export const VerifyEmail: React.FC = () => {
   const { verifyEmail } = useAuth();
@@ -66,7 +67,10 @@ export const VerifyEmail: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200 relative">
+      <div className="absolute top-5 right-5 z-20">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-8 space-y-6">
         
         {/* Header */}
