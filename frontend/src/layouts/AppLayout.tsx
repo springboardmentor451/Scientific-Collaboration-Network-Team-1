@@ -12,6 +12,7 @@ import { ResearcherService } from '../services/researcherService';
 import { PublicationService } from '../services/publicationService';
 import { ProjectService } from '../services/projectService';
 import { ConferenceService } from '../services/conferenceService';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, researcher, logout } = useAuth();
@@ -88,18 +89,42 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
-  // Nav Items Definitions
-  const researcherLinks = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'My Profile', path: '/profile', icon: UserIcon },
-    { name: 'Researchers', path: '/researchers', icon: Users },
-    { name: 'Publications', path: '/publications', icon: FileText },
-    { name: 'Projects', path: '/projects', icon: FolderGit2 },
-    { name: 'Collaborations', path: '/collaborations', icon: GitFork },
-    { name: 'Conferences', path: '/conferences', icon: Calendar },
-    { name: 'Citations', path: '/citations', icon: Award },
-    { name: 'Reports', path: '/reports', icon: FileSpreadsheet },
-    { name: 'Settings', path: '/settings', icon: Settings },
+  // Nav Items Definitions by Category
+  const sidebarGroups = [
+    {
+      title: 'Overview',
+      links: [{ name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard }]
+    },
+    {
+      title: 'Network',
+      links: [
+        { name: 'Researchers', path: '/researchers', icon: Users },
+        { name: 'Collaborations', path: '/collaborations', icon: GitFork }
+      ]
+    },
+    {
+      title: 'Research',
+      links: [
+        { name: 'Publications', path: '/publications', icon: FileText },
+        { name: 'Projects', path: '/projects', icon: FolderGit2 },
+        { name: 'Citations', path: '/citations', icon: Award }
+      ]
+    },
+    {
+      title: 'Discovery',
+      links: [{ name: 'Conferences', path: '/conferences', icon: Calendar }]
+    },
+    {
+      title: 'Analytics',
+      links: [{ name: 'Reports', path: '/reports', icon: FileSpreadsheet }]
+    },
+    {
+      title: 'Account',
+      links: [
+        { name: 'My Profile', path: '/profile', icon: UserIcon },
+        { name: 'Settings', path: '/settings', icon: Settings }
+      ]
+    }
   ];
 
   const adminLinks = [
@@ -114,49 +139,49 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
   const isLinkActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200 w-full">
       
       {/* 1. SIDEBAR (DESKTOP) */}
-      <aside className="hidden lg:flex flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 select-none">
+      <aside className="hidden lg:flex flex-col w-64 border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 select-none shrink-0">
         
         {/* Sidebar Header */}
-        <div className="h-16 px-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <Link to="/dashboard" className="flex items-center gap-2 font-bold text-navy-600 dark:text-navy-400 text-lg">
-            <GitFork className="w-6 h-6 animate-pulse" />
-            <span className="tracking-tight text-slate-800 dark:text-slate-200">SCN Network</span>
+        <div className="h-16 px-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <Link to="/dashboard" className="flex items-center gap-2 font-bold text-navy-600 dark:text-navy-450 text-base">
+            <GitFork className="w-4 h-4 text-navy-600" />
+            <span className="tracking-tight text-slate-900 dark:text-slate-200">SCN Platform</span>
           </Link>
         </div>
 
         {/* Sidebar Nav Links */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-7">
-          
-          {/* General Researcher Sections */}
-          <div className="space-y-1">
-            <p className="px-3 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Researcher Hub</p>
-            {researcherLinks.map((link) => {
-              const Icon = link.icon;
-              const active = isLinkActive(link.path);
-              return (
-                <Link
-                  key={link.name}
-                  to={link.path}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                    active 
-                      ? 'bg-navy-500 text-white shadow-md shadow-navy-500/10' 
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100'
-                  }`}
-                >
-                  <Icon className={`w-4.5 h-4.5 ${active ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`} />
-                  {link.name}
-                </Link>
-              );
-            })}
-          </div>
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+          {sidebarGroups.map((group) => (
+            <div key={group.title} className="space-y-1">
+              <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{group.title}</p>
+              {group.links.map((link) => {
+                const Icon = link.icon;
+                const active = isLinkActive(link.path);
+                return (
+                  <Link
+                    key={link.name}
+                    to={link.path}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      active 
+                        ? 'bg-navy-600 text-white shadow-sm shadow-navy-600/10' 
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 ${active ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`} />
+                    {link.name}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
 
           {/* Admin Sections */}
           {user?.role === UserRole.SYSTEM_ADMIN && (
-            <div className="space-y-1">
-              <p className="px-3 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Administration</p>
+            <div className="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <p className="px-3 text-[10px] font-bold text-red-500 uppercase tracking-widest mb-1.5">Administration</p>
               {adminLinks.map((link) => {
                 const Icon = link.icon;
                 const active = isLinkActive(link.path);
@@ -164,13 +189,13 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                   <Link
                     key={link.name}
                     to={link.path}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                       active 
-                        ? 'bg-red-600 dark:bg-red-700 text-white shadow-md shadow-red-600/10' 
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100'
+                        ? 'bg-red-600 text-white shadow-sm shadow-red-650/10' 
+                        : 'text-slate-650 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100'
                     }`}
                   >
-                    <Icon className={`w-4.5 h-4.5 ${active ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`} />
+                    <Icon className={`w-4 h-4 ${active ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`} />
                     {link.name}
                   </Link>
                 );
@@ -180,19 +205,19 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
         </div>
 
         {/* Sidebar User Footer */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-2">
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-2">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-navy-600 flex items-center justify-center text-white font-bold shadow-inner">
               {researcher?.name ? researcher.name.charAt(0) : user?.email.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-semibold truncate leading-4">{researcher?.name || 'Academic User'}</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 truncate capitalize">{user?.role.replace('_', ' ')}</p>
+              <h4 className="text-sm font-semibold truncate leading-4 text-slate-850 dark:text-slate-100">{researcher?.name || 'Academic User'}</h4>
+              <p className="text-xs text-slate-450 dark:text-slate-400 truncate capitalize">{user?.role.replace('_', ' ')}</p>
             </div>
           </div>
           <button 
             onClick={() => { logout(); navigate('/'); }}
-            className="w-full mt-2 flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+            className="w-full mt-2 flex items-center justify-center gap-2 border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" />
             Sign Out
@@ -215,29 +240,32 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
             </div>
             
             <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
-              <div className="space-y-1">
-                {researcherLinks.map((link) => {
-                  const Icon = link.icon;
-                  const active = isLinkActive(link.path);
-                  return (
-                    <Link
-                      key={link.name}
-                      to={link.path}
-                      onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium ${
-                        active ? 'bg-navy-500 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      {link.name}
-                    </Link>
-                  );
-                })}
-              </div>
+              {sidebarGroups.map((group) => (
+                <div key={group.title} className="space-y-1">
+                  <p className="px-3 text-[10px] font-bold text-slate-450 uppercase tracking-widest mb-1.5">{group.title}</p>
+                  {group.links.map((link) => {
+                    const Icon = link.icon;
+                    const active = isLinkActive(link.path);
+                    return (
+                      <Link
+                        key={link.name}
+                        to={link.path}
+                        onClick={() => setSidebarOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold ${
+                          active ? 'bg-navy-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        {link.name}
+                      </Link>
+                    );
+                  })}
+                </div>
+              ))}
 
               {user?.role === UserRole.SYSTEM_ADMIN && (
-                <div className="space-y-1">
-                  <p className="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Admin</p>
+                <div className="space-y-1 pt-2 border-t border-slate-150">
+                  <p className="px-3 text-[10px] font-bold text-red-500 uppercase tracking-widest mb-1.5">Admin</p>
                   {adminLinks.map((link) => {
                     const Icon = link.icon;
                     const active = isLinkActive(link.path);
@@ -246,7 +274,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                         key={link.name}
                         to={link.path}
                         onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium ${
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold ${
                           active ? 'bg-red-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                         }`}
                       >
@@ -285,7 +313,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
       <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
         
         {/* TOPBAR */}
-        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 lg:px-6 flex items-center justify-between sticky top-0 z-40 select-none">
+        <header className="h-16 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 lg:px-6 flex items-center justify-between sticky top-0 z-40 select-none">
           
           {/* Left search activation trigger / Drawer toggler */}
           <div className="flex items-center gap-4">
@@ -299,10 +327,10 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
             {/* Command-Palette input launcher */}
             <button 
               onClick={() => setSearchOpen(true)}
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg text-slate-400 text-xs w-64 justify-between transition-colors"
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg text-slate-400 text-xs w-64 justify-between transition-colors"
             >
               <span className="flex items-center gap-2"><Search className="w-3.5 h-3.5 text-slate-500" /> Global Search...</span>
-              <kbd className="bg-white dark:bg-slate-800 px-1.5 py-0.5 border border-slate-200 dark:border-slate-700 rounded text-[9px] font-mono flex items-center gap-0.5">
+              <kbd className="bg-white dark:bg-slate-800 px-1.5 py-0.5 border border-slate-150 dark:border-slate-700 rounded text-[9px] font-mono flex items-center gap-0.5">
                 <Command className="w-2.5 h-2.5" />K
               </kbd>
             </button>
@@ -320,13 +348,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
             </button>
 
             {/* Dark mode toggle */}
-            <button 
-              onClick={toggleTheme}
-              className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
-              title="Toggle Theme"
-            >
-              {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-500" /> : <Moon className="w-5 h-5 text-navy-500" />}
-            </button>
+            <ThemeToggle />
 
             {/* Notifications Popover */}
             <div className="relative">
@@ -343,7 +365,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
               {notifOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 py-3 divide-y divide-slate-100 dark:divide-slate-850">
+                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl shadow-xl z-50 py-3 divide-y divide-slate-100 dark:divide-slate-850">
                     <div className="px-4 pb-2 flex items-center justify-between">
                       <span className="font-semibold text-sm">Notifications Center</span>
                       <button onClick={markAllRead} className="text-[10px] text-navy-500 dark:text-navy-400 hover:underline">Mark all read</button>
@@ -371,7 +393,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
             </div>
 
             {/* Profile Dropdown Indicator */}
-            <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800" />
+            <div className="h-8 w-[1px] bg-slate-100 dark:bg-slate-800" />
             <Link to="/profile" className="flex items-center gap-2 select-none hover:opacity-85">
               <div className="w-8 h-8 rounded-full bg-navy-600 text-white font-bold flex items-center justify-center text-sm">
                 {researcher?.name ? researcher.name.charAt(0) : user?.email.charAt(0).toUpperCase()}
@@ -394,10 +416,10 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
       {searchOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-sm flex items-start justify-center pt-[15vh] px-4">
           <div className="fixed inset-0" onClick={() => setSearchOpen(false)} />
-          <div className="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden max-h-[60vh] animate-scale-in">
+          <div className="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden max-h-[60vh] animate-scale-in">
             
             {/* Search Input bar */}
-            <div className="h-14 border-b border-slate-200 dark:border-slate-800 flex items-center px-4 gap-3 bg-slate-50 dark:bg-slate-950">
+            <div className="h-14 border-b border-slate-100 dark:border-slate-800 flex items-center px-4 gap-3 bg-slate-50 dark:bg-slate-950">
               <Search className="w-5 h-5 text-slate-400" />
               <input 
                 type="text" 
@@ -409,7 +431,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
               />
               <button 
                 onClick={() => setSearchOpen(false)}
-                className="px-1.5 py-0.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-[10px] text-slate-500 font-mono"
+                className="px-1.5 py-0.5 border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-[10px] text-slate-500 font-mono"
               >
                 ESC
               </button>
