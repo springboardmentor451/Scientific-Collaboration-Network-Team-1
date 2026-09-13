@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/Auth';
 import { ResearcherService } from '../../services/researcherService';
 import { AdminService } from '../../services/adminService';
 import type { Institution } from '../../types';
-import { Landmark, ArrowRight, UserPlus, AlertCircle } from 'lucide-react';
+import { Landmark, ArrowRight, UserPlus, AlertCircle, Network } from 'lucide-react';
+import { ThemeToggle } from '../../components/ThemeToggle';
 
 export const ProfileCreate: React.FC = () => {
   const { user, refreshUser } = useAuth();
@@ -77,8 +78,29 @@ export const ProfileCreate: React.FC = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto py-10 px-6">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-8 space-y-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 flex flex-col">
+      {/* Top Header */}
+      <header className="border-b border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-6 py-4">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2.5 font-extrabold text-slate-900 dark:text-white">
+            <div className="w-8 h-8 rounded-lg bg-navy-600 text-white flex items-center justify-center">
+              <Network className="w-4 h-4" />
+            </div>
+            <span>SCN Portal</span>
+          </Link>
+          <div className="flex items-center gap-3">
+            {user?.email && (
+              <span className="text-xs text-slate-400 hidden sm:inline-block">
+                Signed in as <strong className="text-slate-700 dark:text-slate-200">{user.email}</strong>
+              </span>
+            )}
+            <ThemeToggle />
+          </div>
+        </div>
+      </header>
+
+      <main className="flex-1 flex items-center justify-center py-10 px-6">
+        <div className="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-8 space-y-6">
         
         {/* Header */}
         <div className="text-center space-y-2">
@@ -202,7 +224,8 @@ export const ProfileCreate: React.FC = () => {
           </button>
         </form>
 
-      </div>
+        </div>
+      </main>
     </div>
   );
 };

@@ -253,13 +253,13 @@ export const Profile: React.FC = () => {
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex-1 md:flex-initial flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-semibold border-b-2 transition-all ${
                   active 
-                    ? 'border-navy-500 text-navy-650 dark:text-navy-400 bg-white dark:bg-slate-900' 
+                    ? 'border-navy-600 text-navy-600 dark:text-navy-400 bg-white dark:bg-slate-900' 
                     : 'border-transparent text-slate-550 hover:bg-slate-100/50 dark:hover:bg-slate-850 hover:text-slate-700'
                 }`}
               >
                 <Icon className="w-4 h-4" />
                 {tab.label}
-                <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${active ? 'bg-navy-100 dark:bg-navy-950 text-navy-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>{tab.count}</span>
+                <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${active ? 'bg-navy-50 dark:bg-navy-950 text-navy-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>{tab.count}</span>
               </button>
             );
           })}
