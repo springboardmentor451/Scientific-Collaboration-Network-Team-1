@@ -25,3 +25,6 @@ Thumbs.db
 
 # Ignore uploads folder
 uploads/
+
+# Ignore node modules
+node_modules
