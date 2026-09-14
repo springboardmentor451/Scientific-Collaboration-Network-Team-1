@@ -85,6 +85,7 @@ export interface Institution {
   country: string;
   type: InstitutionType;
   website?: string | null;
+  domain?: string | null;
 }
 
 export interface Publication {
@@ -144,7 +145,7 @@ export interface Citation {
 
 export interface UserRequest {
   email: string;
-  password?: string;
+  password: string;
   requested_role?: UserRole;
 }
 
@@ -160,7 +161,7 @@ export interface VerificationCodeRequest {
 
 export interface TokenResponse {
   access_token: string;
-  refresh_token: string;
+  refresh_token?: string;
   token_type: string;
 }
 
@@ -202,6 +203,7 @@ export interface InstitutionRequest {
   country: string;
   type: InstitutionType;
   website?: string | null;
+  domain?: string | null; 
 }
 
 export interface InstitutionUpdateRequest {
@@ -210,6 +212,7 @@ export interface InstitutionUpdateRequest {
   country?: string;
   type?: InstitutionType;
   website?: string | null;
+  domain?: string | null; 
 }
 
 export interface PublicationRequest {
