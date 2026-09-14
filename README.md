@@ -19,15 +19,25 @@ institutional networks, secured behind role-based access and 2FA.
 
 - Python 3.11+
 - `uv` (or `pip`) for dependency management
+- Node.js 20+
+- Docker (optional, for containerized deployment)
 
 
 ## Setup
 
+#### Backend
 ```bash
 git clone <repo-url>
 cd backend
 uv sync                      # or: pip install -r requirements.txt
 cp .env.example .env         # fill in real values before running
+```
+
+#### Frontend
+```bash
+cd frontend
+npm install                  # or: pnpm install
+npm run dev                  # start development server
 ```
 
 
@@ -52,12 +62,30 @@ cp .env.example .env         # fill in real values before running
 
 ## Running the App
 
+#### Backend
 ```bash
 cd backend
 uv run -m main
 ```
 
 API docs available at `http://localhost:8000/docs`.
+
+#### Frontend
+```bash
+cd frontend
+npm run dev
+```
+Frontend available at `http://localhost:5173.`
+
+### Docker Setup
+A docker-compose.yml is provided to run both backend and frontend together.
+```
+bash
+docker compose up --build
+```
+
+- Backend runs on `http://localhost:8000`
+- Frontend runs on `http://localhost:5173`
 
 
 ## Creating the First Admin
@@ -102,19 +130,23 @@ Test tiers:
 ## Project Structure
 
 ```
-app/
-├── core/        config, database, security, constants, validators
-├── models/      SQLAlchemy ORM models
-├── schemas/     Pydantic request/response models
-├── services/    business logic, one class per domain
-├── routes/      FastAPI routers, thin, delegate to services
-└── utils/       email notifier, file upload helpers
-scripts/         create_superuser.py, seed data
-tests/
-├── unit/
-├── integration/
-└── concurrency/
-migrations/      Alembic revisions
+project_dir/
+├── api-client/         Bruno request collection
+├── backend/            FastAPI backend
+│   ├── app/            core, models, schemas, services, routes, utils
+│   ├── data/
+│   ├── database/
+│   ├── logs/
+│   ├── migrations/     Alembic revisions
+│   ├── scripts/
+│   └── tests/          unit, integration, concurrency
+│   ├── main.py
+├── docker/             Docker Compose setup
+├── frontend/           React + Vite frontend
+│   ├── src/
+│   └── public/
+├── .gitignore
+└── README.md
 ```
 
 
@@ -136,6 +168,12 @@ The `api-client/` folder is a full request collection covering every route.
 
 Open the collection in Bruno Desktop, pick an environment, and run requests
 in the order shown in each folder's `seq`.
+
+
+## Acknowledgments
+
+This project was made possible through the dedication of our team and the guidance of our mentor.  
+AI tools, including Claude (Sonnet 4.6 and Sonnet 5) by Anthropic, Microsoft Copilot, and ChatGPT, were used selectively for debugging and documentation support.
 
 
 ## Key Design Decisions
