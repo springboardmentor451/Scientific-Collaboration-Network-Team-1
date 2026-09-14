@@ -27,12 +27,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const currentUser = await AuthService.getCurrentUser();
       setUser(currentUser);
-      // if (currentUser) {
-      //   const currentRes = await ResearcherService.getMyProfile();
-      //   setResearcher(currentRes);
-      // } else {
-      //   setResearcher(null);
-      // }
       if (currentUser?.role === UserRole.RESEARCHER) {
         try {
           const currentRes = await ResearcherService.getMyProfile();
