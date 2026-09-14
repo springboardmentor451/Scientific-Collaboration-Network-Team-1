@@ -98,7 +98,7 @@ export const Collaborations: React.FC = () => {
 
     setSelectedLoading(true);
 
-    PublicationService.getByResearcher(selectedResId)
+    PublicationService.getMine()
       .then((pubs) => {
         setSelectedPubs(pubs);
       })

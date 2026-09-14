@@ -55,9 +55,6 @@ export const Dashboard: React.FC = () => {
     setLoading(true);
 
     Promise.all([
-      // DashboardService.getResearcherDashboard(user!.user_id),
-      // PublicationService.getByResearcher(researcher.researcher_id),
-      // ProjectService.getByResearcher(researcher.researcher_id),
       DashboardService.getMyDashboard(),
       PublicationService.getMine(),
       ProjectService.getMine(),
@@ -163,11 +160,6 @@ export const Dashboard: React.FC = () => {
     },
   ];
 
-  // const firstName =
-  //   researcher.first_name ||
-  //   user?.first_name ||
-  //   researcher.name?.split(' ')[0] ||
-  //   'Researcher';
   const firstName = researcher.name;
 
   const totalPublications =

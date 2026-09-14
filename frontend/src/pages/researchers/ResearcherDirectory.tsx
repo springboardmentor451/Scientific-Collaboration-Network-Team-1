@@ -51,17 +51,20 @@ export const ResearcherDirectory: React.FC = () => {
         > = {};
 
         for (const researcher of resList) {
-          const pubs = await PublicationService.getByResearcher(
-            researcher.researcher_id
-          );
+          // const pubs = await PublicationService.getByResearcher(
+          //   researcher.researcher_id
+          // );
+          const pubs = await PublicationService.getMine();
 
-          const projs = await ProjectService.getByResearcher(
-            researcher.researcher_id
-          );
+          // const projs = await ProjectService.getByResearcher(
+          //   researcher.researcher_id
+          // );
+          const projs = await ProjectService.getMine();
 
-          const colls = await CollaborationService.getByResearcher(
-            researcher.researcher_id
-          );
+          // const colls = await CollaborationService.getByResearcher(
+          //   researcher.researcher_id
+          // );
+          const colls = await CollaborationService.getMine();
 
           calculatedStats[researcher.researcher_id] = {
             pubs: pubs.length,
@@ -140,7 +143,7 @@ export const ResearcherDirectory: React.FC = () => {
     setInstFilter('all');
   };
 
-  const getInstitutionName = (institutionId?: number) => {
+  const getInstitutionName = (institutionId?: number | null) => {
     return (
       institutions.find(
         (institution) => institution.institution_id === institutionId
@@ -421,11 +424,10 @@ export const ResearcherDirectory: React.FC = () => {
             <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-1">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`rounded-lg p-2 transition ${
-                  viewMode === 'grid'
-                    ? 'bg-navy-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
-                }`}
+                className={`rounded-lg p-2 transition ${viewMode === 'grid'
+                  ? 'bg-navy-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                  }`}
                 title="Grid view"
               >
                 <Grid className="h-4 w-4" />
@@ -433,11 +435,10 @@ export const ResearcherDirectory: React.FC = () => {
 
               <button
                 onClick={() => setViewMode('list')}
-                className={`rounded-lg p-2 transition ${
-                  viewMode === 'list'
-                    ? 'bg-navy-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
-                }`}
+                className={`rounded-lg p-2 transition ${viewMode === 'list'
+                  ? 'bg-navy-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                  }`}
                 title="List view"
               >
                 <List className="h-4 w-4" />

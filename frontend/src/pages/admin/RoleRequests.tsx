@@ -36,17 +36,7 @@ export const RoleRequests: React.FC = () => {
   const handleDecline = async (userId: number) => {
     if (!window.confirm("Decline this role upgrade request?")) return;
     try {
-      // Direct modify via service to clear requested role
-      await AdminService.changeUserRole(userId, (await AdminService.getAllUsers()).find(u => u.user_id === userId)!.role);
-      // Wait, we want to clear the requested role field. In adminService.ts, changeUserRole changes role, but doesn't clear requested_role.
-      // Let's modify adminService.ts if needed, or in mock database we can just clear it.
-      // Let's clear the requested_role field in mock DB:
-      const users = (await AdminService.getAllUsers());
-      const idx = users.findIndex(u => u.user_id === userId);
-      if (idx !== -1) {
-        users[idx].requested_role = null;
-        localStorage.setItem("scn_users", JSON.stringify(users));
-      }
+      await AdminService.rejectRoleChange(userId); // needs adding to adminService.ts if missing
       loadRequests();
       alert("Role upgrade request declined.");
     } catch (err: any) {
@@ -56,7 +46,7 @@ export const RoleRequests: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      
+
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 pb-4">
         <div>
@@ -95,7 +85,8 @@ export const RoleRequests: React.FC = () => {
                   <tr key={u.user_id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
                     <td className="px-6 py-4 font-mono text-[10px] text-slate-400">SCN-USER-{u.user_id}</td>
                     <td className="px-6 py-4 font-semibold text-slate-800 dark:text-slate-200">{u.email}</td>
-                    <td className="px-6 py-4 capitalize text-slate-500">{u.role.replace('_', ' ')}</td>
+                    {/* <td className="px-6 py-4 capitalize text-slate-500">{u.role.replace('_', ' ')}</td> */}
+                    <td className="px-6 py-4 capitalize text-slate-500">{u.role ? u.role.replace('_', ' ') : 'Unassigned'}</td>
                     <td className="px-6 py-4 capitalize text-emerald-600 font-semibold">{u.requested_role?.replace('_', ' ')}</td>
                     <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
                       <button

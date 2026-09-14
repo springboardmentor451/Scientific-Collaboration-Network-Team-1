@@ -7,9 +7,9 @@ import { ProjectService } from '../../services/projectService';
 import { AdminService } from '../../services/adminService';
 import { CollaborationService } from '../../services/collaborationService';
 import type { Researcher, Publication, Project, Institution, Collaboration } from '../../types';
-import { 
-  Landmark, BookOpen, FolderGit2, GitFork, 
-  PenSquare, X, Check, Globe, AlertCircle 
+import {
+  Landmark, BookOpen, FolderGit2, GitFork,
+  PenSquare, X, Check, Globe, AlertCircle
 } from 'lucide-react';
 
 export const Profile: React.FC = () => {
@@ -67,17 +67,17 @@ export const Profile: React.FC = () => {
         setInstitution(inst || null);
 
         // Load authored pubs
-        const pubs = await PublicationService.getByResearcher(activeProfile.researcher_id);
+        const pubs = await PublicationService.getMine();
         setPublications(pubs);
 
         // Load projects
-        const projs = await ProjectService.getByResearcher(activeProfile.researcher_id);
+        const projs = await ProjectService.getMine();
         setProjects(projs);
 
         // Load collaborations and map partner names
-        const colls = await CollaborationService.getByResearcher(activeProfile.researcher_id);
+        const colls = await CollaborationService.getMine();
         const allRes = await ResearcherService.getAll();
-        
+
         const mappedColls = colls.map(c => {
           const partnerId = c.researcher_ids.find(rid => rid !== activeProfile!.researcher_id);
           const partner = allRes.find(r => r.researcher_id === partnerId);
@@ -103,7 +103,7 @@ export const Profile: React.FC = () => {
         setLoading(false);
       }
     };
-
+    if (!currentResearcher) return;
     loadProfile();
   }, [id, currentResearcher, isOwnProfile]);
 
@@ -158,7 +158,7 @@ export const Profile: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      
+
       {/* Profile Header Card */}
       <div className="p-6 lg:p-8 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl shadow-sm flex flex-col md:flex-row gap-6 items-start justify-between relative">
         <div className="flex flex-col md:flex-row gap-5 items-center md:items-start text-center md:text-left w-full">
@@ -166,7 +166,7 @@ export const Profile: React.FC = () => {
           <div className="w-20 h-20 md:w-24 md:h-24 bg-navy-600 text-white font-extrabold flex items-center justify-center rounded-full text-2xl md:text-4xl shadow-inner shrink-0 select-none">
             {profile.name.charAt(0)}
           </div>
-          
+
           <div className="space-y-3 flex-1 min-w-0">
             <div className="space-y-1">
               <h2 className="text-2xl font-bold tracking-tight">{profile.name}</h2>
@@ -175,10 +175,10 @@ export const Profile: React.FC = () => {
                 {profile.department ? `${profile.department}, ` : ''} {institution?.name || 'Independent Researcher'}
               </p>
             </div>
-            
+
             {/* Bio */}
             <p className="text-xs text-slate-650 dark:text-slate-400 leading-relaxed max-w-2xl">{profile.bio || 'No biography details provided.'}</p>
-            
+
             {/* Academic links: ORCID, email */}
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-[10px]">
               <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-600 dark:text-slate-400 font-medium font-mono">ORCID iD: {profile.orcid || 'N/A'}</span>
@@ -193,7 +193,7 @@ export const Profile: React.FC = () => {
 
         {/* Edit Button (conditionally rendered) */}
         {isOwnProfile && (
-          <button 
+          <button
             onClick={() => setIsEditing(true)}
             className="md:absolute md:top-6 md:right-6 shrink-0 inline-flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
           >
@@ -205,7 +205,7 @@ export const Profile: React.FC = () => {
 
       {/* Skills & Interests Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        
+
         {/* Skills List Card */}
         <div className="p-5 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl shadow-sm">
           <h4 className="font-bold text-xs text-slate-400 uppercase tracking-widest mb-3">Skills & Expertise</h4>
@@ -251,11 +251,10 @@ export const Profile: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex-1 md:flex-initial flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-semibold border-b-2 transition-all ${
-                  active 
-                    ? 'border-navy-600 text-navy-600 dark:text-navy-400 bg-white dark:bg-slate-900' 
+                className={`flex-1 md:flex-initial flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-semibold border-b-2 transition-all ${active
+                    ? 'border-navy-600 text-navy-600 dark:text-navy-400 bg-white dark:bg-slate-900'
                     : 'border-transparent text-slate-550 hover:bg-slate-100/50 dark:hover:bg-slate-850 hover:text-slate-700'
-                }`}
+                  }`}
               >
                 <Icon className="w-4 h-4" />
                 {tab.label}
@@ -267,7 +266,7 @@ export const Profile: React.FC = () => {
 
         {/* Tab Content */}
         <div className="p-6">
-          
+
           {/* 1. PUBLICATIONS TAB */}
           {activeTab === 'pubs' && (
             <div className="space-y-4">
@@ -288,7 +287,7 @@ export const Profile: React.FC = () => {
                           <span>Logged: {pub.publication_date || pub.created_at.split('T')[0]}</span>
                         </div>
                       </div>
-                      <Link 
+                      <Link
                         to={`/publications/${pub.publication_id}`}
                         className="self-start md:self-center px-3 py-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-semibold"
                       >
@@ -312,11 +311,10 @@ export const Profile: React.FC = () => {
                     <div key={proj.project_id} className="p-4 border border-slate-150 dark:border-slate-800 rounded-xl space-y-3">
                       <div className="flex justify-between items-start gap-2">
                         <Link to={`/projects/${proj.project_id}`} className="font-bold text-xs text-slate-800 dark:text-slate-200 hover:text-navy-650 hover:underline line-clamp-1">{proj.name}</Link>
-                        <span className={`text-[9px] font-semibold px-2 py-0.5 rounded capitalize ${
-                          proj.status === 'active' 
-                            ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600' 
+                        <span className={`text-[9px] font-semibold px-2 py-0.5 rounded capitalize ${proj.status === 'active'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600'
                             : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
-                        }`}>{proj.status}</span>
+                          }`}>{proj.status}</span>
                       </div>
                       <p className="text-[11px] text-slate-550 line-clamp-2 leading-relaxed">{proj.description}</p>
                       <div className="pt-2 border-t border-slate-50 dark:border-slate-850 flex justify-between items-center text-[10px] text-slate-400">
@@ -372,7 +370,7 @@ export const Profile: React.FC = () => {
               <h3 className="font-bold text-sm">Edit Academic Profile</h3>
               <button onClick={() => setIsEditing(false)} className="p-1 hover:bg-slate-250 rounded-lg"><X className="w-5 h-5" /></button>
             </div>
-            
+
             <form onSubmit={handleUpdateProfile} className="p-6 space-y-4 overflow-y-auto max-h-[75vh]">
               {editError && (
                 <div className="p-3 bg-red-50 text-red-650 rounded-xl text-xs flex gap-2">
@@ -383,8 +381,8 @@ export const Profile: React.FC = () => {
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-600">Full Name *</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
                   className="w-full px-4 py-2 border border-slate-200 bg-slate-50 rounded-xl text-xs outline-none focus:border-navy-500"
                   value={editName}
@@ -394,7 +392,7 @@ export const Profile: React.FC = () => {
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-600">Affiliation Institution</label>
-                <select 
+                <select
                   className="w-full px-4 py-2 border border-slate-200 bg-slate-50 rounded-xl text-xs outline-none focus:border-navy-500"
                   value={editInstId}
                   onChange={e => setEditInstId(Number(e.target.value))}
@@ -411,8 +409,8 @@ export const Profile: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-600">Department</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     className="w-full px-4 py-2 border border-slate-200 bg-slate-50 rounded-xl text-xs outline-none focus:border-navy-500"
                     value={editDept}
                     onChange={e => setEditDept(e.target.value)}
@@ -420,8 +418,8 @@ export const Profile: React.FC = () => {
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-600">ORCID ID</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     className="w-full px-4 py-2 border border-slate-200 bg-slate-50 rounded-xl text-xs outline-none focus:border-navy-500"
                     value={editOrcid}
                     onChange={e => setEditOrcid(e.target.value)}
@@ -431,7 +429,7 @@ export const Profile: React.FC = () => {
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-600">Biography</label>
-                <textarea 
+                <textarea
                   rows={3}
                   className="w-full px-4 py-2 border border-slate-200 bg-slate-50 rounded-xl text-xs outline-none focus:border-navy-500"
                   value={editBio}
@@ -441,8 +439,8 @@ export const Profile: React.FC = () => {
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-600">Skills (Comma-separated)</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   className="w-full px-4 py-2 border border-slate-200 bg-slate-50 rounded-xl text-xs outline-none focus:border-navy-500"
                   value={editSkills}
                   onChange={e => setEditSkills(e.target.value)}
@@ -451,8 +449,8 @@ export const Profile: React.FC = () => {
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-600">Research Interests (Comma-separated)</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   className="w-full px-4 py-2 border border-slate-200 bg-slate-50 rounded-xl text-xs outline-none focus:border-navy-500"
                   value={editInterests}
                   onChange={e => setEditInterests(e.target.value)}
@@ -460,14 +458,14 @@ export const Profile: React.FC = () => {
               </div>
 
               <div className="flex gap-2 justify-end pt-4 border-t border-slate-100">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setIsEditing(false)}
                   className="px-4 py-2 border border-slate-200 bg-white rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-50"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="px-4 py-2 bg-navy-600 hover:bg-navy-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5"
                 >

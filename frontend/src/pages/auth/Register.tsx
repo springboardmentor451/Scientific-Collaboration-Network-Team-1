@@ -149,12 +149,6 @@ export const Register: React.FC = () => {
         requested_role: requestedRole,
       });
 
-      // Save user's temporary name and real selected institution in localStorage
-      // localStorage.setItem(`pending_name_${email}`, name);
-      // if (selectedInstitutionId) {
-      //   localStorage.setItem(`pending_inst_${email}`, String(selectedInstitutionId));
-      // }
-
       // Route to Verify Email View
       navigate(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (err: any) {
@@ -176,14 +170,6 @@ export const Register: React.FC = () => {
   };
 
   const getLabel = () => {
-    // switch (provider) {
-    //   case 'gmail':
-    //     return 'Google Workspace / Gmail Address';
-    //   case 'outlook':
-    //     return 'Microsoft 365 / Outlook Address';
-    //   default:
-    //     return 'Institutional Academic Email';
-    // }
     return 'Institutional Academic Email';
   };
 
@@ -371,48 +357,6 @@ export const Register: React.FC = () => {
                 </div>
               </div>
 
-              {/* Provider Selector Tabs */}
-              {/* <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
-                {[
-                  { id: 'email' as const, label: 'University Email', icon: '🏛️' },
-                  // { id: 'gmail' as const, label: 'Google Workspace', icon: '🌐' },
-                  // { id: 'outlook' as const, label: 'Microsoft 365', icon: '📧' },
-                ].map((prov) => (
-                  <button
-                    key={prov.id}
-                    type="button"
-                    onClick={() => {
-                      setProvider(prov.id);
-                      setError('');
-                    }}
-                    className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
-                      provider === prov.id
-                        ? 'bg-white dark:bg-slate-800 text-cyan-700 dark:text-cyan-400 shadow-sm border border-slate-200 dark:border-slate-700'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    <span className="text-xs">{prov.icon}</span>
-                    <span className="truncate">{prov.label}</span>
-                  </button>
-                ))}
-              </div> */}
-
-              {/* Social Fast Signup Option
-              {provider !== 'email' && (
-                <button
-                  type="button"
-                  onClick={() => setShowOAuthModal(true)}
-                  className={`w-full py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm ${
-                    provider === 'gmail'
-                      ? 'bg-red-50/70 dark:bg-red-950/30 border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 hover:bg-red-100/70'
-                      : 'bg-sky-50/70 dark:bg-sky-950/30 border-sky-200 dark:border-sky-900/50 text-sky-700 dark:text-sky-300 hover:bg-sky-100/70'
-                  }`}
-                >
-                  <span>{provider === 'gmail' ? '🌐' : '📧'}</span>
-                  <span>1-Click Test Onboarding with {provider === 'gmail' ? 'Google' : 'Microsoft'} (Real Profiles)</span>
-                </button>
-              )} */}
-
               {/* Error Notification */}
               {error && (
                 <div className="p-2.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 rounded-xl text-xs text-red-700 dark:text-red-300 flex items-center gap-2">
@@ -423,94 +367,8 @@ export const Register: React.FC = () => {
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-3">
-                {/* Role Selector Compact Cards */}
-                {/* <div className="space-y-1">
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                    Requested Academic Role
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      {
-                        role: UserRole.RESEARCHER,
-                        label: 'Researcher',
-                        icon: <GraduationCap className="w-3.5 h-3.5" />,
-                      },
-                      {
-                        role: UserRole.REVIEWER,
-                        label: 'Peer Reviewer',
-                        icon: <ShieldCheck className="w-3.5 h-3.5" />,
-                      },
-                      {
-                        role: UserRole.INSTITUTION_ADMIN,
-                        label: 'Inst Admin',
-                        icon: <Building2 className="w-3.5 h-3.5" />,
-                      },
-                    ].map((item) => {
-                      const isSelected = requestedRole === item.role;
-                      return (
-                        <button
-                          type="button"
-                          key={item.role}
-                          onClick={() => setRequestedRole(item.role)}
-                          className={`py-2 px-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
-                            isSelected
-                              ? 'border-cyan-500 bg-cyan-50/70 dark:bg-cyan-950/40 text-cyan-800 dark:text-cyan-300 font-extrabold shadow-sm'
-                              : 'border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-850'
-                          }`}
-                        >
-                          <div className="flex items-center gap-1.5 truncate">
-                            <span className={isSelected ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-400'}>
-                              {item.icon}
-                            </span>
-                            <span className="text-xs truncate">{item.label}</span>
-                          </div>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div> */}
-
                 {/* Name and Real Institution row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* <div className="space-y-1">
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                      Full Academic Name
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                      <input
-                        type="text"
-                        required
-                        placeholder="Dr. Rishitha Khandesh"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        disabled={loading}
-                        className="w-full pl-10 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl text-xs font-medium focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none transition-all"
-                      />
-                    </div>
-                  </div> */}
-
-                  {/* <div className="space-y-1">
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                      Real Affiliated Institution
-                    </label>
-                    <div className="relative">
-                      <Landmark className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                      <select
-                        value={selectedInstitutionId}
-                        onChange={(e) => setSelectedInstitutionId(e.target.value)}
-                        disabled={loading}
-                        className="w-full pl-10 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl text-xs font-medium focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none transition-all appearance-none"
-                      >
-                        {institutions.map((inst) => (
-                          <option key={inst.institution_id} value={inst.institution_id} className="dark:bg-slate-900">
-                            {inst.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div> */}
                 </div>
 
                 {/* Email Address with Domain recognition */}

@@ -51,9 +51,7 @@ export const Citations: React.FC = () => {
       setLoading(true);
 
       try {
-        const pubs = await PublicationService.getByResearcher(
-          researcher.researcher_id
-        );
+        const pubs = await PublicationService.getMine();
 
         const allCitations: Citation[] = [];
         const countsMap: Record<number, number> = {};

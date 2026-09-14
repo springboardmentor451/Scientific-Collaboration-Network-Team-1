@@ -103,10 +103,10 @@ export const VerifyEmail: React.FC = () => {
             </div>
             
             {/* Demo Notice for approval */}
-            <div className="p-3.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-xl text-xs text-amber-700 dark:text-amber-400 leading-normal">
+            {/*<div className="p-3.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-xl text-xs text-amber-700 dark:text-amber-400 leading-normal">
               <span className="font-bold">Developer Notice: </span>
               In this demo workspace, you can log in as the default Administrator (<code className="font-mono">admin@university.edu</code> / password: <code className="font-mono">password123</code>) to approve pending registrations immediately.
-            </div>
+            </div>*/}
 
             <Link 
               to="/login"
