@@ -19,17 +19,11 @@ export class AuthService {
 
   static async verifyLoginCode(body: VerificationCodeRequest): Promise<TokenResponse> {
     const { data } = await apiClient.post<TokenResponse>('/auth/verify-login-code', body);
-    const tokens = data; // use data directly
-
-    // Store tokens consistently
+    const tokens = data;
     localStorage.setItem("scn_token", tokens.access_token);
     if (tokens.refresh_token) {
       localStorage.setItem("scn_refresh_token", tokens.refresh_token);
     }
-
-    // Optionally store user email if needed
-    // localStorage.setItem("scn_current_user_email", body.email);
-
     return tokens;
   }
 
@@ -46,8 +40,6 @@ export class AuthService {
   }
 
   static async getCurrentUser(): Promise<User | null> {
-    // const { data } = await apiClient.get<User>('/users/me');
-    // return data || null;
     try {
       const { data } = await apiClient.get<User>('/users/me');
       return data;
@@ -63,7 +55,6 @@ export class AuthService {
   }
 
   static async verifyEmailChange(body: VerificationCodeRequest): Promise<MessageResponse> {
-
     const { data } = await apiClient.post<MessageResponse>('/auth/verify-email-change', body);
     return data;
   }

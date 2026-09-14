@@ -9,27 +9,27 @@ export class AdminService {
   }
 
   static async getAllUsers(): Promise<User[]> {
-    const { data } = await apiClient.get<User[]>('/all-users');
+    const { data } = await apiClient.get<User[]>('/users/all-users');
     return data;
   }
 
   static async approveUser(userId: number): Promise<User> {
-    const { data } = await apiClient.post<User>(`/users/${userId}/approve`);
+    const { data } = await apiClient.patch<User>(`/users/${userId}/approve`);
     return data;
   }
 
   static async rejectUser(userId: number): Promise<User> {
-    const { data } = await apiClient.post<User>(`/users/${userId}/reject`);
+    const { data } = await apiClient.patch<User>(`/users/${userId}/reject`);
     return data;
   }
 
   static async banUser(userId: number): Promise<User> {
-    const { data } = await apiClient.post<User>(`/users/${userId}/ban`);
+    const { data } = await apiClient.patch<User>(`/users/${userId}/ban`);
     return data;
   }
 
   static async changeUserRole(userId: number, newRole: UserRole): Promise<User> {
-    const { data } = await apiClient.put<User>(`/users/${userId}/role`, { role: newRole });
+    const { data } = await apiClient.patch<User>(`/users/${userId}/role`, { role: newRole });
     return data;
   }
 
@@ -43,7 +43,7 @@ export class AdminService {
   }
 
   static async approveRoleChange(userId: number): Promise<User> {
-    const { data } = await apiClient.post<User>(`/users/${userId}/approve-role-change`);
+    const { data } = await apiClient.patch<User>(`/users/${userId}/approve-role-change`);
     return data;
   }
 
@@ -62,8 +62,13 @@ export class AdminService {
     return data;
   }
 
+  static async rejectRoleChange(userId: number): Promise<User> {
+    const { data } = await apiClient.patch<User>(`/users/${userId}/reject-role-change`);
+    return data;
+  }
+
   static async updateInstitution(id: number, payload: InstitutionUpdateRequest): Promise<Institution> {
-    const { data } = await apiClient.put<Institution>(`/institutions/${id}`, payload);
+    const { data } = await apiClient.patch<Institution>(`/institutions/${id}`, payload);
     return data;
   }
 

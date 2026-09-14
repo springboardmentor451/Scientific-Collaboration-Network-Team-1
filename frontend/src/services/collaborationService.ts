@@ -11,13 +11,7 @@ export class CollaborationService {
     const { data } = await apiClient.get<Collaboration[]>('/collaborations/my');
     return data;
   }
-  // static async getByResearcher(researcherId: number): Promise<Collaboration[]> {
-  // static async getByResearcher(): Promise<Collaboration[]> {
-  //   // const { data } = await apiClient.get<Collaboration[]>(`/collaborations/researcher/${researcherId}`);
-  //   const { data } = await apiClient.get<Collaboration[]>(`/collaborations/my`);
-  //   return data;
-  // }
-  
+
   static async create(payload: CollaborationRequest): Promise<Collaboration> {
     if (payload.researcher_ids.length < 2) {
       throw new Error("Collaboration must involve at least 2 researchers.");

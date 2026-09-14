@@ -13,11 +13,6 @@ export class ResearcherService {
     return data;
   }
 
-  // static async getByUserId(userId: number): Promise<Researcher | null> {
-  //   const { data } = await apiClient.get<Researcher>(`/researchers/user/${userId}`);
-  //   return data || null;
-  // }
-
   static async getMyProfile(): Promise<Researcher | null> {
     try {
       const { data } = await apiClient.get<Researcher>('/researchers/me');
@@ -29,29 +24,18 @@ export class ResearcherService {
   }
 
   static async create(payload: ResearcherRequest): Promise<Researcher> {
-    const currentUser = await AuthService.getCurrentUser();
-    if (!currentUser) throw new Error("Not authenticated");
-
-    const { data } = await apiClient.post<Researcher>('/researchers', {
-      ...payload,
-      user_id: currentUser.user_id
-    });
+    const { data } = await apiClient.post<Researcher>('/researchers', payload);
     return data;
   }
-  static async update(payload: ResearcherUpdateRequest): Promise<Researcher> {
-    const currentUser = await AuthService.getCurrentUser();
-    if (!currentUser) throw new Error("Not authenticated");
 
-    // const { data } = await apiClient.put<Researcher>(`/researchers/${currentUser.user_id}`, payload);
-    const { data } = await apiClient.put<Researcher>(`/researchers/me`, payload);
+  static async update(payload: ResearcherUpdateRequest): Promise<Researcher> {
+    const { data } = await apiClient.patch<Researcher>(`/researchers/me`, payload);
     return data;
   }
 
   static async delete(): Promise<void> {
     const currentUser = await AuthService.getCurrentUser();
     if (!currentUser) throw new Error("Not authenticated");
-
-    // await apiClient.delete(`/researchers/${currentUser.user_id}`);
     await apiClient.delete(`/researchers/me`);
   }
 }

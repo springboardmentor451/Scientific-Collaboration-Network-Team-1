@@ -12,25 +12,10 @@ export class ConferenceService {
     return data;
   }
   static async create(payload: ConferenceRequest): Promise<Conference> {
-    // if (payload.start_date && payload.end_date && new Date(payload.end_date) < new Date(payload.start_date)) {
-    //   throw new Error("End date cannot be before start date.");
-    // }
-
-    // const { data } = await apiClient.post<Conference>('/conferences', payload);
-    // return data;
     const { data } = await apiClient.post<Conference>('/conferences', payload);
     return data;
   }
   static async update(conferenceId: number, payload: ConferenceUpdateRequest): Promise<Conference> {
-    // const start = payload.start_date;
-    // const end = payload.end_date;
-
-    // if (start && end && new Date(end) < new Date(start)) {
-    //   throw new Error("End date cannot be before start date.");
-    // }
-
-    // const { data } = await apiClient.put<Conference>(`/conferences/${conferenceId}`, payload);
-    // return data;
     const { data } = await apiClient.patch<Conference>(`/conferences/${conferenceId}`, payload);
     return data;
   }
