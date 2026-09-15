@@ -32,4 +32,5 @@ class CollaborationResponse(ResponseBase):
     collaboration_id: int
     collaboration_type: str | None
     collaboration_count: int
+    researcher_ids: list[int] = Field(default_factory=list)
     created_at: datetime

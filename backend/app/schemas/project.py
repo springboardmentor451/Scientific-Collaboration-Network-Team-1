@@ -54,6 +54,7 @@ class ProjectResponse(ResponseBase):
     start_date: date | None
     end_date: date | None
     status: ProjectStatus
+    researcher_ids: list[int] = Field(default_factory=list)
     created_at: datetime
 
 
