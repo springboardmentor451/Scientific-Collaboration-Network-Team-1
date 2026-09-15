@@ -11,14 +11,15 @@ export const Institutions: React.FC = () => {
   // Dialog State
   const [formOpen, setFormOpen] = useState(false);
   const [editingInst, setEditingInst] = useState<Institution | null>(null);
-  
+
   // Form fields
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [country, setCountry] = useState('');
   const [type, setType] = useState<InstitutionType>(InstitutionType.UNIVERSITY);
   const [website, setWebsite] = useState('');
-  
+  const [domain, setDomain] = useState('');
+
   const [error, setError] = useState('');
 
   const loadInstitutions = async () => {
@@ -44,6 +45,7 @@ export const Institutions: React.FC = () => {
     setCountry('');
     setType(InstitutionType.UNIVERSITY);
     setWebsite('');
+    setDomain('')
     setError('');
     setFormOpen(true);
   };
@@ -55,6 +57,7 @@ export const Institutions: React.FC = () => {
     setCountry(inst.country);
     setType(inst.type);
     setWebsite(inst.website || '');
+    setDomain(inst.domain || '');
     setError('');
     setFormOpen(true);
   };
@@ -80,7 +83,8 @@ export const Institutions: React.FC = () => {
           city: city.trim() || null as any,
           country,
           type,
-          website: website.trim() || null as any
+          website: website.trim() || null as any,
+          domain: domain.trim() || null as any
         });
       } else {
         await AdminService.createInstitution({
@@ -88,7 +92,8 @@ export const Institutions: React.FC = () => {
           city: city.trim() || null as any,
           country,
           type,
-          website: website.trim() || null as any
+          website: website.trim() || null as any,
+          domain: domain.trim() || null as any
         });
       }
       setFormOpen(false);
@@ -111,7 +116,7 @@ export const Institutions: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      
+
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 pb-4">
         <div>
@@ -121,7 +126,7 @@ export const Institutions: React.FC = () => {
           </h1>
           <p className="text-slate-500 text-sm">Register universities, laboratories, or companies to verify researcher emails.</p>
         </div>
-        <button 
+        <button
           onClick={handleOpenAdd}
           className="px-3.5 py-2 bg-navy-600 hover:bg-navy-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-navy-500/10 transition-all hover:scale-[1.01]"
         >
@@ -195,7 +200,7 @@ export const Institutions: React.FC = () => {
               <h3 className="font-bold text-sm">{editingInst ? 'Edit Institution Registry' : 'Register New Institution'}</h3>
               <button onClick={() => setFormOpen(false)} className="p-1 hover:bg-slate-200 rounded-lg"><X className="w-5 h-5" /></button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               {error && (
                 <div className="p-2.5 bg-red-50 text-red-655 rounded-xl text-xs flex gap-2">
@@ -206,8 +211,8 @@ export const Institutions: React.FC = () => {
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-655 block">Institution Name *</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="e.g. University of California, Berkeley"
                   required
                   className="w-full px-4 py-2 border border-slate-200 bg-slate-50 rounded-xl text-xs focus:outline-none"
@@ -218,7 +223,7 @@ export const Institutions: React.FC = () => {
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-655 block">Institution Type *</label>
-                <select 
+                <select
                   className="w-full px-4 py-2 border border-slate-200 bg-slate-50 rounded-xl text-xs focus:outline-none"
                   value={type}
                   onChange={e => setType(e.target.value as any)}
@@ -235,8 +240,8 @@ export const Institutions: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-655 block">City</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="e.g. Berkeley"
                     className="w-full px-4 py-2 border border-slate-200 bg-slate-50 rounded-xl text-xs focus:outline-none"
                     value={city}
@@ -245,8 +250,8 @@ export const Institutions: React.FC = () => {
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-655 block">Country *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="e.g. USA"
                     required
                     className="w-full px-4 py-2 border border-slate-200 bg-slate-50 rounded-xl text-xs focus:outline-none"
@@ -258,8 +263,8 @@ export const Institutions: React.FC = () => {
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-655 block">Website (http/https)</label>
-                <input 
-                  type="url" 
+                <input
+                  type="url"
                   placeholder="e.g. https://berkeley.edu"
                   className="w-full px-4 py-2 border border-slate-200 bg-slate-50 rounded-xl text-xs focus:outline-none"
                   value={website}
@@ -267,15 +272,27 @@ export const Institutions: React.FC = () => {
                 />
               </div>
 
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-655 block">Email Domain (auto-links researchers)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. berkeley.edu"
+                  className="w-full px-4 py-2 border border-slate-200 bg-slate-50 rounded-xl text-xs focus:outline-none"
+                  value={domain}
+                  onChange={e => setDomain(e.target.value)}
+                />
+                <p className="text-[10px] text-slate-400">Researchers registering with this email domain are auto-affiliated.</p>
+              </div>
+
               <div className="flex gap-2 justify-end pt-4 border-t border-slate-100">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setFormOpen(false)}
                   className="px-4 py-2 border border-slate-200 bg-white rounded-xl text-xs font-semibold text-slate-550 hover:bg-slate-50"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="px-4 py-2 bg-navy-600 hover:bg-navy-500 text-white rounded-xl text-xs font-semibold inline-flex items-center gap-1"
                 >

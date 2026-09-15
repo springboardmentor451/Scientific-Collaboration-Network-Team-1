@@ -67,15 +67,15 @@ export const Profile: React.FC = () => {
         setInstitution(inst || null);
 
         // Load authored pubs
-        const pubs = await PublicationService.getMine();
+        const pubs = await PublicationService.getByResearcher(activeProfile.researcher_id);
         setPublications(pubs);
 
         // Load projects
-        const projs = await ProjectService.getMine();
+        const projs = await ProjectService.getByResearcher(activeProfile.researcher_id);
         setProjects(projs);
 
         // Load collaborations and map partner names
-        const colls = await CollaborationService.getMine();
+        const colls = await CollaborationService.getByResearcher(activeProfile.researcher_id);
         const allRes = await ResearcherService.getAll();
 
         const mappedColls = colls.map(c => {
@@ -252,8 +252,8 @@ export const Profile: React.FC = () => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex-1 md:flex-initial flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-semibold border-b-2 transition-all ${active
-                    ? 'border-navy-600 text-navy-600 dark:text-navy-400 bg-white dark:bg-slate-900'
-                    : 'border-transparent text-slate-550 hover:bg-slate-100/50 dark:hover:bg-slate-850 hover:text-slate-700'
+                  ? 'border-navy-600 text-navy-600 dark:text-navy-400 bg-white dark:bg-slate-900'
+                  : 'border-transparent text-slate-550 hover:bg-slate-100/50 dark:hover:bg-slate-850 hover:text-slate-700'
                   }`}
               >
                 <Icon className="w-4 h-4" />
@@ -312,8 +312,8 @@ export const Profile: React.FC = () => {
                       <div className="flex justify-between items-start gap-2">
                         <Link to={`/projects/${proj.project_id}`} className="font-bold text-xs text-slate-800 dark:text-slate-200 hover:text-navy-650 hover:underline line-clamp-1">{proj.name}</Link>
                         <span className={`text-[9px] font-semibold px-2 py-0.5 rounded capitalize ${proj.status === 'active'
-                            ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
                           }`}>{proj.status}</span>
                       </div>
                       <p className="text-[11px] text-slate-550 line-clamp-2 leading-relaxed">{proj.description}</p>

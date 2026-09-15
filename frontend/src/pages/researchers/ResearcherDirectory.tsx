@@ -54,17 +54,17 @@ export const ResearcherDirectory: React.FC = () => {
           // const pubs = await PublicationService.getByResearcher(
           //   researcher.researcher_id
           // );
-          const pubs = await PublicationService.getMine();
+          const pubs = await PublicationService.getByResearcher(researcher.researcher_id);
 
           // const projs = await ProjectService.getByResearcher(
           //   researcher.researcher_id
           // );
-          const projs = await ProjectService.getMine();
+          const projs = await ProjectService.getByResearcher(researcher.researcher_id);
 
           // const colls = await CollaborationService.getByResearcher(
           //   researcher.researcher_id
           // );
-          const colls = await CollaborationService.getMine();
+          const colls = await CollaborationService.getByResearcher(researcher.researcher_id);
 
           calculatedStats[researcher.researcher_id] = {
             pubs: pubs.length,

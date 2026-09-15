@@ -99,8 +99,6 @@ export const ProjectForm: React.FC = () => {
     return researchers.filter((researcher) => {
       const searchableText = [
         researcher.name,
-        researcher.email,
-        researcher.institution_name,
         researcher.department,
       ]
         .filter(Boolean)
@@ -174,20 +172,35 @@ export const ProjectForm: React.FC = () => {
     setSaving(true);
 
     try {
-      const payload = {
+      // const payload = {
+      //   name: trimmedName,
+      //   description: description.trim() || null,
+      //   status,
+      //   start_date: startDate || null,
+      //   end_date: endDate || null,
+      //   researcher_ids: selectedResearcherIds,
+      // };
+
+      // if (isEditMode) {
+      //   await ProjectService.update(Number(id), payload);
+      //   navigate(`/projects/${id}`);
+      // } else {
+      //   await ProjectService.create(payload);
+      //   navigate('/projects');
+      // }
+      const basePayload = {
         name: trimmedName,
         description: description.trim() || null,
-        status,
         start_date: startDate || null,
         end_date: endDate || null,
         researcher_ids: selectedResearcherIds,
       };
 
       if (isEditMode) {
-        await ProjectService.update(Number(id), payload);
+        await ProjectService.update(Number(id), { ...basePayload, status });
         navigate(`/projects/${id}`);
       } else {
-        await ProjectService.create(payload);
+        await ProjectService.create(basePayload);
         navigate('/projects');
       }
     } catch (err: any) {
@@ -423,31 +436,33 @@ export const ProjectForm: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Status */}
-                <div className="md:col-span-1">
-                  <label
-                    htmlFor="project-status"
-                    className="block text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2"
-                  >
-                    Status <span className="text-red-500">*</span>
-                  </label>
+                {isEditMode && (
+                  <div className="md:col-span-1">
+                    <label
+                      htmlFor="project-status"
+                      className="block text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2"
+                    >
+                      Status <span className="text-red-500">*</span>
+                    </label>
 
-                  <select
-                    id="project-status"
-                    value={status}
-                    onChange={(e) =>
-                      setStatus(e.target.value as ProjectStatus)
-                    }
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 focus:border-navy-500 focus:ring-4 focus:ring-navy-500/10 focus:outline-none transition-all"
-                  >
-                    <option value={ProjectStatus.ACTIVE}>Active</option>
-                    <option value={ProjectStatus.COMPLETED}>Completed</option>
-                    <option value={ProjectStatus.CANCELLED}>Cancelled</option>
-                  </select>
+                    <select
+                      id="project-status"
+                      value={status}
+                      onChange={(e) =>
+                        setStatus(e.target.value as ProjectStatus)
+                      }
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 focus:border-navy-500 focus:ring-4 focus:ring-navy-500/10 focus:outline-none transition-all"
+                    >
+                      <option value={ProjectStatus.ACTIVE}>Active</option>
+                      <option value={ProjectStatus.COMPLETED}>Completed</option>
+                      <option value={ProjectStatus.CANCELLED}>Cancelled</option>
+                    </select>
 
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-2 leading-5">
-                    {getStatusDescription(status)}
-                  </p>
-                </div>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-2 leading-5">
+                      {getStatusDescription(status)}
+                    </p>
+                  </div>
+                )}
 
                 {/* Start Date */}
                 <div>
@@ -540,7 +555,7 @@ export const ProjectForm: React.FC = () => {
                       const isSelf =
                         !!currentResearcher &&
                         researcher.researcher_id ===
-                          currentResearcher.researcher_id;
+                        currentResearcher.researcher_id;
 
                       return (
                         <div
@@ -620,16 +635,15 @@ export const ProjectForm: React.FC = () => {
                         const isSelf =
                           !!currentResearcher &&
                           researcher.researcher_id ===
-                            currentResearcher.researcher_id;
+                          currentResearcher.researcher_id;
 
                         return (
                           <label
                             key={researcher.researcher_id}
-                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
-                              isSelected
-                                ? 'bg-navy-50 dark:bg-navy-950/30 border border-navy-100 dark:border-navy-900/60'
-                                : 'border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/70'
-                            }`}
+                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isSelected
+                              ? 'bg-navy-50 dark:bg-navy-950/30 border border-navy-100 dark:border-navy-900/60'
+                              : 'border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/70'
+                              }`}
                           >
                             <input
                               type="checkbox"
@@ -661,9 +675,7 @@ export const ProjectForm: React.FC = () => {
                               </div>
 
                               <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">
-                                {researcher.institution_name ||
-                                  researcher.email ||
-                                  'Researcher'}
+                                {researcher.department || 'Researcher'}
                               </p>
                             </div>
 

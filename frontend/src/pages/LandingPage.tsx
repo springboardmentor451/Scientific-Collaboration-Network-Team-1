@@ -259,29 +259,6 @@ export const LandingPage: React.FC = () => {
     );
   };
 
-  const statItems = [
-    {
-      label: 'Researchers',
-      value: stats?.total_researchers || 0,
-      icon: Users,
-    },
-    {
-      label: 'Publications',
-      value: stats?.total_publications || 0,
-      icon: BookOpen,
-    },
-    {
-      label: 'Collaborations',
-      value: stats?.total_collaborations || 0,
-      icon: GitFork,
-    },
-    {
-      label: 'Citations',
-      value: stats?.total_citations || 0,
-      icon: Award,
-    },
-  ];
-
   const getInstitutionName = (institutionId?: number | null) => {
     if (!institutionId) return 'Independent Researcher';
     return (
@@ -1696,43 +1673,6 @@ export const LandingPage: React.FC = () => {
                 </div>
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* =========================================================
-            STATS
-        ========================================================= */}
-        <section className="border-y border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-          <div className="mx-auto grid max-w-7xl grid-cols-2 md:grid-cols-4">
-
-            {statItems.map((item, index) => {
-              const Icon = item.icon;
-
-              return (
-                <div
-                  key={item.label}
-                  className={`flex items-center gap-4 px-5 py-7 sm:px-8 ${
-                    index !== 0
-                      ? 'border-l border-slate-200 dark:border-slate-800'
-                      : ''
-                  }`}
-                >
-                  <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-500 dark:bg-navy-950/50 sm:flex">
-                    <Icon className="h-4.5 w-4.5" />
-                  </div>
-
-                  <div>
-                    <div className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                      {item.value}
-                    </div>
-
-                    <div className="mt-1 text-[9px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                      {item.label}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
           </div>
         </section>
 

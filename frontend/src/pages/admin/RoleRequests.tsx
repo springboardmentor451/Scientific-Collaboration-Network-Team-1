@@ -36,7 +36,7 @@ export const RoleRequests: React.FC = () => {
   const handleDecline = async (userId: number) => {
     if (!window.confirm("Decline this role upgrade request?")) return;
     try {
-      await AdminService.rejectRoleChange(userId); // needs adding to adminService.ts if missing
+      await AdminService.rejectRoleChange(userId);
       loadRequests();
       alert("Role upgrade request declined.");
     } catch (err: any) {

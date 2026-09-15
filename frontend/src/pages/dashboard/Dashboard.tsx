@@ -4,7 +4,8 @@ import { useAuth } from '../../contexts/Auth';
 import { DashboardService } from '../../services/dashboardService';
 import { PublicationService } from '../../services/publicationService';
 import { ProjectService } from '../../services/projectService';
-import type { ResearcherDashboard, Publication, Project } from '../../types';
+import { type ResearcherDashboard, type Publication, type Project, UserRole } from '../../types';
+import { AdminDashboard } from '../admin/AdminDashboard';
 
 import {
   Plus,
@@ -74,6 +75,10 @@ export const Dashboard: React.FC = () => {
       });
   }, [user, researcher]);
 
+  if (user?.role === UserRole.SYSTEM_ADMIN) {
+    return <AdminDashboard />;
+  }
+
   if (loading) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center">
@@ -139,11 +144,11 @@ export const Dashboard: React.FC = () => {
 
   const pubTypeData = dashboardData?.publication_stats?.by_type
     ? Object.keys(dashboardData.publication_stats.by_type).map((key) => ({
-        name: key
-          .replace(/_/g, ' ')
-          .replace(/\b\w/g, (char) => char.toUpperCase()),
-        count: dashboardData.publication_stats.by_type[key],
-      }))
+      name: key
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase()),
+      count: dashboardData.publication_stats.by_type[key],
+    }))
     : [];
 
   /*

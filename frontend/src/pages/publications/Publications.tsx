@@ -53,17 +53,20 @@ export const Publications: React.FC = () => {
 
         const counts: Record<number, number> = {};
 
-        for (const publication of pubs) {
-          try {
-            const citations = await CitationService.getCitedBy(
-              publication.publication_id
-            );
+        // for (const publication of pubs) {
+        await Promise.all(
+          pubs.map(async (publication) => {
+            try {
+              const citations = await CitationService.getCitedBy(
+                publication.publication_id
+              );
 
-            counts[publication.publication_id] = citations.length;
-          } catch {
-            counts[publication.publication_id] = 0;
-          }
-        }
+              counts[publication.publication_id] = citations.length;
+            } catch {
+              counts[publication.publication_id] = 0;
+            }
+          })
+        );
 
         setCitationCounts(counts);
       } catch (err) {
@@ -343,11 +346,10 @@ export const Publications: React.FC = () => {
           <div className="flex items-center gap-1">
             <button
               onClick={() => setActiveTab('all')}
-              className={`relative px-4 py-3 text-xs font-semibold transition ${
-                activeTab === 'all'
-                  ? 'text-navy-600 dark:text-navy-400'
-                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-              }`}
+              className={`relative px-4 py-3 text-xs font-semibold transition ${activeTab === 'all'
+                ? 'text-navy-600 dark:text-navy-400'
+                : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                }`}
             >
               All Scholarly Works
 
@@ -358,11 +360,10 @@ export const Publications: React.FC = () => {
 
             <button
               onClick={() => setActiveTab('my')}
-              className={`relative px-4 py-3 text-xs font-semibold transition ${
-                activeTab === 'my'
-                  ? 'text-navy-600 dark:text-navy-400'
-                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-              }`}
+              className={`relative px-4 py-3 text-xs font-semibold transition ${activeTab === 'my'
+                ? 'text-navy-600 dark:text-navy-400'
+                : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                }`}
             >
               My Publications
 

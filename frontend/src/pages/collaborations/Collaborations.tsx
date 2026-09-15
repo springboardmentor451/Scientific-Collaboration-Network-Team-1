@@ -98,7 +98,7 @@ export const Collaborations: React.FC = () => {
 
     setSelectedLoading(true);
 
-    PublicationService.getMine()
+    PublicationService.getByResearcher(selectedResId)
       .then((pubs) => {
         setSelectedPubs(pubs);
       })
@@ -265,9 +265,10 @@ export const Collaborations: React.FC = () => {
     );
 
     const filteredCollabs = collaborations.filter((collaboration) => {
-      const inNodes = collaboration.researcher_ids.every(
-        (id) => activeResearcherIds.includes(id)
-      );
+      // const inNodes = collaboration.researcher_ids.every(
+      //   (id) => activeResearcherIds.includes(id)
+      // );
+      const inNodes = (collaboration.researcher_ids ?? []).every((id) => activeResearcherIds.includes(id));
 
       const matchType =
         !collabTypeFilter ||
@@ -506,7 +507,7 @@ export const Collaborations: React.FC = () => {
     const density =
       nodeCount > 1
         ? (2 * edgeCount) /
-          (nodeCount * (nodeCount - 1))
+        (nodeCount * (nodeCount - 1))
         : 0;
 
     const totalWeight =
@@ -614,9 +615,9 @@ export const Collaborations: React.FC = () => {
 
     const closeness =
       reachableCount > 1 &&
-      distanceSum > 0
+        distanceSum > 0
         ? (reachableCount - 1) /
-          distanceSum
+        distanceSum
         : 0;
 
     return {
@@ -705,18 +706,18 @@ export const Collaborations: React.FC = () => {
 
   const selectedResearcher = selectedResId
     ? researchers.find(
-        (researcher) =>
-          researcher.researcher_id ===
-          selectedResId
-      )
+      (researcher) =>
+        researcher.researcher_id ===
+        selectedResId
+    )
     : null;
 
   const selectedInstitution = selectedInstId
     ? institutions.find(
-        (institution) =>
-          institution.institution_id ===
-          selectedInstId
-      )
+      (institution) =>
+        institution.institution_id ===
+        selectedInstId
+    )
     : null;
 
   /*
@@ -1252,27 +1253,27 @@ export const Collaborations: React.FC = () => {
                         const isSourceSelected =
                           selectedResId &&
                           sourceNode.id ===
-                            `res_${selectedResId}`;
+                          `res_${selectedResId}`;
 
                         const isTargetSelected =
                           selectedResId &&
                           targetNode.id ===
-                            `res_${selectedResId}`;
+                          `res_${selectedResId}`;
 
                         const isInstitutionSelected =
                           selectedInstId &&
                           (
                             sourceNode.id ===
-                              `inst_${selectedInstId}` ||
+                            `inst_${selectedInstId}` ||
                             targetNode.id ===
-                              `inst_${selectedInstId}`
+                            `inst_${selectedInstId}`
                           );
 
                         const isSelected =
                           Boolean(
                             isSourceSelected ||
-                              isTargetSelected ||
-                              isInstitutionSelected
+                            isTargetSelected ||
+                            isInstitutionSelected
                           );
 
                         const hasSelection =
@@ -1284,8 +1285,8 @@ export const Collaborations: React.FC = () => {
                             ? '#36B7C9'
                             : edge.type ===
                               'affiliation'
-                            ? '#cbd5e1'
-                            : '#94a3b8';
+                              ? '#cbd5e1'
+                              : '#94a3b8';
 
                         const opacity =
                           hasSelection
@@ -1294,8 +1295,8 @@ export const Collaborations: React.FC = () => {
                               : 0.12
                             : edge.type ===
                               'affiliation'
-                            ? 0.45
-                            : 0.65;
+                              ? 0.45
+                              : 0.65;
 
                         return (
                           <line
@@ -1310,8 +1311,8 @@ export const Collaborations: React.FC = () => {
                                 ? 2.5
                                 : edge.type ===
                                   'affiliation'
-                                ? 1
-                                : Math.min(
+                                  ? 1
+                                  : Math.min(
                                     edge.weight + 0.8,
                                     5
                                   )
@@ -1319,7 +1320,7 @@ export const Collaborations: React.FC = () => {
                             opacity={opacity}
                             strokeDasharray={
                               edge.type ===
-                              'affiliation'
+                                'affiliation'
                                 ? '4 4'
                                 : undefined
                             }
@@ -1334,15 +1335,15 @@ export const Collaborations: React.FC = () => {
                         const isSelected =
                           (
                             node.type ===
-                              'researcher' &&
+                            'researcher' &&
                             selectedResId ===
-                              node.dbId
+                            node.dbId
                           ) ||
                           (
                             node.type ===
-                              'institution' &&
+                            'institution' &&
                             selectedInstId ===
-                              node.dbId
+                            node.dbId
                           );
 
                         let connected =
@@ -1359,15 +1360,15 @@ export const Collaborations: React.FC = () => {
                               (edge) =>
                                 (
                                   edge.source ===
-                                    selectedId &&
+                                  selectedId &&
                                   edge.target ===
-                                    node.id
+                                  node.id
                                 ) ||
                                 (
                                   edge.target ===
-                                    selectedId &&
+                                  selectedId &&
                                   edge.source ===
-                                    node.id
+                                  node.id
                                 )
                             );
 
@@ -1382,15 +1383,15 @@ export const Collaborations: React.FC = () => {
                               (edge) =>
                                 (
                                   edge.source ===
-                                    selectedId &&
+                                  selectedId &&
                                   edge.target ===
-                                    node.id
+                                  node.id
                                 ) ||
                                 (
                                   edge.target ===
-                                    selectedId &&
+                                  selectedId &&
                                   edge.source ===
-                                    node.id
+                                  node.id
                                 )
                             );
                         }
@@ -1408,7 +1409,7 @@ export const Collaborations: React.FC = () => {
 
                         const radius =
                           node.type ===
-                          'institution'
+                            'institution'
                             ? 20
                             : 16;
 
@@ -1417,8 +1418,8 @@ export const Collaborations: React.FC = () => {
                             ? '#36B7C9'
                             : node.type ===
                               'institution'
-                            ? '#167D9A'
-                            : '#123B63';
+                              ? '#167D9A'
+                              : '#123B63';
 
                         return (
                           <g
@@ -1701,7 +1702,7 @@ export const Collaborations: React.FC = () => {
 
                                           await loadData();
                                         } catch (
-                                          error
+                                        error
                                         ) {
                                           console.error(
                                             error
@@ -1856,9 +1857,8 @@ export const Collaborations: React.FC = () => {
 
                     <DetailRow
                       icon={<Info className="h-3.5 w-3.5" />}
-                      label={`ORCID: ${
-                        selectedResearcher.orcid || 'N/A'
-                      }`}
+                      label={`ORCID: ${selectedResearcher.orcid || 'N/A'
+                        }`}
                       mono
                     />
 
@@ -2431,9 +2431,8 @@ const DetailRow: React.FC<{
       </span>
 
       <span
-        className={`truncate text-[10px] text-slate-500 dark:text-slate-400 ${
-          mono ? 'font-mono' : ''
-        }`}
+        className={`truncate text-[10px] text-slate-500 dark:text-slate-400 ${mono ? 'font-mono' : ''
+          }`}
       >
         {label}
       </span>
@@ -2453,29 +2452,29 @@ const InsightCard: React.FC<{
   description,
   icon,
 }) => {
-  return (
-    <div className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 p-4">
+    return (
+      <div className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 p-4">
 
-      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
 
-        <span className="text-navy-500">
-          {icon}
-        </span>
+          <span className="text-navy-500">
+            {icon}
+          </span>
 
-        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
-          {title}
+          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+            {title}
+          </p>
+
+        </div>
+
+        <p className="mt-3 truncate text-sm font-bold text-slate-800 dark:text-slate-200">
+          {value}
+        </p>
+
+        <p className="mt-1 text-[10px] leading-4 text-slate-400">
+          {description}
         </p>
 
       </div>
-
-      <p className="mt-3 truncate text-sm font-bold text-slate-800 dark:text-slate-200">
-        {value}
-      </p>
-
-      <p className="mt-1 text-[10px] leading-4 text-slate-400">
-        {description}
-      </p>
-
-    </div>
-  );
-};
+    );
+  };

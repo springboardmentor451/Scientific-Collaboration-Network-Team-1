@@ -61,7 +61,7 @@ export const UserManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      
+
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 pb-4">
         <div>
@@ -117,9 +117,9 @@ export const UserManagement: React.FC = () => {
                           </div>
                         ) : (
                           <div className="flex items-center gap-2">
-                            <span className="capitalize font-semibold text-slate-700 dark:text-slate-350">{u.role.replace('_', ' ')}</span>
+                            <span className="capitalize font-semibold text-slate-700 dark:text-slate-350">{u.role ? u.role.replace('_', ' ') : 'Unassigned'}</span>
                             {u.role !== UserRole.SYSTEM_ADMIN && (
-                              <button 
+                              <button
                                 onClick={() => { setEditingUserId(u.user_id); setTempRole(u.role); }}
                                 className="text-[10px] text-navy-500 hover:underline"
                               >
@@ -130,13 +130,12 @@ export const UserManagement: React.FC = () => {
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold capitalize ${
-                          u.status === UserStatus.ACTIVE 
-                            ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600' 
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold capitalize ${u.status === UserStatus.ACTIVE
+                            ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600'
                             : u.status === UserStatus.PENDING
-                            ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600'
-                            : 'bg-red-50 dark:bg-red-950/20 text-red-650'
-                        }`}>
+                              ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600'
+                              : 'bg-red-50 dark:bg-red-950/20 text-red-650'
+                          }`}>
                           {u.status}
                         </span>
                       </td>
