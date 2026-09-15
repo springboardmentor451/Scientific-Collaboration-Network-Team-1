@@ -3,9 +3,9 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/Auth';
 import { useTheme } from '../contexts/ThemeContext';
 import { UserRole } from '../types';
-import { 
-  LayoutDashboard, User as UserIcon, Users, FileText, FolderGit2, 
-  GitFork, Calendar, Award, FileSpreadsheet, Settings, LogOut, 
+import {
+  LayoutDashboard, User as UserIcon, Users, FileText, FolderGit2,
+  GitFork, Calendar, Award, FileSpreadsheet, Settings, LogOut,
   Search, Bell, Sun, Moon, Menu, X, Shield, Landmark, AlertCircle, Command, Clock
 } from 'lucide-react';
 import { ResearcherService } from '../services/researcherService';
@@ -59,7 +59,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
     }
 
     const q = searchQuery.toLowerCase();
-    
+
     Promise.all([
       ResearcherService.getAll(),
       PublicationService.getAll(),
@@ -121,7 +121,10 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
     {
       title: 'Account',
       links: [
-        { name: 'My Profile', path: '/profile', icon: UserIcon },
+        ...(user?.role === UserRole.RESEARCHER
+          ? [{ name: 'My Profile', path: '/profile', icon: UserIcon }]
+          : []),
+        // { name: 'My Profile', path: '/profile', icon: UserIcon },
         { name: 'Settings', path: '/settings', icon: Settings }
       ]
     }
@@ -140,10 +143,10 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200 w-full">
-      
+
       {/* 1. SIDEBAR (DESKTOP) */}
       <aside className="hidden lg:flex flex-col w-64 border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 select-none shrink-0">
-        
+
         {/* Sidebar Header */}
         <div className="h-16 px-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <Link to="/dashboard" className="flex items-center gap-2 font-bold text-navy-600 dark:text-navy-450 text-base">
@@ -164,11 +167,10 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                   <Link
                     key={link.name}
                     to={link.path}
-                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                      active 
-                        ? 'bg-navy-600 text-white shadow-sm shadow-navy-600/10' 
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100'
-                    }`}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${active
+                      ? 'bg-navy-600 text-white shadow-sm shadow-navy-600/10'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100'
+                      }`}
                   >
                     <Icon className={`w-4 h-4 ${active ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`} />
                     {link.name}
@@ -189,11 +191,10 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                   <Link
                     key={link.name}
                     to={link.path}
-                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                      active 
-                        ? 'bg-red-600 text-white shadow-sm shadow-red-650/10' 
-                        : 'text-slate-650 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100'
-                    }`}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${active
+                      ? 'bg-red-600 text-white shadow-sm shadow-red-650/10'
+                      : 'text-slate-650 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100'
+                      }`}
                   >
                     <Icon className={`w-4 h-4 ${active ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`} />
                     {link.name}
@@ -215,7 +216,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
               <p className="text-xs text-slate-450 dark:text-slate-400 truncate capitalize">{user?.role.replace('_', ' ')}</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => { logout(); navigate('/'); }}
             className="w-full mt-2 flex items-center justify-center gap-2 border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
           >
@@ -238,7 +239,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
               {sidebarGroups.map((group) => (
                 <div key={group.title} className="space-y-1">
@@ -251,9 +252,8 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                         key={link.name}
                         to={link.path}
                         onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold ${
-                          active ? 'bg-navy-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                        }`}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold ${active ? 'bg-navy-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                          }`}
                       >
                         <Icon className="w-4 h-4" />
                         {link.name}
@@ -274,9 +274,8 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                         key={link.name}
                         to={link.path}
                         onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold ${
-                          active ? 'bg-red-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                        }`}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold ${active ? 'bg-red-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                          }`}
                       >
                         <Icon className="w-4 h-4" />
                         {link.name}
@@ -294,10 +293,10 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="text-xs font-semibold truncate">{researcher?.name || 'Academic User'}</h4>
-                  <p className="text-[10px] text-slate-500 capitalize">{user?.role.replace('_', ' ')}</p>
+                  <p className="text-[10px] text-slate-500 capitalize">{user?.role?.replace('_', ' ') || 'Member'}</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => { logout(); navigate('/'); }}
                 className="w-full flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 transition-colors"
               >
@@ -311,21 +310,21 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
 
       {/* 2. MAIN CONTAINER */}
       <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
-        
+
         {/* TOPBAR */}
         <header className="h-16 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 lg:px-6 flex items-center justify-between sticky top-0 z-40 select-none">
-          
+
           {/* Left search activation trigger / Drawer toggler */}
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
             >
               <Menu className="w-5 h-5" />
             </button>
-            
+
             {/* Command-Palette input launcher */}
-            <button 
+            <button
               onClick={() => setSearchOpen(true)}
               className="hidden sm:flex items-center gap-2 px-3 py-1.5 border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg text-slate-400 text-xs w-64 justify-between transition-colors"
             >
@@ -338,10 +337,10 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
 
           {/* Right utility links */}
           <div className="flex items-center gap-3">
-            
+
             {/* Mobile search button */}
-            <button 
-              onClick={() => setSearchOpen(true)} 
+            <button
+              onClick={() => setSearchOpen(true)}
               className="sm:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
             >
               <Search className="w-5 h-5" />
@@ -352,7 +351,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
 
             {/* Notifications Popover */}
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setNotifOpen(!notifOpen)}
                 className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative"
               >
@@ -361,7 +360,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 animate-ping" />
                 )}
               </button>
-              
+
               {notifOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
@@ -370,7 +369,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                       <span className="font-semibold text-sm">Notifications Center</span>
                       <button onClick={markAllRead} className="text-[10px] text-navy-500 dark:text-navy-400 hover:underline">Mark all read</button>
                     </div>
-                    
+
                     <div className="max-h-64 overflow-y-auto py-1">
                       {notifications.length === 0 ? (
                         <div className="px-4 py-6 text-center text-xs text-slate-400">No notifications.</div>
@@ -394,7 +393,9 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
 
             {/* Profile Dropdown Indicator */}
             <div className="h-8 w-[1px] bg-slate-100 dark:bg-slate-800" />
-            <Link to="/profile" className="flex items-center gap-2 select-none hover:opacity-85">
+            {/* <Link to="/profile" className="flex items-center gap-2 select-none hover:opacity-85"> */}
+            <Link to={user?.role === UserRole.RESEARCHER ? '/profile' : '/settings'}
+              className="flex items-center gap-2 select-none hover:opacity-85">
               <div className="w-8 h-8 rounded-full bg-navy-600 text-white font-bold flex items-center justify-center text-sm">
                 {researcher?.name ? researcher.name.charAt(0) : user?.email.charAt(0).toUpperCase()}
               </div>
@@ -417,19 +418,19 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
         <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-sm flex items-start justify-center pt-[15vh] px-4">
           <div className="fixed inset-0" onClick={() => setSearchOpen(false)} />
           <div className="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden max-h-[60vh] animate-scale-in">
-            
+
             {/* Search Input bar */}
             <div className="h-14 border-b border-slate-100 dark:border-slate-800 flex items-center px-4 gap-3 bg-slate-50 dark:bg-slate-950">
               <Search className="w-5 h-5 text-slate-400" />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Search across researchers, publications, projects, conferences..."
                 className="flex-1 bg-transparent border-0 outline-none text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 autoFocus
               />
-              <button 
+              <button
                 onClick={() => setSearchOpen(false)}
                 className="px-1.5 py-0.5 border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-[10px] text-slate-500 font-mono"
               >
@@ -439,7 +440,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
 
             {/* Results listing */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              
+
               {/* If empty query */}
               {!searchQuery && (
                 <div className="text-center py-8">
@@ -452,10 +453,10 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
               {/* Match categories */}
               {searchQuery && (
                 <>
-                  {searchResults.researchers.length === 0 && 
-                   searchResults.publications.length === 0 && 
-                   searchResults.projects.length === 0 && 
-                   searchResults.conferences.length === 0 ? (
+                  {searchResults.researchers.length === 0 &&
+                    searchResults.publications.length === 0 &&
+                    searchResults.projects.length === 0 &&
+                    searchResults.conferences.length === 0 ? (
                     <div className="text-center py-6 text-xs text-slate-400">No results found for "{searchQuery}".</div>
                   ) : (
                     <div className="space-y-4">
