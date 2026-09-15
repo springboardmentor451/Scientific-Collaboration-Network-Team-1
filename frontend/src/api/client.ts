@@ -62,7 +62,16 @@ apiClient.interceptors.response.use(
     }
 
     // Handle standard connection/server errors
-    const errorMessage = error.response?.data?.detail || 'An unexpected connection error occurred.';
+    const detail = error.response?.data?.detail;
+    let errorMessage = 'An unexpected connection error occurred.';
+
+    if (typeof detail === 'string') {
+      errorMessage = detail;
+    } else if (Array.isArray(detail)) {
+      errorMessage = detail
+        .map((e: any) => `${(e.loc ?? []).slice(1).join('.')}: ${e.msg}`)
+        .join('; ');
+    }
     return Promise.reject(new Error(errorMessage));
   }
 );
