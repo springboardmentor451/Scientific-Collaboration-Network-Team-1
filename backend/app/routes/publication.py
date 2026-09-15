@@ -46,6 +46,15 @@ async def get_my_publications(
 
 
 # Dynamic routes
+@publication_router.get(
+    "/by-researcher/{researcher_id:int}", response_model=list[PublicationResponse]
+)
+async def get_publications_by_researcher(
+    researcher_id: int, publication_service: PublicationServiceDeps
+) -> list[PublicationResponse]:
+    return await publication_service.get_by_researcher(researcher_id)
+
+
 @publication_router.post(
     "/{publication_id:int}/upload", response_model=PublicationResponse
 )

@@ -36,8 +36,9 @@ async def get_researchers(
 @researcher_router.get("/me", response_model=ResearcherResponse)
 async def get_my_researcher_profile(
     current_researcher: CurrentResearcher,
+    researcher_service: ResearcherServiceDeps
 ) -> ResearcherResponse:
-    return ResearcherResponse.from_orm(current_researcher)
+    return await researcher_service.get_by_id(current_researcher.researcher_id)
 
 
 @researcher_router.patch("/me", response_model=ResearcherResponse)

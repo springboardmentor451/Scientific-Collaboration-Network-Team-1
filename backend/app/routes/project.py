@@ -39,6 +39,15 @@ async def get_my_projects(
 
 
 # Dynamic routes
+@project_router.get(
+    "/by-researcher/{researcher_id:int}", response_model=list[ProjectResponse]
+)
+async def get_projects_by_researcher(
+    researcher_id: int, project_service: ProjectServiceDeps
+) -> list[ProjectResponse]:
+    return await project_service.get_by_researcher(researcher_id)
+
+
 @project_router.post(
     "/{project_id:int}/members", response_model=ProjectMemberResponse, status_code=201
 )

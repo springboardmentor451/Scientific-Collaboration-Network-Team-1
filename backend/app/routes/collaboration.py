@@ -37,6 +37,15 @@ async def get_my_collaborations(
 
 
 # Dynamic route
+@collaboration_router.get(
+    "/by-researcher/{researcher_id:int}", response_model=list[CollaborationResponse]
+)
+async def get_collaborations_by_researcher(
+    researcher_id: int, collaboration_service: CollaborationServiceDeps
+) -> list[CollaborationResponse]:
+    return await collaboration_service.get_by_researcher(researcher_id)
+
+
 @collaboration_router.delete("/{collaboration_id:int}", status_code=204)
 async def delete_collaboration(
     collaboration_id: int,
