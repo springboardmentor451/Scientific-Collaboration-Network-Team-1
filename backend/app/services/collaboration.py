@@ -35,7 +35,7 @@ class CollaborationService:
             .join(CollaborationResearcher)
             .where(CollaborationResearcher.researcher_id == researcher_id)
         )
-        return [CollaborationResponse.from_orm(c) for c in result.all()]
+        return [await self._to_response(c) for c in result.all()]
 
     async def create(
         self, data: CollaborationRequest, researcher: Researcher
@@ -51,11 +51,11 @@ class CollaborationService:
         collaboration_id: int = await self._upsert_collaboration(data)
         await self._ensure_members(collaboration_id, data.researcher_ids)
         await self.session.commit()
-        collaboration: Collaboration | None = await self.session.get(
-            Collaboration, collaboration_id
+        collaboration: Collaboration | None = await self._get_collaboration_or_500(
+            collaboration_id
         )
         logger.info("collaboration upserted: %d", collaboration_id)
-        return CollaborationResponse.from_orm(collaboration)
+        return await self._to_response(collaboration)
 
     async def delete(self, collaboration_id: int, researcher: Researcher) -> None:
         logger.debug("delete collaboration: %d", collaboration_id)
@@ -130,6 +130,16 @@ class CollaborationService:
         result: Result[tuple[int]] = await self.session.execute(stmt)
         return result.scalar_one()
 
+    async def _get_collaboration_or_500(self, collaboration_id: int) -> Collaboration:
+        collaboration: Collaboration | None = await self.session.get(
+            Collaboration, collaboration_id
+        )
+        if not collaboration:
+            raise HTTPException(
+                status_code=500, detail="collaboration not found after upsert"
+            )
+        return collaboration
+
     async def _ensure_members(
         self, collaboration_id: int, researcher_ids: list[int]
     ) -> None:
@@ -146,3 +156,14 @@ class CollaborationService:
             index_elements=["collaboration_id", "researcher_id"]
         )
         await self.session.execute(stmt)
+
+    async def _to_response(self, collaboration: Collaboration) -> CollaborationResponse:
+        member_ids: ScalarResult[int] = await self.session.scalars(
+            select(CollaborationResearcher.researcher_id).where(
+                CollaborationResearcher.collaboration_id
+                == collaboration.collaboration_id
+            )
+        )
+        response: CollaborationResponse = CollaborationResponse.from_orm(collaboration)
+        response.researcher_ids = list(member_ids.all())
+        return response

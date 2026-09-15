@@ -26,11 +26,11 @@ class ProjectService:
 
     async def get_all(self) -> list[ProjectResponse]:
         result: ScalarResult[Project] = await self.session.scalars(select(Project))
-        return [ProjectResponse.from_orm(p) for p in result.all()]
+        return [await self._to_response(p) for p in result.all()]
 
     async def get_by_id(self, project_id: int) -> ProjectResponse:
         project: Project = await self._get_by_id(project_id)
-        return ProjectResponse.from_orm(project)
+        return await self._to_response(project)
 
     async def get_by_researcher(self, researcher_id: int) -> list[ProjectResponse]:
         result: ScalarResult[Project] = await self.session.scalars(
@@ -38,7 +38,7 @@ class ProjectService:
             .join(ProjectResearcher)
             .where(ProjectResearcher.researcher_id == researcher_id)
         )
-        return [ProjectResponse.from_orm(p) for p in result.all()]
+        return [await self._to_response(p) for p in result.all()]
 
     async def create(
         self, data: ProjectRequest, researcher: Researcher
@@ -52,7 +52,7 @@ class ProjectService:
         self._assign_members(project.project_id, member_ids)
         await self.session.commit()
         logger.info("project created: %d", project.project_id)
-        return ProjectResponse.from_orm(project)
+        return await self._to_response(project)
 
     async def update(
         self, project_id: int, data: ProjectUpdateRequest, researcher: Researcher
@@ -67,7 +67,7 @@ class ProjectService:
         await self.session.commit()
         # await self.session.refresh(project)
         logger.info("project updated: %d", project_id)
-        return ProjectResponse.from_orm(project)
+        return await self._to_response(project)
 
     async def delete(self, project_id: int, researcher: Researcher) -> None:
         project: Project = await self._get_by_id(project_id)
@@ -116,7 +116,9 @@ class ProjectService:
             await self.session.commit()
         except IntegrityError:
             await self.session.rollback()
-            raise HTTPException(status_code=409, detail="researcher is already a member")
+            raise HTTPException(
+                status_code=409, detail="researcher is already a member"
+            )
         # await self.session.refresh(member)
         logger.info(
             "member added: project_id=%d researcher_id=%d",
@@ -296,3 +298,13 @@ class ProjectService:
             project_id,
             researcher_ids,
         )
+
+    async def _to_response(self, project: Project) -> ProjectResponse:
+        member_ids: ScalarResult[int] = await self.session.scalars(
+            select(ProjectResearcher.researcher_id).where(
+                ProjectResearcher.project_id == project.project_id
+            )
+        )
+        response: ProjectResponse = ProjectResponse.from_orm(project)
+        response.researcher_ids = list(member_ids.all())
+        return response

@@ -32,11 +32,11 @@ class PublicationService:
         if not include_restricted:
             query = query.where(Publication.is_open_access == True)
         result: ScalarResult[Publication] = await self.session.scalars(query)
-        return [PublicationResponse.from_orm(p) for p in result.all()]
+        return [await self._to_response(p) for p in result.all()]
 
     async def get_by_id(self, publication_id: int) -> PublicationResponse:
         publication: Publication = await self._get_by_id(publication_id)
-        return PublicationResponse.from_orm(publication)
+        return await self._to_response(publication)
 
     async def get_by_researcher(self, researcher_id: int) -> list[PublicationResponse]:
         logger.debug("fetching publications for researcher: %d", researcher_id)
@@ -45,7 +45,7 @@ class PublicationService:
             .join(PublicationAuthor)
             .where(PublicationAuthor.researcher_id == researcher_id)
         )
-        return [PublicationResponse.from_orm(p) for p in result.all()]
+        return [await self._to_response(p) for p in result.all()]
 
     async def create(
         self, data: PublicationRequest, researcher: Researcher
@@ -63,7 +63,7 @@ class PublicationService:
         await self.session.commit()
         await self.session.refresh(publication)
         logger.info("publication created: %d", publication.publication_id)
-        return PublicationResponse.from_orm(publication)
+        return await self._to_response(publication)
 
     async def update(
         self,
@@ -87,7 +87,7 @@ class PublicationService:
         await self.session.commit()
         await self.session.refresh(publication)
         logger.info("publication updated: %d", publication_id)
-        return PublicationResponse.from_orm(publication)
+        return await self._to_response(publication)
 
     async def delete(self, publication_id: int, researcher: Researcher) -> None:
         publication: Publication = await self._get_by_id(publication_id)
@@ -108,7 +108,7 @@ class PublicationService:
         logger.info(
             "file uploaded: publication_id=%d path=%s", publication_id, file_path
         )
-        return PublicationResponse.from_orm(publication)
+        return await self._to_response(publication)
 
     async def download(self, publication_id: int, user: User) -> FileResponse:
         logger.debug("download requested: publication_id=%d", publication_id)
@@ -210,6 +210,7 @@ class PublicationService:
             publication_date=data.publication_date,
             conference_id=data.conference_id,
             external_authors=data.external_authors,
+            is_open_access=data.is_open_access,
         )
         self.session.add(publication)
         try:
@@ -284,3 +285,13 @@ class PublicationService:
                     is_corresponding=False,
                 )
             )
+
+    async def _to_response(self, publication: Publication) -> PublicationResponse:
+        author_ids: ScalarResult[int] = await self.session.scalars(
+            select(PublicationAuthor.researcher_id).where(
+                PublicationAuthor.publication_id == publication.publication_id
+            )
+        )
+        response: PublicationResponse = PublicationResponse.from_orm(publication)
+        response.researcher_ids = list(author_ids.all())
+        return response
