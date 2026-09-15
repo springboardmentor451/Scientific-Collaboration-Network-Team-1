@@ -32,4 +32,9 @@ export class CollaborationService {
   static async delete(collaborationId: number): Promise<void> {
     await apiClient.delete(`/collaborations/${collaborationId}`);
   }
+
+  static async getByResearcher(researcherId: number): Promise<Collaboration[]> {
+    const { data } = await apiClient.get<Collaboration[]>(`/collaborations/by-researcher/${researcherId}`);
+    return data;
+  }
 }

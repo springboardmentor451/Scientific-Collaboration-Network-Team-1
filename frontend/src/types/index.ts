@@ -246,7 +246,7 @@ export interface ProjectRequest {
   description?: string | null;
   start_date?: string | null;
   end_date?: string | null;
-  status: ProjectStatus;
+  // status: ProjectStatus;
   researcher_ids?: number[];
 }
 

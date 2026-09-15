@@ -16,7 +16,7 @@ export class ProjectService {
     const { data } = await apiClient.get<Project>(`/projects/${projectId}`);
     return data;
   }
-  
+
   static async create(payload: ProjectRequest): Promise<Project> {
     if (payload.start_date && payload.end_date && new Date(payload.end_date) < new Date(payload.start_date)) {
       throw new Error("End date cannot be prior to start date.");
@@ -36,6 +36,11 @@ export class ProjectService {
 
   static async delete(projectId: number): Promise<void> {
     await apiClient.delete(`/projects/${projectId}`);
+  }
+
+  static async getByResearcher(researcherId: number): Promise<Project[]> {
+    const { data } = await apiClient.get<Project[]>(`/projects/by-researcher/${researcherId}`);
+    return data;
   }
 
   static async addMember(projectId: number, payload: ProjectMemberRequest): Promise<ProjectMemberResponse> {

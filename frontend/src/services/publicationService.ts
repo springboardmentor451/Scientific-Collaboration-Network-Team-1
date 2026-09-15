@@ -41,6 +41,11 @@ export class PublicationService {
     return data;
   }
 
+  static async getByResearcher(researcherId: number): Promise<Publication[]> {
+  const { data } = await apiClient.get<Publication[]>(`/publications/by-researcher/${researcherId}`);
+  return data;
+}
+
   static async download(publicationId: number): Promise<Blob> {
     const response = await apiClient.get(`/publications/${publicationId}/download`, {
       responseType: 'blob',
