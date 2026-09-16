@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [Rishabh-Singhal]
+    branches: [Rishabh-Singhal, final-integration]
   pull_request:
     branches: [main]
 
