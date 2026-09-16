@@ -6,13 +6,25 @@ institutional networks, secured behind role-based access and 2FA.
 
 ## Tech Stack
 
+**Backend**
 - **API**: FastAPI (async)
 - **ORM**: SQLAlchemy 2.0 (async engine)
 - **Migrations**: Alembic
 - **Auth**: JWT (access + refresh) + TOTP-based email OTP
 - **DB**: SQLite (dev/test) · PostgreSQL (production)
 - **Testing**: pytest, pytest-asyncio, httpx
-- **API client**: Bruno
+
+**Frontend**
+- **Framework**: React 19 + TypeScript
+- **Build tool**: Vite
+- **Styling**: Tailwind CSS v4 (PostCSS)
+- **HTTP client**: Axios, with interceptors for token attachment and refresh
+- **Charts**: Recharts
+- **Icons**: Lucide React
+- **Linting**: oxlint
+
+**API client**
+- Bruno (desktop + CLI)
 
 
 ## Requirements
@@ -59,6 +71,12 @@ npm run dev                  # start development server
 | `NEW_ADMIN_EMAIL`, `NEW_ADMIN_PASSWORD` | New administrator credentials (required when replacing) |
 
 
+### Required frontend `.env` value
+
+| Variable | Purpose |
+|----------|---------|
+| `VITE_API_BASE_URL` | Backend API base URL (defaults to `http://localhost:8000/api` if unset) |
+
 
 ## Running the App
 
@@ -68,19 +86,18 @@ cd backend
 uv run -m main
 ```
 
-API docs available at `http://localhost:8000/docs`.
+API docs available at `http://localhost:8000/docs`
 
 #### Frontend
 ```bash
 cd frontend
 npm run dev
 ```
-Frontend available at `http://localhost:5173.`
+Frontend available at `http://localhost:5173`
 
 ### Docker Setup
 A docker-compose.yml is provided to run both backend and frontend together.
-```
-bash
+```bash
 docker compose up --build
 ```
 
