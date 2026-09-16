@@ -129,8 +129,6 @@ export const PublicationForm: React.FC = () => {
     return researchers.filter((researcher) => {
       const searchableText = [
         researcher.name,
-        researcher.email,
-        researcher.institution_name,
         researcher.department,
       ]
         .filter(Boolean)
@@ -259,7 +257,7 @@ export const PublicationForm: React.FC = () => {
       console.error('Failed to save publication:', err);
       setError(
         err?.message ||
-          'Failed to save publication. Please try again.'
+        'Failed to save publication. Please try again.'
       );
       setSaving(false);
     }
@@ -719,7 +717,7 @@ export const PublicationForm: React.FC = () => {
                       const isSelf =
                         !!currentResearcher &&
                         researcher.researcher_id ===
-                          currentResearcher.researcher_id;
+                        currentResearcher.researcher_id;
 
                       return (
                         <div
@@ -805,16 +803,15 @@ export const PublicationForm: React.FC = () => {
                         const isSelf =
                           !!currentResearcher &&
                           researcher.researcher_id ===
-                            currentResearcher.researcher_id;
+                          currentResearcher.researcher_id;
 
                         return (
                           <label
                             key={researcher.researcher_id}
-                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
-                              isSelected
-                                ? 'bg-navy-50 dark:bg-navy-950/30 border border-navy-100 dark:border-navy-900/60'
-                                : 'border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/70'
-                            }`}
+                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isSelected
+                              ? 'bg-navy-50 dark:bg-navy-950/30 border border-navy-100 dark:border-navy-900/60'
+                              : 'border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/70'
+                              }`}
                           >
                             <input
                               type="checkbox"
@@ -846,9 +843,7 @@ export const PublicationForm: React.FC = () => {
                               </div>
 
                               <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">
-                                {researcher.institution_name ||
-                                  researcher.email ||
-                                  'Researcher'}
+                                {researcher.department || 'Researcher'}
                               </p>
                             </div>
 

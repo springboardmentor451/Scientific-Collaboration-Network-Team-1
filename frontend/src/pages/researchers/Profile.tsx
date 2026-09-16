@@ -103,7 +103,7 @@ export const Profile: React.FC = () => {
         setLoading(false);
       }
     };
-    if (!currentResearcher) return;
+    if (isOwnProfile && !currentResearcher) return;
     loadProfile();
   }, [id, currentResearcher, isOwnProfile]);
 

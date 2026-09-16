@@ -43,9 +43,9 @@ export const Register: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [requestedRole, setRequestedRole] = useState<UserRole>(UserRole.RESEARCHER);
-  const [selectedInstitutionId, setSelectedInstitutionId] = useState<number | string>('');
+  const [, setSelectedInstitutionId] = useState<number | string>('');
 
-  const [provider, setProvider] = useState<'email' | 'gmail' | 'outlook'>('email');
+  const [provider] = useState<'email' | 'gmail' | 'outlook'>('email');
   const [showOAuthModal, setShowOAuthModal] = useState(false);
 
   const [error, setError] = useState('');

@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/Auth';
-import { useTheme } from '../contexts/ThemeContext';
 import { UserRole } from '../types';
 import {
   LayoutDashboard, User as UserIcon, Users, FileText, FolderGit2,
   GitFork, Calendar, Award, FileSpreadsheet, Settings, LogOut,
-  Search, Bell, Sun, Moon, Menu, X, Shield, Landmark, AlertCircle, Command, Clock
+  Search, Bell, Menu, X, Shield, Landmark, AlertCircle, Command, Clock
 } from 'lucide-react';
 import { ResearcherService } from '../services/researcherService';
 import { PublicationService } from '../services/publicationService';
@@ -16,7 +15,6 @@ import { ThemeToggle } from '../components/ThemeToggle';
 
 export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, researcher, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
