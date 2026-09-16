@@ -23,8 +23,8 @@
   --color-slate-200: #e2e8f0;
   --color-slate-800: #1e293b;
   --color-slate-850: #0f172a;
-  --color-slate-900: #172033; /* Slate 900 mapped to Primary Text */
-  --color-slate-950: #0f172a; /* Slate 950 mapped to deep background */
+  --color-slate-900: #1e293b; /* Slate 900 mapped to Primary Text */
+  --color-slate-950: #141b29; /* Slate 950 mapped to deep background */
 
   --color-success: #16a34a;
   --color-warning: #d97706;
@@ -58,7 +58,7 @@
   }
   
   body.dark {
-    @apply bg-slate-950 text-slate-50;
+    @apply bg-slate-950 text-slate-200;
   }
 }
 

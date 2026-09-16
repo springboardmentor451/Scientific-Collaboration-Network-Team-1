@@ -16,7 +16,6 @@ import {
   Sparkles,
   FileText,
   Quote,
-  ExternalLink,
 } from 'lucide-react';
 import {
   ResponsiveContainer,

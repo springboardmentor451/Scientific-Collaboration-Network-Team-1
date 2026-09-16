@@ -569,10 +569,26 @@ export const PublicationDetails: React.FC = () => {
                 </div>
 
                 <button
-                  onClick={() =>
-                    alert(
-                      `[DEMO SYSTEM] Simulating download for manuscript: ${publication.file_path}`
-                    )
+                  onClick={async () =>
+                  // alert(
+                  //   `[DEMO SYSTEM] Simulating download for manuscript: ${publication.file_path}`
+                  // )
+                  {
+                    try {
+                      const blob = await PublicationService.download(publication.publication_id);
+                      const url = window.URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = publication.file_path?.split(/[\\/]/).pop() || 'manuscript';
+                      document.body.appendChild(link);
+                      link.click();
+                      link.remove();
+                      window.URL.revokeObjectURL(url);
+                    } catch (err) {
+                      console.error('Download failed:', err);
+                      alert('Failed to download the manuscript.');
+                    }
+                  }
                   }
                   className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-navy-700 hover:bg-navy-600 text-white text-sm font-bold shadow-lg shadow-navy-700/15 transition-all hover:-translate-y-0.5"
                 >
