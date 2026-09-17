@@ -1,0 +1,42 @@
+info:
+  name: transition-status
+  type: http
+  seq: 7
+
+http:
+  method: PATCH
+  url: "{{publicationUrl}}/{{publicationId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "status": "{{targetStatus}}"
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  variables:
+    - name: targetStatus
+      value: "submitted"
+      description: ""
+  scripts:
+    - type: tests
+      code: |
+        test("status is 200", function() {
+          expect(res.status).to.equal(200);
+        });
+        test("status is submitted", function() {
+          expect(res.body.status).to.equal("targetStatus");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

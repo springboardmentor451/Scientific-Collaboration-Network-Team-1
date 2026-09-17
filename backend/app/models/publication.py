@@ -1,28 +1,80 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime
-from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
-from app.core.database import Base
-from app.models.researcher import publication_author_association
+from __future__ import annotations
+
+from datetime import date, datetime
+from typing import TYPE_CHECKING
+
+from sqlalchemy import JSON, Date, DateTime, Enum, ForeignKey, String, Text, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.core import Base
+from app.core.constants import (
+    DOI_MAX_LENGTH,
+    TITLE_MAX_LENGTH,
+    PublicationStatus,
+    PublicationType,
+)
+
+if TYPE_CHECKING:
+    from app.models.citation import Citation
+    from app.models.conference import Conference
+    from app.models.researcher import Researcher
+
 
 class Publication(Base):
-    __tablename__ = "publications"
+    __tablename__: str = "publications"
 
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(500), nullable=False, index=True)
-    doi = Column(String(100), unique=True, index=True, nullable=True)
-    abstract = Column(Text, nullable=True)
-    publication_year = Column(Integer, nullable=False, index=True)
-    journal_name = Column(String(255), nullable=True)
-    citation_count = Column(Integer, default=0, nullable=False)
-    
-    conference_id = Column(Integer, ForeignKey("conferences.id", ondelete="SET NULL"), nullable=True)
-    project_id = Column(Integer, ForeignKey("projects.id", ondelete="SET NULL"), nullable=True)
+    publication_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(TITLE_MAX_LENGTH), nullable=False)
+    abstract: Mapped[str | None] = mapped_column(Text, nullable=True)
+    doi: Mapped[str | None] = mapped_column(
+        String(DOI_MAX_LENGTH), unique=True, nullable=True, index=True
+    )
+    publication_type: Mapped[PublicationType] = mapped_column(
+        Enum(PublicationType), nullable=False, default=PublicationType.JOURNAL
+    )
+    status: Mapped[PublicationStatus] = mapped_column(
+        Enum(PublicationStatus),
+        nullable=False,
+        default=PublicationStatus.DRAFT,
+        index=True,
+    )
+    file_path: Mapped[str | None] = mapped_column(String, nullable=True)
+    publication_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    conference_id: Mapped[int | None] = mapped_column(
+        ForeignKey("conferences.conference_id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+    external_authors: Mapped[list[str]] = mapped_column(
+        JSON, default=list, nullable=False
+    )
+    is_open_access: Mapped[bool] = mapped_column(default=True, nullable=False)
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    conference: Mapped[Conference | None] = relationship(
+        "Conference", back_populates="publications"
+    )
+    authors: Mapped[list[Researcher]] = relationship(
+        "Researcher", secondary="publication_authors", back_populates="publications"
+    )
+    citations_made: Mapped[list[Citation]] = relationship(
+        "Citation",
+        foreign_keys="Citation.citing_publication_id",
+        back_populates="citing_publication",
+    )
+    citations_received: Mapped[list[Citation]] = relationship(
+        "Citation",
+        foreign_keys="Citation.cited_publication_id",
+        back_populates="cited_publication",
+    )
 
-    conference = relationship("Conference", back_populates="publications")
-    project = relationship("Project", back_populates="publications")
-    authors = relationship("Researcher", secondary=publication_author_association, back_populates="publications")
-    
-    citations_made = relationship("Citation", foreign_keys="Citation.citing_publication_id", back_populates="citing_publication")
-    citations_received = relationship("Citation", foreign_keys="Citation.cited_publication_id", back_populates="cited_publication")
+    def __repr__(self) -> str:
+        return f"<Publication(title={self.title}, status={self.status})>"

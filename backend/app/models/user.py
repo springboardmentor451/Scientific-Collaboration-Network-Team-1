@@ -1,33 +1,52 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Enum as SQLEnum
-from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
-import enum
-from app.core.database import Base
+from __future__ import annotations
 
-class UserRole(str, enum.Enum):
-    RESEARCHER = "Researcher"
-    REVIEWER = "Reviewer"
-    INSTITUTION_ADMIN = "Institution Admin"
-    SYSTEM_ADMIN = "System Admin"
+from typing import TYPE_CHECKING
+
+from pydantic import SecretStr
+from sqlalchemy import Enum, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.core import Base
+from app.core.constants import UserRole, UserStatus
+from app.core.security import verify_password
+
+if TYPE_CHECKING:
+    from app.models.researcher import Researcher
+
 
 class User(Base):
-    __tablename__ = "users"
+    __tablename__: str = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String(255), unique=True, index=True, nullable=False)
-    username = Column(String(100), unique=True, index=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    full_name = Column(String(200), nullable=True)
-    role = Column(String(50), default=UserRole.RESEARCHER.value, nullable=False, index=True)
-    is_active = Column(Boolean, default=True, nullable=False)
-    is_superuser = Column(Boolean, default=False, nullable=False)
-    
-    refresh_token = Column(String(500), nullable=True)
-    
-    researcher_id = Column(Integer, ForeignKey("researchers.id", ondelete="SET NULL"), nullable=True)
-    
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    user_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
+    password: Mapped[str] = mapped_column(String(256), nullable=False)
+    role: Mapped[UserRole | None] = mapped_column(
+        Enum(UserRole), default=None, nullable=True, index=True
+    )
+    is_verified: Mapped[bool] = mapped_column(default=False, nullable=False, index=True)
+    status: Mapped[UserStatus] = mapped_column(
+        Enum(UserStatus), default=UserStatus.PENDING, nullable=False, index=True
+    )
+    pending_email: Mapped[str | None] = mapped_column(String, nullable=True)
+    requested_role: Mapped[UserRole | None] = mapped_column(
+        Enum(UserRole), default=None, nullable=True
+    )
 
-    researcher = relationship("Researcher", back_populates="user_account")
-    audit_logs = relationship("AuditLog", back_populates="user")
+    researcher: Mapped[Researcher | None] = relationship(
+        "Researcher",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    managed_institution_id: Mapped[int | None] = mapped_column(
+        ForeignKey("institutions.institution_id", ondelete="SET NULL"),
+        nullable=True,
+        default=None,
+        index=True,
+    )
+
+    def check_password(self, plain_password: SecretStr) -> bool:
+        return verify_password(plain_password, self.password)
+
+    def __repr__(self) -> str:
+        return f"<User(user_id={self.user_id}, role={self.role}, status={self.status})>"

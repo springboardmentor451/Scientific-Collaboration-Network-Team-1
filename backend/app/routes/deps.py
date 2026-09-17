@@ -1,0 +1,218 @@
+from functools import lru_cache
+from typing import Annotated
+
+from fastapi import Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core import Config, get_config, get_db
+from app.core.constants import UserRole
+from app.core.interfaces import EmailNotifier
+from app.models import Researcher, RevokedToken, User
+from app.schemas import TokenPayload
+from app.services import (
+    AuthService,
+    CitationService,
+    CollaborationService,
+    ConferenceService,
+    DashboardService,
+    InstitutionService,
+    ProjectService,
+    PublicationService,
+    ReportService,
+    ResearcherService,
+    TokenService,
+    UserAdminService,
+    UserService,
+    VerificationCodeService,
+)
+from app.utils import ConsoleEmailNotifier, SMTPConfig, SMTPEmailNotifier
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+optional_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
+config: Config = get_config()
+
+DBSession = Annotated[AsyncSession, Depends(get_db)]
+Token = Annotated[str, Depends(oauth2_scheme)]
+
+
+# -- Service factories --
+@lru_cache
+def get_email_notifier() -> EmailNotifier:
+    if config.DEBUG or config.TESTING:
+        return ConsoleEmailNotifier()
+    smtp_config = SMTPConfig(
+        host=config.SMTP_HOST,
+        port=config.SMTP_PORT,
+        user=config.SMTP_USER,
+        password=config.SMTP_PASSWORD.get_secret_value(),
+    )
+    return SMTPEmailNotifier(smtp_config)
+
+
+def get_user_service(session: DBSession) -> UserService:
+    return UserService(session)
+
+
+def get_user_admin_service(session: DBSession) -> UserAdminService:
+    return UserAdminService(session, get_email_notifier())
+
+
+@lru_cache
+def get_token_service() -> TokenService:
+    return TokenService(config)
+
+
+def get_verification_code_service(session: DBSession) -> VerificationCodeService:
+    return VerificationCodeService(session, get_email_notifier())
+
+
+def get_auth_service(session: DBSession) -> AuthService:
+    return AuthService(
+        get_token_service(),
+        get_verification_code_service(session),
+    )
+
+
+def get_researcher_service(session: DBSession) -> ResearcherService:
+    return ResearcherService(session)
+
+
+def get_institution_service(session: DBSession) -> InstitutionService:
+    return InstitutionService(session)
+
+
+def get_publication_service(session: DBSession) -> PublicationService:
+    return PublicationService(session)
+
+
+def get_project_service(session: DBSession) -> ProjectService:
+    return ProjectService(session)
+
+
+def get_conference_service(session: DBSession) -> ConferenceService:
+    return ConferenceService(session)
+
+
+def get_citation_service(session: DBSession) -> CitationService:
+    return CitationService(session)
+
+
+def get_collaboration_service(session: DBSession) -> CollaborationService:
+    return CollaborationService(session)
+
+
+def get_dashboard_service(session: DBSession) -> DashboardService:
+    return DashboardService(session)
+
+
+def get_report_service(session: DBSession) -> ReportService:
+    return ReportService(session)
+
+
+# -- Auth guard --
+async def get_current_user(token: Token, session: DBSession) -> User:
+    revoked: RevokedToken | None = await session.scalar(
+        select(RevokedToken).where(RevokedToken.token == token)
+    )
+    if revoked:
+        raise HTTPException(status_code=401, detail="token has been revoked")
+
+    token_service: TokenService = get_token_service()
+    payload: TokenPayload = token_service.decode_token(token)
+    if not payload.sub:
+        raise HTTPException(status_code=401, detail="invalid token payload")
+
+    user: User | None = await UserService(session).get_by_email(payload.sub)
+    if not user:
+        raise HTTPException(status_code=401, detail="user not found")
+    return user
+
+
+async def get_optional_user(
+    token: Annotated[str | None, Depends(optional_oauth2_scheme)], session: DBSession
+) -> User | None:
+    if not token:
+        return None
+    try:
+        payload: TokenPayload = get_token_service().decode_token(token)
+    except HTTPException:
+        return None
+    if not payload.sub:
+        return None
+    return await UserService(session).get_by_email(payload.sub)
+
+
+def require_role(*roles: UserRole):
+    async def checker(current_user: CurrentUser) -> User:
+        if current_user.role not in roles:
+            raise HTTPException(status_code=403, detail="insufficient permissions")
+        return current_user
+
+    return checker
+
+
+# -- Type aliases --
+CurrentUser = Annotated[User, Depends(get_current_user)]
+AuthServiceDeps = Annotated[AuthService, Depends(get_auth_service)]
+UserServiceDeps = Annotated[UserService, Depends(get_user_service)]
+UserAdminServiceDeps = Annotated[UserAdminService, Depends(get_user_admin_service)]
+ResearcherServiceDeps = Annotated[ResearcherService, Depends(get_researcher_service)]
+InstitutionServiceDeps = Annotated[InstitutionService, Depends(get_institution_service)]
+PublicationServiceDeps = Annotated[PublicationService, Depends(get_publication_service)]
+ProjectServiceDeps = Annotated[ProjectService, Depends(get_project_service)]
+ConferenceServiceDeps = Annotated[ConferenceService, Depends(get_conference_service)]
+CitationServiceDeps = Annotated[CitationService, Depends(get_citation_service)]
+CollaborationServiceDeps = Annotated[
+    CollaborationService, Depends(get_collaboration_service)
+]
+DashboardServiceDeps = Annotated[DashboardService, Depends(get_dashboard_service)]
+ReportServiceDeps = Annotated[ReportService, Depends(get_report_service)]
+OptionalUser = Annotated[User | None, Depends(get_optional_user)]
+
+# Role guards
+AdminUser = Annotated[User, Depends(require_role(UserRole.SYSTEM_ADMIN))]
+InstitutionAdminUser = Annotated[
+    User, Depends(require_role(UserRole.INSTITUTION_ADMIN))
+]
+ReviewerUser = Annotated[User, Depends(require_role(UserRole.REVIEWER))]
+AnyAdminUser = Annotated[
+    User, Depends(require_role(UserRole.SYSTEM_ADMIN, UserRole.INSTITUTION_ADMIN))
+]
+
+
+# -- Domain-level dependencies --
+async def get_current_researcher(
+    current_user: CurrentUser, researcher_service: ResearcherServiceDeps
+) -> Researcher:
+    researcher: Researcher | None = await researcher_service.get_by_user_id(
+        current_user.user_id
+    )
+    if not researcher:
+        raise HTTPException(status_code=404, detail="create a researcher profile first")
+    return researcher
+
+
+async def get_current_institution_admin(current_user: CurrentUser) -> User:
+    if current_user.role != UserRole.INSTITUTION_ADMIN:
+        raise HTTPException(status_code=403, detail="institution admin role required")
+    if not current_user.managed_institution_id:
+        raise HTTPException(
+            status_code=400,
+            detail="no institution assigned to this admin",
+        )
+    return current_user
+
+
+CurrentResearcher = Annotated[Researcher, Depends(get_current_researcher)]
+CurrentInstitutionAdmin = Annotated[User, Depends(get_current_institution_admin)]
+
+
+async def get_managed_institution_id(current_admin: CurrentInstitutionAdmin) -> int:
+    if current_admin.managed_institution_id is None:
+        raise HTTPException(status_code=400, detail="no institution assigned")
+    return current_admin.managed_institution_id
+
+
+ManagedInstitutionId = Annotated[int, Depends(get_managed_institution_id)]

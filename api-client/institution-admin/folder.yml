@@ -1,0 +1,10 @@
+info:
+  name: institution-admin
+  type: folder
+  seq: 12
+
+request:
+  variables:
+    - name: institutionAdminUrl
+      value: "{{baseUrl}}/institution-admin"
+      description: ""

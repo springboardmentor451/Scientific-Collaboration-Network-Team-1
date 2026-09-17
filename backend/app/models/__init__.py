@@ -1,24 +1,29 @@
-from app.models.user import User, UserRole
-from app.models.institution import Institution
-from app.models.researcher import Researcher, project_researcher_association, publication_author_association
-from app.models.project import Project
-from app.models.conference import Conference
-from app.models.publication import Publication
-from app.models.collaboration import Collaboration
 from app.models.citation import Citation
-from app.models.audit_log import AuditLog
+from app.models.collaboration import Collaboration
+from app.models.collaboration_researcher import CollaborationResearcher
+from app.models.conference import Conference
+from app.models.institution import Institution
+from app.models.project import Project
+from app.models.project_researcher import ProjectResearcher
+from app.models.publication import Publication
+from app.models.publication_author import PublicationAuthor
+from app.models.researcher import Researcher
+from app.models.revoked_token import RevokedToken
+from app.models.user import User
+from app.models.verification_code import VerificationCode
 
-__all__ = [
-    "User",
-    "UserRole",
-    "Institution",
-    "Researcher",
-    "Project",
-    "Conference",
-    "Publication",
-    "Collaboration",
+__all__: list[str] = [
     "Citation",
-    "AuditLog",
-    "project_researcher_association",
-    "publication_author_association",
+    "Collaboration",
+    "CollaborationResearcher",
+    "Conference",
+    "Institution",
+    "Project",
+    "ProjectResearcher",
+    "Publication",
+    "PublicationAuthor",
+    "Researcher",
+    "RevokedToken",
+    "User",
+    "VerificationCode",
 ]

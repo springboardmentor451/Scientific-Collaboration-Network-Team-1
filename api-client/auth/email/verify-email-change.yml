@@ -1,0 +1,39 @@
+info:
+  name: verify-email-change
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{authUrl}}/verify-email-change"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "email": "{{newEmail}}",
+        "code": "{{verificationCode}}"
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("status is 200", function() {
+          expect(res.status).to.equal(200);
+        });
+        test("email updated message", function() {
+          expect(res.body.message).to.include("updated");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

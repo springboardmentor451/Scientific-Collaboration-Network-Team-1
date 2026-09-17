@@ -1,0 +1,202 @@
+from datetime import date
+
+import pytest
+from app.core.constants import UserRole
+from app.schemas import (
+    CitationRequest,
+    EmailChangeRequest,
+    ProjectRequest,
+    RoleChangeRequest,
+    UserRequest,
+)
+from app.schemas.base import validate_dates
+from app.schemas.user import PasswordResetRequest
+from pydantic import SecretStr, ValidationError
+
+VALID_EMAIL = "john@mit.edu"
+VALID_PASSWORD = SecretStr("SecurePass123")
+
+
+# Email domain
+@pytest.mark.parametrize(
+    "email",
+    ["user@mit.edu", "user@harvard.edu", "user@ibm.com"],
+)
+def test_valid_academic_email(email: str) -> None:
+    user = UserRequest(email=email, password=VALID_PASSWORD)
+    assert user.email == email
+
+
+@pytest.mark.parametrize(
+    "email",
+    ["user@gmail.com", "user@hotmail.com", "user@fake.com"],
+)
+def test_invalid_non_academic_email(email: str) -> None:
+    with pytest.raises(ValidationError, match="recognised institution"):
+        UserRequest(email=email, password=VALID_PASSWORD)
+
+
+# Password
+@pytest.mark.parametrize(
+    "password, match",
+    [("12345678", "letter"), ("abcdefgh", "number"), ("ab", "least")],
+)
+def test_invalid_password(password: SecretStr, match: str) -> None:
+    with pytest.raises(ValidationError, match=match):
+        UserRequest(email=VALID_EMAIL, password=password)
+
+
+def test_valid_password() -> None:
+    user = UserRequest(email=VALID_EMAIL, password=VALID_PASSWORD)
+    assert user.password == VALID_PASSWORD
+
+
+# UserRequest role
+def test_default_role_is_researcher() -> None:
+    user = UserRequest(email=VALID_EMAIL, password=VALID_PASSWORD)
+    assert user.requested_role == "researcher"
+
+
+def test_reviewer_role_accepted_in_registration() -> None:
+    user = UserRequest(
+        email=VALID_EMAIL,
+        password=VALID_PASSWORD,
+        requested_role=UserRole.REVIEWER,
+    )
+    assert user.requested_role == "reviewer"
+
+
+def test_institution_admin_role_accepted_in_registration() -> None:
+    user = UserRequest(
+        email=VALID_EMAIL,
+        password=VALID_PASSWORD,
+        requested_role=UserRole.INSTITUTION_ADMIN,
+    )
+    assert user.requested_role == "institution_admin"
+
+
+def test_system_admin_role_rejected_in_registration() -> None:
+    with pytest.raises(ValidationError, match="system admin"):
+        UserRequest(
+            email=VALID_EMAIL,
+            password=VALID_PASSWORD,
+            requested_role=UserRole.SYSTEM_ADMIN,
+        )
+
+
+# Role self-declaration
+def test_system_admin_role_rejected() -> None:
+    with pytest.raises(ValidationError, match="system_admin"):
+        UserRequest(
+            email=VALID_EMAIL,
+            password=VALID_PASSWORD,
+            requested_role=UserRole.SYSTEM_ADMIN,
+        )
+
+
+def test_reviewer_role_accepted() -> None:
+    user = UserRequest(
+        email=VALID_EMAIL,
+        password=VALID_PASSWORD,
+        requested_role=UserRole.REVIEWER,
+    )
+    assert user.requested_role == "reviewer"
+
+
+# Date validation
+def test_valid_dates() -> None:
+    validate_dates(date(2024, 1, 1), date(2024, 12, 31))
+
+
+# Citation
+def test_valid_citation() -> None:
+    req = CitationRequest(citing_publication_id=1, cited_publication_ids=[2, 3])
+    assert len(req.cited_publication_ids) == 2
+
+
+def test_citation_requires_at_least_one_cited() -> None:
+    with pytest.raises(ValidationError):
+        CitationRequest(citing_publication_id=1, cited_publication_ids=[])
+
+
+# Project dates
+def test_project_end_before_start() -> None:
+    with pytest.raises(ValidationError, match="cannot be before start_date"):
+        ProjectRequest(
+            name="TestProject",
+            start_date=date(2024, 12, 1),
+            end_date=date(2024, 1, 1),
+        )
+
+
+def test_project_same_start_end_valid() -> None:
+    req = ProjectRequest(
+        name="One Day Project",
+        start_date=date(2024, 6, 1),
+        end_date=date(2024, 6, 1),
+    )
+    assert req.name == "One Day Project"
+
+
+# Role change request
+def test_role_change_request_valid() -> None:
+    req = RoleChangeRequest(requested_role=UserRole.REVIEWER)
+    assert req.requested_role == "reviewer"
+
+
+def test_role_change_request_system_admin_rejected() -> None:
+    with pytest.raises(ValidationError, match="system admin"):
+        RoleChangeRequest(requested_role=UserRole.SYSTEM_ADMIN)
+
+
+# Email change request
+def test_email_change_request_invalid_domain() -> None:
+    with pytest.raises(
+        expected_exception=ValidationError, match="recognised institution"
+    ):
+        EmailChangeRequest(new_email="user@gmail.com")
+
+
+def test_email_change_request_valid_domain() -> None:
+    req = EmailChangeRequest(new_email="user@ox.ac.uk")
+    assert str(req.new_email) == "user@ox.ac.uk"
+
+
+def test_password_reset_passwords_must_match() -> None:
+    with pytest.raises(ValidationError, match="passwords do not match"):
+        PasswordResetRequest(
+            email=VALID_EMAIL,
+            code="123456",
+            new_password=SecretStr("NewPass123"),
+            confirm_password=SecretStr("DifferentPass99"),
+        )
+
+
+def test_password_reset_valid() -> None:
+    req = PasswordResetRequest(
+        email=VALID_EMAIL,
+        code="123456",
+        new_password=SecretStr("NewPass123"),
+        confirm_password=SecretStr("NewPass123"),
+    )
+    assert req.new_password.get_secret_value() == "NewPass123"
+
+
+def test_password_reset_code_length() -> None:
+    with pytest.raises(ValidationError):
+        PasswordResetRequest(
+            email=VALID_EMAIL,
+            code="123",
+            new_password=SecretStr("NewPass123"),
+            confirm_password=SecretStr("NewPass123"),
+        )
+
+
+def test_password_reset_weak_password() -> None:
+    with pytest.raises(ValidationError):
+        PasswordResetRequest(
+            email=VALID_EMAIL,
+            code="123456",
+            new_password=SecretStr("onlyletters"),
+            confirm_password=SecretStr("onlyletters"),
+        )

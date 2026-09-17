@@ -1,0 +1,24 @@
+name: local-researcher
+variables:
+  - name: baseUrl
+    value: http://localhost:8000/api
+  - name: email
+    value: new_user@mit.edu
+  - name: researcherId
+    value:
+      type: number
+      data: "1"
+  - name: institutionId
+    value: ""
+  - name: conferenceId
+    value: ""
+  - name: collaborationId
+    value: ""
+  - secret: true
+    name: password
+  - secret: true
+    name: verificationCode
+  - secret: true
+    name: accessToken
+  - secret: true
+    name: refreshToken

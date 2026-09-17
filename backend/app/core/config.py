@@ -1,26 +1,109 @@
-from pydantic_settings import BaseSettings
-from typing import List
+import os
 
-class Settings(BaseSettings):
-    PROJECT_NAME: str = "SciConnect"
-    API_V1_STR: str = "/api/v1"
-    SECRET_KEY: str = "super-secret-jwt-key-change-in-production"
-    REFRESH_SECRET_KEY: str = "super-secret-refresh-jwt-key-change-in-production"
-    ALGORITHM: str = "HS256"
+from dotenv import load_dotenv
+from pydantic import Field, SecretStr, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+load_dotenv()
+
+ALLOWED_ALGORITHMS: frozenset[str] = frozenset({"HS256", "HS384", "HS512"})
+_SHARED_SETTINGS = SettingsConfigDict(env_file_encoding="utf-8", extra="ignore")
+
+
+def validate_positive(value: int) -> int:
+    if value <= 0:
+        raise ValueError("Must be a positive integer")
+    return value
+
+
+class AuthConfig(BaseSettings):
+    model_config = _SHARED_SETTINGS
+
+    JWT_KEY: SecretStr
+    ALGORITHM: str = Field(default="HS256")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    REFRESH_TOKEN_EXPIRE_DAYS: int
+
+    @field_validator("ALGORITHM")
+    @classmethod
+    def validate_algorithm(cls, value: str) -> str:
+        if value not in ALLOWED_ALGORITHMS:
+            raise ValueError(f"Unsupported HMAC algorithm: {value}")
+        return value
+
+    @field_validator("ACCESS_TOKEN_EXPIRE_MINUTES", "REFRESH_TOKEN_EXPIRE_DAYS")
+    @classmethod
+    def check_positive(cls, value: int) -> int:
+        return validate_positive(value)
+
+
+class DatabaseConfig(BaseSettings):
+    model_config = _SHARED_SETTINGS
+
+    DATABASE_URL: str
+
+
+class SMTPConfig(BaseSettings):
+    model_config = _SHARED_SETTINGS
+
+    SMTP_HOST: str = Field(default="localhost")
+    SMTP_PORT: int = Field(default=587)
+    SMTP_USER: str = Field(default="")
+    SMTP_PASSWORD: SecretStr = Field(default=SecretStr(""))
+
+    @field_validator("SMTP_PORT")
+    @classmethod
+    def check_positive(cls, value: int) -> int:
+        return validate_positive(value)
+
+
+class Config(AuthConfig, DatabaseConfig, SMTPConfig):
+    DEBUG: bool = False
+    TESTING: bool = False
+    ALLOWED_ORIGIN: str
+
+
+class DevelopmentConfig(Config):
+    JWT_KEY: SecretStr = SecretStr("dev-key-minimum-32-characters-long")
+    DATABASE_URL: str = Field(
+        default_factory=lambda: os.environ.get(
+            "DEV_DATABASE_URL", "sqlite+aiosqlite:///database/dev.db"
+        )
+    )
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    
-    POSTGRES_SERVER: str = "localhost"
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "postgrespassword"
-    POSTGRES_DB: str = "collaboration_network"
-    POSTGRES_PORT: int = 5432
-    DATABASE_URL: str = "postgresql://postgres:postgrespassword@localhost:5432/collaboration_network"
+    DEBUG: bool = True
 
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
 
-    class Config:
-        case_sensitive = True
-        env_file = ".env"
+class TestingConfig(Config):
+    JWT_KEY: SecretStr = SecretStr("test-key-minimum-32-characters-long")
+    DATABASE_URL: str = Field(
+        default_factory=lambda: os.environ.get(
+            "TEST_DATABASE_URL", "sqlite+aiosqlite:///database/test.db"
+        )
+    )
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    TESTING: bool = True
 
-settings = Settings()
+
+class ProductionConfig(Config):
+    DEBUG: bool = False
+    TESTING: bool = False
+
+
+_config: dict[str, type[Config]] = {
+    "development": DevelopmentConfig,
+    "testing": TestingConfig,
+    "production": ProductionConfig,
+}
+
+
+def get_config() -> Config:
+    env: str = os.environ.get("FASTAPI_ENV", "development")
+    if env not in _config:
+        raise SystemExit(
+            f"[config] FASTAPI_ENV must be in {list(_config.keys())}, got '{env}'"
+        )
+    cls = _config[env]
+    return cls.model_validate({})

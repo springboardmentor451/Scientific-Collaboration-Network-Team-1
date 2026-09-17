@@ -1,0 +1,5 @@
+AUTH_URL = "/api/auth"
+PASSWORD = "TestPass123"
+LOGIN_URL = f"{AUTH_URL}/login"
+VERIFY_LOGIN_URL = f"{AUTH_URL}/verify-login-code"
+USER_URL = "/api/users"

@@ -1,0 +1,26 @@
+info:
+  name: delete-user
+  type: http
+  seq: 14
+
+http:
+  method: DELETE
+  url: "{{userUrl}}/{{userId}}"
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  scripts:
+    - type:
+      code: |
+        test("status is 204", function() {
+          expect(res.status).to.equal(204);
+        }); 
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

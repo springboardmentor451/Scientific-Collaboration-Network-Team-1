@@ -1,0 +1,181 @@
+import logging
+
+from fastapi import HTTPException
+from sqlalchemy import select, update
+from sqlalchemy.engine.result import Result, ScalarResult
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.dml import Update
+
+from app.core.constants import UserRole, UserStatus
+from app.core.interfaces import EmailNotifier
+from app.core.validator import UserStatusValidator
+from app.models import Institution, User
+from app.schemas import UserResponse, UserRoleUpdateRequest
+
+logger: logging.Logger = logging.getLogger(__name__)
+
+
+class UserAdminService:
+    def __init__(self, session: AsyncSession, email_notifier: EmailNotifier) -> None:
+        self.session: AsyncSession = session
+        self.email_notifier: EmailNotifier = email_notifier
+
+    async def get_user(self, user_id: int) -> UserResponse:
+        user: User = await self._get_by_id(user_id)
+        return UserResponse.from_orm(user)
+
+    async def get_all_users(self) -> list[UserResponse]:
+        logger.debug("fetching all users")
+        result: ScalarResult[User] = await self.session.scalars(select(User))
+        return [UserResponse.from_orm(user) for user in result.all()]
+
+    async def get_pending_users(self) -> list[UserResponse]:
+        logger.debug("fetching pending users")
+        result: ScalarResult[User] = await self.session.scalars(
+            select(User).where(User.status == UserStatus.PENDING)
+        )
+        return [UserResponse.from_orm(user) for user in result.all()]
+
+    async def get_role_change_requests(self) -> list[UserResponse]:
+        logger.debug("fetching role change requests")
+        result: ScalarResult[User] = await self.session.scalars(
+            select(User).where(User.requested_role.isnot(None))
+        )
+        return [UserResponse.from_orm(user) for user in result.all()]
+
+    async def approve(self, user_id: int) -> UserResponse:
+        logger.debug("approve user: user_id=%d", user_id)
+        user: User = await self._get_by_id(user_id)
+        UserStatusValidator.ensure_approvable(user)
+        result: Result[tuple[int]] = await self.session.execute(
+            update(User)
+            .where(User.user_id == user_id, User.status == UserStatus.PENDING)
+            .values(
+                status=UserStatus.ACTIVE, role=User.requested_role, requested_role=None
+            )
+            .returning(User.user_id)
+        )
+        updated_user_id: int | None = result.scalar_one_or_none()
+        if updated_user_id is None:
+            await self.session.rollback()
+            raise HTTPException(
+                status_code=409, detail="user is no longer pending approval"
+            )
+        user.status = UserStatus.ACTIVE
+        await self.session.commit()
+        await self.session.refresh(user)
+        self.email_notifier.send_approval_notification(user.email)
+        logger.info("user approved: user_id=%d", user.user_id)
+        return UserResponse.from_orm(user)
+
+    async def reject(self, user_id: int) -> UserResponse:
+        logger.debug("reject user: user_id=%d", user_id)
+        # user: User = await self._get_by_id(user_id)
+        user: User = await self._set_status(
+            user_id, UserStatus.REJECTED, require_current=UserStatus.PENDING
+        )
+        self.email_notifier.send_rejection_notification(user.email)
+        logger.info("user rejected: user_id=%d", user.user_id)
+        return UserResponse.from_orm(user)
+
+    async def ban(self, user_id: int) -> UserResponse:
+        logger.debug("ban user: user_id=%d", user_id)
+        # user: User = await self._get_by_id(user_id)
+        user: User = await self._set_status(user_id, UserStatus.BANNED)
+        self.email_notifier.send_ban_notification(user.email)
+        logger.info("user banned: user_id=%d", user.user_id)
+        return UserResponse.from_orm(user)
+
+    async def change_role(
+        self, user_id: int, data: UserRoleUpdateRequest
+    ) -> UserResponse:
+        logger.debug("change role: user_id=%d", user_id)
+        user: User = await self._get_by_id(user_id)
+        if user.role == data.role:
+            raise HTTPException(status_code=409, detail="user already has this role")
+        user.role = data.role
+        user.requested_role = None
+        await self._manage_institution_id(data, user)
+        await self.session.commit()
+        logger.info("role changed for user: user_id=%d", user_id)
+        return UserResponse.from_orm(user)
+
+    async def approve_role_change(self, user_id: int) -> UserResponse:
+        logger.debug("approve role change: user_id=%d", user_id)
+        user: User = await self._get_by_id(user_id)
+        if not user.requested_role:
+            raise HTTPException(status_code=400, detail="no role change requested")
+        if user.status != UserStatus.ACTIVE:
+            raise HTTPException(status_code=400, detail="user must be active")
+        user.role = user.requested_role
+        user.requested_role = None
+        await self.session.commit()
+        logger.info("role changed for user: user_id=%d", user_id)
+        return UserResponse.from_orm(user)
+
+    async def reject_role_change(self, user_id: int) -> UserResponse:
+        logger.debug("reject role change: user_id=%d", user_id)
+        user: User = await self._get_by_id(user_id)
+        if not user.requested_role:
+            raise HTTPException(status_code=400, detail="no role change requested")
+        user.requested_role = None
+        await self.session.commit()
+        logger.info("role change rejected: user_id=%d", user_id)
+        return UserResponse.from_orm(user)
+
+    async def delete_by_id(self, user_id: int) -> None:
+        logger.debug("delete user: user_id=%d", user_id)
+        user: User = await self._get_by_id(user_id)
+        await self.session.delete(user)
+        await self.session.commit()
+        logger.info("user deleted: user_id=%d", user_id)
+
+    async def _get_by_id(self, user_id: int) -> User:
+        user: User | None = await self.session.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="user not found")
+        return user
+
+    async def _set_status(
+        self,
+        user_id: int,
+        target_status: UserStatus,
+        require_current: UserStatus | None = None,
+    ) -> User:
+        await self._get_by_id(user_id)
+        stmt: Update = (
+            update(User).where(User.user_id == user_id).values(status=target_status)
+        )
+        stmt = stmt.where(
+            User.status == require_current
+            if require_current is not None
+            else User.status != target_status
+        )
+        stmt = stmt.returning(User.user_id)
+        result: Result[tuple[int]] = await self.session.execute(stmt)
+        if result.scalar_one_or_none() is None:
+            await self.session.rollback()
+            raise HTTPException(
+                status_code=409,
+                detail=f"user status transition rejected, already {target_status.value} or invalid current state",
+            )
+        await self.session.commit()
+        return await self._get_by_id(user_id)
+
+    async def _manage_institution_id(
+        self, data: UserRoleUpdateRequest, user: User
+    ) -> None:
+        if data.role == UserRole.INSTITUTION_ADMIN:
+            if not data.managed_institution_id:
+                raise HTTPException(
+                    status_code=400,
+                    detail="managed_institution_id required for institution admin role",
+                )
+            institution: Institution | None = await self.session.get(
+                Institution, data.managed_institution_id
+            )
+            if not institution:
+                raise HTTPException(status_code=404, detail="institution not found")
+            user.managed_institution_id = data.managed_institution_id
+        else:
+            user.managed_institution_id = None

@@ -1,0 +1,38 @@
+info:
+  name: request-role-change
+  type: http
+  seq: 8
+
+http:
+  method: POST
+  url: "{{selfUrl}}/request-role-change"
+  headers:
+    - name: Authorization
+      value: Bearer {{accessToken}}
+  body:
+    type: json
+    data: |
+      {
+        "requested_role": "researcher"  
+      }
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("status is 200", function() {
+          expect(res.status).to.equal(200);
+        });
+        test("submitted message", function() {
+          expect(res.body.message).to.include("submitted");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

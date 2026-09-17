@@ -1,0 +1,63 @@
+import logging
+
+from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.orm_utils import apply_updates
+from app.core.security import hash_password
+from app.models import User
+from app.schemas import (
+    MessageResponse,
+    RoleChangeRequest,
+    UserResponse,
+    UserUpdateRequest,
+)
+
+logger: logging.Logger = logging.getLogger(__name__)
+
+
+class UserService:
+    def __init__(self, session: AsyncSession) -> None:
+        self.session: AsyncSession = session
+
+    async def get_by_email(self, email: str) -> User | None:
+        return await self.session.scalar(select(User).where(User.email == email))
+
+    async def update(self, credentials: UserUpdateRequest, user: User) -> UserResponse:
+        logger.debug("update information: user_id=%d", user.user_id)
+        updates = credentials.model_dump(exclude_none=True)
+        if UserUpdateRequest.PASSWORD_FIELD in updates:
+            user.password = hash_password(updates.pop(UserUpdateRequest.PASSWORD_FIELD))
+        apply_updates(user, credentials, exclude={UserUpdateRequest.PASSWORD_FIELD})
+        await self.session.commit()
+        logger.info("user information updated successfully: %d", user.user_id)
+        return UserResponse.from_orm(user)
+
+    async def delete(self, user: User) -> None:
+        logger.debug("delete user: user_id=%d", user.user_id)
+        user_id: int = user.user_id
+        await self.session.delete(user)
+        await self.session.commit()
+        logger.info("user deleted: %d", user_id)
+
+    async def request_role_change(
+        self, data: RoleChangeRequest, user: User
+    ) -> MessageResponse:
+        logger.debug("request role change: user_id=%d", user.user_id)
+        if data.requested_role == user.role:
+            raise HTTPException(status_code=400, detail="already have this role")
+        if user.requested_role == data.requested_role:
+            raise HTTPException(
+                status_code=400, detail="you already requested this role"
+            )
+        user.requested_role = data.requested_role
+        await self.session.commit()
+        logger.info(
+            "role change requested: user_id=%d role=%s",
+            user.user_id,
+            data.requested_role,
+        )
+        return MessageResponse(
+            message="role change request submitted, awaiting admin approval"
+        )

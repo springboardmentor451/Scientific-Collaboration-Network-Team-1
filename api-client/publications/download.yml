@@ -1,0 +1,29 @@
+info:
+  name: download
+  type: http
+  seq: 8
+
+http:
+  method: GET
+  url: "{{publicationUrl}}/{{publicationId}}/download"
+  headers: []
+  body:
+    type: none
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |
+        test("status is 200", function() {
+          expect(res.status).to.equal(200);
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

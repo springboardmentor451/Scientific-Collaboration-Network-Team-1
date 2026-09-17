@@ -1,3 +1,3 @@
-from app.utils.helpers import calculate_h_index
+from app.utils.email import ConsoleEmailNotifier, SMTPConfig, SMTPEmailNotifier
 
-__all__ = ["calculate_h_index"]
+__all__: list[str] = ["ConsoleEmailNotifier", "SMTPConfig", "SMTPEmailNotifier"]

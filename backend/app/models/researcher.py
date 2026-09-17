@@ -1,47 +1,63 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, DateTime
-from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
-from app.core.database import Base
+from __future__ import annotations
 
-# Association Table: Researcher <-> Project (Many-to-Many)
-project_researcher_association = Table(
-    "project_researchers",
-    Base.metadata,
-    Column("researcher_id", Integer, ForeignKey("researchers.id", ondelete="CASCADE"), primary_key=True),
-    Column("project_id", Integer, ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True),
-    Column("role", String(100), default="Co-Investigator")
+from typing import TYPE_CHECKING
+
+from sqlalchemy import JSON, ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.core import Base
+from app.core.constants import (
+    DEPARTMENT_MAX_LENGTH,
+    ORCID_MAX_LENGTH,
+    USERNAME_MAX_LENGTH,
 )
 
-# Association Table: Publication <-> Author (Researcher) (Many-to-Many with authorship metadata)
-publication_author_association = Table(
-    "publication_authors",
-    Base.metadata,
-    Column("publication_id", Integer, ForeignKey("publications.id", ondelete="CASCADE"), primary_key=True),
-    Column("researcher_id", Integer, ForeignKey("researchers.id", ondelete="CASCADE"), primary_key=True),
-    Column("author_order", Integer, default=1),
-    Column("is_corresponding", String(10), default="False")
-)
+if TYPE_CHECKING:
+    from app.models.collaboration import Collaboration
+    from app.models.institution import Institution
+    from app.models.project import Project
+    from app.models.publication import Publication
+    from app.models.user import User
+
 
 class Researcher(Base):
-    __tablename__ = "researchers"
+    __tablename__: str = "researchers"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(200), nullable=False, index=True)
-    email = Column(String(255), unique=True, index=True, nullable=True)
-    orcid = Column(String(50), unique=True, index=True, nullable=True)
-    department = Column(String(150), nullable=True)
-    h_index = Column(Integer, default=0, nullable=False)
-    citation_count = Column(Integer, default=0, nullable=False)
-    
-    institution_id = Column(Integer, ForeignKey("institutions.id", ondelete="SET NULL"), nullable=True)
+    researcher_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.user_id"), unique=True, nullable=False
+    )
+    institution_id: Mapped[int | None] = mapped_column(
+        ForeignKey("institutions.institution_id"), nullable=True, index=True
+    )
+    name: Mapped[str] = mapped_column(String(USERNAME_MAX_LENGTH), nullable=False)
+    bio: Mapped[str | None] = mapped_column(Text, nullable=True)
+    department: Mapped[str | None] = mapped_column(
+        String(DEPARTMENT_MAX_LENGTH), nullable=True
+    )
+    orcid: Mapped[str | None] = mapped_column(
+        String(ORCID_MAX_LENGTH), unique=True, nullable=True
+    )
+    skills: Mapped[list[str]] = mapped_column(JSON, default=list)
+    research_interests: Mapped[list[str]] = mapped_column(JSON, default=list)
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    user: Mapped[User] = relationship("User", back_populates="researcher")
+    institution: Mapped[Institution | None] = relationship(
+        "Institution", back_populates="researchers"
+    )
+    publications: Mapped[list[Publication]] = relationship(
+        "Publication",
+        secondary="publication_authors",
+        back_populates="authors",
+    )
+    projects: Mapped[list[Project]] = relationship(
+        "Project", secondary="project_researchers", back_populates="researchers"
+    )
+    collaborations: Mapped[list[Collaboration]] = relationship(
+        "Collaboration",
+        secondary="collaboration_researchers",
+        back_populates="researchers",
+    )
 
-    institution = relationship("Institution", back_populates="researchers")
-    user_account = relationship("User", back_populates="researcher", uselist=False)
-    
-    projects = relationship("Project", secondary=project_researcher_association, back_populates="researchers")
-    publications = relationship("Publication", secondary=publication_author_association, back_populates="authors")
-    
-    collaborations_as_a = relationship("Collaboration", foreign_keys="Collaboration.researcher_a_id", back_populates="researcher_a")
-    collaborations_as_b = relationship("Collaboration", foreign_keys="Collaboration.researcher_b_id", back_populates="researcher_b")
+    def __repr__(self) -> str:
+        return f"<Researcher(name={self.name}, department={self.department})>"

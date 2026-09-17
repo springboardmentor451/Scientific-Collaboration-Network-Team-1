@@ -1,20 +1,37 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-from app.core.config import settings
+import logging
+from collections.abc import AsyncGenerator
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    pool_pre_ping=True,
-    echo=False
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio.engine import AsyncEngine
+from sqlalchemy.orm import DeclarativeBase
+
+from app.core.config import Config, get_config
+
+logger: logging.Logger = logging.getLogger(__name__)
+
+configure: Config = get_config()
+
+engine: AsyncEngine = create_async_engine(
+    url=configure.DATABASE_URL,
+    echo=configure.DEBUG,
+    connect_args={"check_same_thread": False}
+    if "sqlite" in configure.DATABASE_URL
+    else {},
+)
+session: async_sessionmaker[AsyncSession] = async_sessionmaker(
+    bind=engine, autoflush=False, expire_on_commit=False
 )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
+class Base(DeclarativeBase):
+    pass
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    logger.debug("opening database session")
+    async with session() as db:
+        try:
+            yield db
+        finally:
+            logger.debug("closing database session")
+            await db.close()

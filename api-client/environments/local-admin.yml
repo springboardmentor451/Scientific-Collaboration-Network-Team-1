@@ -1,0 +1,30 @@
+name: local-admin
+variables:
+  - name: baseUrl
+    value: http://localhost:8000/api
+  - name: email
+    value: admin_system@harvard.edu
+  - name: userId
+    value:
+      type: number
+      data: "12"
+  - name: researcherId
+    value: ""
+  - name: institutionId
+    value:
+      type: number
+      data: "1"
+  - name: publicationId
+    value: ""
+  - name: conferenceId
+    value: ""
+  - name: collaborationId
+    value: ""
+  - secret: true
+    name: password
+  - secret: true
+    name: verificationCode
+  - secret: true
+    name: accessToken
+  - secret: true
+    name: refreshToken

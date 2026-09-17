@@ -1,24 +1,41 @@
-import apiClient from './api';
-import { INITIAL_RESEARCHERS } from '../data/mockData';
-import { ResearcherNode } from '../types';
+import apiClient from '../api/client';
+import type { Researcher, ResearcherRequest, ResearcherUpdateRequest } from '../types';
+import { AuthService } from './authService';
 
-export const researcherService = {
-  async getResearchers(): Promise<ResearcherNode[]> {
-    try {
-      const response = await apiClient.get('/researchers');
-      return response.data;
-    } catch {
-      // Fallback to mock data if backend isn't reached
-      return INITIAL_RESEARCHERS;
-    }
-  },
+export class ResearcherService {
+  static async getAll(): Promise<Researcher[]> {
+    const { data } = await apiClient.get<Researcher[]>('/researchers');
+    return data;
+  }
 
-  async getResearcherById(id: string): Promise<ResearcherNode | undefined> {
+  static async getById(researcherId: number): Promise<Researcher> {
+    const { data } = await apiClient.get<Researcher>(`/researchers/${researcherId}`);
+    return data;
+  }
+
+  static async getMyProfile(): Promise<Researcher | null> {
     try {
-      const response = await apiClient.get(`/researchers/${id}`);
-      return response.data;
-    } catch {
-      return INITIAL_RESEARCHERS.find((r) => r.id === id);
+      const { data } = await apiClient.get<Researcher>('/researchers/me');
+      return data;
+    } catch (err: any) {
+      if (err.response?.status === 404) return null;
+      throw err;
     }
-  },
-};
+  }
+
+  static async create(payload: ResearcherRequest): Promise<Researcher> {
+    const { data } = await apiClient.post<Researcher>('/researchers', payload);
+    return data;
+  }
+
+  static async update(payload: ResearcherUpdateRequest): Promise<Researcher> {
+    const { data } = await apiClient.patch<Researcher>(`/researchers/me`, payload);
+    return data;
+  }
+
+  static async delete(): Promise<void> {
+    const currentUser = await AuthService.getCurrentUser();
+    if (!currentUser) throw new Error("Not authenticated");
+    await apiClient.delete(`/researchers/me`);
+  }
+}

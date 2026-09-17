@@ -1,0 +1,14 @@
+name: local-reviewer
+variables:
+  - name: baseUrl
+    value: http://localhost:8000
+  - name: email
+    value: role_change@mit.edu
+  - secret: true
+    name: password
+  - secret: true
+    name: verificationCode
+  - secret: true
+    name: accessToken
+  - secret: true
+    name: refreshToken

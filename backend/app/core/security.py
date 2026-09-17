@@ -1,51 +1,13 @@
-from datetime import datetime, timedelta, timezone
-from typing import Optional, Any, Dict
-from jose import jwt, JWTError
-from passlib.context import CryptContext
-from app.core.config import settings
+from pwdlib import PasswordHash
+from pwdlib.hashers.argon2 import Argon2Hasher
+from pydantic import SecretStr
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_hasher = PasswordHash([Argon2Hasher()])
 
-def create_access_token(subject: str | Any, role: str, expires_delta: Optional[timedelta] = None) -> str:
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    
-    to_encode = {
-        "exp": expire,
-        "sub": str(subject),
-        "role": role,
-        "type": "access"
-    }
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-    return encoded_jwt
 
-def create_refresh_token(subject: str | Any, expires_delta: Optional[timedelta] = None) -> str:
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    
-    to_encode = {
-        "exp": expire,
-        "sub": str(subject),
-        "type": "refresh"
-    }
-    encoded_jwt = jwt.encode(to_encode, settings.REFRESH_SECRET_KEY, algorithm=settings.ALGORITHM)
-    return encoded_jwt
+def hash_password(password: SecretStr) -> str:
+    return pwd_hasher.hash(password.get_secret_value())
 
-def decode_token(token: str, is_refresh: bool = False) -> Dict[str, Any]:
-    secret_key = settings.REFRESH_SECRET_KEY if is_refresh else settings.SECRET_KEY
-    try:
-        payload = jwt.decode(token, secret_key, algorithms=[settings.ALGORITHM])
-        return payload
-    except JWTError as e:
-        raise e
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
-
+def verify_password(plain: SecretStr, hashed: str) -> bool:
+    return pwd_hasher.verify(plain.get_secret_value(), hashed)

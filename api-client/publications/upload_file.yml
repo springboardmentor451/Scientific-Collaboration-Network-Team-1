@@ -1,0 +1,37 @@
+info:
+  name: upload-file
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{publicationUrl}}/{{publicationId}}/upload"
+  body:
+    type: multipart-form
+    data:
+      - name: file
+        type: file
+        value:
+          - fixtures\sample-paper.pdf
+        contentType: application/pdf
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |
+        test("status is 200", function() {
+          expect(res.status).to.equal(200);
+        });
+        test("file_path set", function() {
+          expect(res.body.file_path).to.be.a("string");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

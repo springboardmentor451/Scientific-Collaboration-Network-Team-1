@@ -1,69 +1,201 @@
-<<<<<<< HEAD
 # Scientific-Collaboration-Network-Team-1
-=======
-# SciConnect
 
-Connecting Science, People & Ideas. A production-ready full-stack enterprise application for analyzing co-authorship graph topologies, researcher metrics (h-index, citations), institutional partner clusters, and grant funding networks.
+A research collaboration platform: publications, projects, citations, and
+institutional networks, secured behind role-based access and 2FA.
 
-## Architecture
 
-```
-Scientific_Collaboration_network_Analyser/
+## Tech Stack
 
-frontend/
-    src/
-        assets/
-        components/
-        layouts/
-        pages/
-        hooks/
-        services/
-        utils/
-        context/
-        router/
-        data/
-        styles/
-        App.tsx
-        main.tsx
+**Backend**
+- **API**: FastAPI (async)
+- **ORM**: SQLAlchemy 2.0 (async engine)
+- **Migrations**: Alembic
+- **Auth**: JWT (access + refresh) + TOTP-based email OTP
+- **DB**: SQLite (dev/test) · PostgreSQL (production)
+- **Testing**: pytest, pytest-asyncio, httpx
 
-backend/
-    app/
-        api/
-        models/
-        schemas/
-        services/
-        database/
-        core/
-        middleware/
-        utils/
-        uploads/
-        main.py
+**Frontend**
+- **Framework**: React 19 + TypeScript
+- **Build tool**: Vite
+- **Styling**: Tailwind CSS v4 (PostCSS)
+- **HTTP client**: Axios, with interceptors for token attachment and refresh
+- **Charts**: Recharts
+- **Icons**: Lucide React
+- **Linting**: oxlint
 
-docker-compose.yml
-README.md
-```
+**API client**
+- Bruno (desktop + CLI)
 
-## Production Features
 
-- **Co-Authorship Network Visualizer**: Interactive 2D graph topology with degree centrality, shortest path finder, and cluster filtering.
-- **Publication-Grade PDF Export**: Instant export of executive network summaries, edge matrices, and faculty rosters using `html2canvas` and `jspdf`.
-- **Global Search Engine**: Navbar search bar instantly indexing researchers, institutions, grant numbers, and paper topics.
-- **Citation Intelligence & BibTeX**: Track citation velocity trends and copy standardized BibTeX references.
-- **Role-Based Access Control**: Portals for Researchers, Institution Admins, and System Administrators.
-- **Clean Production UI**: All developer demo tools (JWT Studio, Schema Explorer, Code Viewers, Debug Panels) have been completely removed from the user interface.
+## Requirements
 
-## Quick Start
+- Python 3.11+
+- `uv` (or `pip`) for dependency management
+- Node.js 20+
+- Docker (optional, for containerized deployment)
 
-### Frontend (Vite + React + Tailwind CSS)
+
+## Setup
+
+#### Backend
 ```bash
-npm install
-npm run dev
+git clone <repo-url>
+cd backend
+uv sync                      # or: pip install -r requirements.txt
+cp .env.example .env         # fill in real values before running
 ```
 
-### Backend (FastAPI + SQLAlchemy + PostgreSQL)
+#### Frontend
+```bash
+cd frontend
+npm install                  # or: pnpm install
+npm run dev                  # start development server
+```
+
+
+### Required `.env` values
+
+| Variable | Purpose |
+|----------|---------|
+| `FASTAPI_ENV` | Environment mode: `development`, `testing`, or `production` |
+| `JWT_KEY` | Secret signing key for JWTs (must be at least 32 characters) |
+| `ALGORITHM` | JWT signing algorithm (e.g., `HS256`) |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Lifetime of access tokens in minutes |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | Lifetime of refresh tokens in days |
+| `DEV_DATABASE_URL` | Connection string for the development database |
+| `ALLOWED_ORIGIN` | Frontend origin allowed for CORS requests |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` | Email delivery configuration (if unset, console notifier is used) |
+| `ADMIN_ACTION` | Administrative action (`create` or `replace`) |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Credentials for creating or replacing the system administrator |
+| `CURRENT_ADMIN_EMAIL`, `CURRENT_ADMIN_PASSWORD` | Existing administrator credentials (required when replacing) |
+| `NEW_ADMIN_EMAIL`, `NEW_ADMIN_PASSWORD` | New administrator credentials (required when replacing) |
+
+
+### Required frontend `.env` value
+
+| Variable | Purpose |
+|----------|---------|
+| `VITE_API_BASE_URL` | Backend API base URL (defaults to `http://localhost:8000/api` if unset) |
+
+
+## Running the App
+
+#### Backend
 ```bash
 cd backend
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+uv run -m main
 ```
->>>>>>> 9bb7c4a (Initial commit)
+
+API docs available at `http://localhost:8000/docs`
+
+#### Frontend
+```bash
+cd frontend
+npm run dev
+```
+Frontend available at `http://localhost:5173`
+
+### Docker Setup
+A docker-compose.yml is provided to run both backend and frontend together.
+```bash
+docker compose up --build
+```
+
+- Backend runs on `http://localhost:8000`
+- Frontend runs on `http://localhost:5173`
+
+
+## Creating the First Admin
+
+No admin can self-register with `system_admin`, seed one directly:
+
+```bash
+cd backend
+uv run scripts/create_superuser.py
+```
+
+Reads `ADMIN_EMAIL` / `ADMIN_PASSWORD` (or `ADMIN_ACTION=replace` with
+`CURRENT_ADMIN_*` / `NEW_ADMIN_*`) from `.env`.
+
+
+## Database Migrations
+
+```bash
+alembic upgrade head          # apply all migrations
+alembic revision --autogenerate -m "describe the change"
+alembic downgrade -1          # roll back one step
+```
+
+SQLite can't `ALTER TABLE` directly, migrations touching existing columns use `batch_alter_table`. Always test `downgrade` before merging a new one.
+
+
+## Running Tests
+
+```bash
+pytest tests/unit tests/integration     # fast suite, run this during development
+pytest tests/concurrency -v -s          # race-condition suite, slower, non-deterministic timing
+pytest                                   # everything (330 tests)
+```
+
+Test tiers:
+
+- **`tests/unit/`**: schemas, token service, config, hashing. No DB, no HTTP.
+- **`tests/integration/`**: full HTTP flows per module and per role, including negative cases.
+- **`tests/concurrency/`**: simultaneous requests proving atomicity holds under contention.
+
+
+## Project Structure
+
+```
+project_dir/
+├── api-client/         Bruno request collection
+├── backend/            FastAPI backend
+│   ├── app/            core, models, schemas, services, routes, utils
+│   ├── data/
+│   ├── database/
+│   ├── logs/
+│   ├── migrations/     Alembic revisions
+│   ├── scripts/
+│   └── tests/          unit, integration, concurrency
+│   ├── main.py
+├── docker/             Docker Compose setup
+├── frontend/           React + Vite frontend
+│   ├── src/
+│   └── public/
+├── .gitignore
+└── README.md
+```
+
+
+## API Testing with Bruno
+
+The `api-client/` folder is a full request collection covering every route.
+
+
+**Environments** (`bruno/environments/`):
+
+| Environment | Represents |
+|---|---|
+| `local-visitor` | No auth, public routes only |
+| `local` | Fresh registration template |
+| `local-researcher` | Logged-in researcher session |
+| `local-reviewer` | Logged-in reviewer session |
+| `local-institution-admin` | Scoped institution admin session |
+| `local-admin` | System admin session |
+
+Open the collection in Bruno Desktop, pick an environment, and run requests
+in the order shown in each folder's `seq`.
+
+
+## Acknowledgments
+
+This project was made possible through the dedication of our team and the guidance of our mentor.  
+AI tools, including Claude (Sonnet 4.6 and Sonnet 5) by Anthropic, Microsoft Copilot, and ChatGPT, were used selectively for debugging and documentation support.
+
+
+## Key Design Decisions
+
+- **Role assignment is admin-gated**: Users self-declare a `requested_role` at registration; `role` itself is only set on admin approval.
+- **State transitions are atomic**: Approve/ban/reject use a conditional `UPDATE ... WHERE ... RETURNING`, not read-then-write, safe under concurrent admin actions.
+- **Every uniqueness rule has a real database constraint**: Behind it (DOI, citation pairs, verification codes, collaboration membership), application-level checks alone don't survive concurrent requests.
+- **Institution linkage is automatic**: A researcher's email domain is matched against registered institutions on profile creation.

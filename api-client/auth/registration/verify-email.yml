@@ -1,0 +1,36 @@
+info:
+  name: verify-email
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{authUrl}}/verify-email"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |
+      {
+        "email": "{{email}}",
+        "code": "{{verificationCode}}"
+      }
+
+runtime:
+  scripts:
+    - type: tests
+      code: |
+        test("status is 200", function() {
+          expect(res.status).to.equal(200);
+        });
+        test("verified message", function() {
+          expect(res.body.message).to.include("verified");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

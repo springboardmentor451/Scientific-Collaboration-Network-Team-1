@@ -1,0 +1,10 @@
+info:
+  name: projects
+  type: folder
+  seq: 6
+
+request:
+  variables:
+    - name: projectUrl
+      value: "{{baseUrl}}/projects"
+      description: ""
